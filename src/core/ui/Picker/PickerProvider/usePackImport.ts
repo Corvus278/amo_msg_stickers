@@ -38,9 +38,7 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
       };
 
       setIsImporting(true);
-      setPercent((current) => {
-        return current || 0;
-      });
+      setPercent(0);
 
       try {
         const pack = await importTelegramSet(
@@ -61,6 +59,7 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
         showError(errorMessage(error));
       } finally {
         setIsImporting(false);
+        setPercent(null);
       }
     },
     [isImporting, env, settings, refreshPacks, showStatus, showError, switchTo]
