@@ -1,0 +1,44 @@
+import type { Ref } from 'preact';
+
+export type TextInputProps = {
+  /**
+   * id поля — для связи с `<label htmlFor>`: jsx-a11y не считает `TextInput` внутри
+   * `<label>` полем ввода.
+   */
+  id?: string;
+
+  /**
+   * Тип поля: поиск, обычный текст или скрытое значение — ключи и токены.
+   */
+  type: 'text' | 'search' | 'password';
+
+  /**
+   * Текущее значение.
+   */
+  value: string;
+
+  /**
+   * Подсказка в пустом поле.
+   */
+  placeholder?: string;
+
+  /**
+   * Значение атрибута `autocomplete`: `off` не даёт браузеру подставлять сохранённое.
+   */
+  autoComplete?: string;
+
+  /**
+   * id элемента с описанием поля — подсказки под ним.
+   */
+  describedBy?: string;
+
+  /**
+   * Ссылка на DOM-поле — чтобы поставить в него фокус.
+   */
+  inputRef?: Ref<HTMLInputElement>;
+
+  /**
+   * Колбэк на ввод: новое значение поля.
+   */
+  onInput: (value: string) => void;
+};
