@@ -94,7 +94,7 @@ pnpm store (`actions/cache`, ключ — ОС + хэш `pnpm-lock.yaml`) и `pn
 Job `release` в `release.yml`: `permissions: contents: write` (только у него; на уровне workflow — `contents: read`),
 `needs: ci`. Шаги:
 
-1. `actions/checkout`, версия — `node -p "require('./package.json').version"`.
+1. `actions/checkout`, версия — `jq -r .version package.json`: Node шагу не нужен.
 2. Тег уже есть (`git ls-remote --exit-code --tags origin refs/tags/v<версия>`) → `::warning::` «версия <версия> уже
    выпущена», выход 0. Проверяется тег, а не релиз: тег без релиза тоже значит «версия занята».
 3. `actions/download-artifact` сборки из job-а `build`.

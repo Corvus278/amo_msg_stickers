@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - id: version
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
       # Проверяется тег, а не релиз: тег без релиза тоже значит «версия занята».
       - id: tag
