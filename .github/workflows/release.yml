@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# Группы concurrency нет намеренно: GitHub держит в группе лишь один ожидающий
+# прогон и заменяет его новым — при серии мержей промежуточная версия осталась бы
+# без релиза. Параллельные прогоны выпускают разные теги; «Latest» выставляет шаг
+# после создания релиза.
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: version
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      # Проверяется тег, а не релиз: тег без релиза тоже значит «версия занята».
+      - id: tag
+        env:
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+            echo "::warning::Версия ${TAG} уже выпущена — релиз не создаётся"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Та же сборка, что прошла проверки в job-е build.
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: release
+
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "${TAG}" \
+            --target "${GITHUB_SHA}" \
+            --title "${TAG}" \
+            --generate-notes \
+            --latest=false \
+            "release/amo-stickers-${VERSION}.zip" \
+            release/amo-stickers.user.js
+
+      # «Latest» (на него ведёт README) — всегда наибольшая версия, а не последний
+      # завершившийся прогон: параллельный прогон меньшей версии может закончиться
+      # позже. Последний завершившийся прогон видит все релизы и ставит верный; теги без
+      # релиза, черновики и пре-релизы в расчёт не идут — «Latest» им не поставить.
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1000 \
+            --json tagName --jq '.[].tagName' | sort -V | tail -n 1)
+          gh release edit "${latest}" --latest

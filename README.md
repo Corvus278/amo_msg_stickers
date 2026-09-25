@@ -41,14 +41,27 @@ Pre-commit (husky) гоняет lint-staged, typecheck и тесты по изм
 
 ## Установка
 
+Готовые файлы лежат в [последнем релизе](https://github.com/Corvus278/amo_msg_stickers/releases/latest): релиз
+выходит сам после каждого мержа в `master` с новой версией.
+
 ### Chrome / Яндекс / Edge
 
-`chrome://extensions` → «Режим разработчика» → «Загрузить распакованное» → `dist/extension`.
-Затем откройте попап → ⚙ и введите ключи.
+Скачайте `amo-stickers-<версия>.zip` из релиза и распакуйте. `chrome://extensions` → «Режим разработчика» →
+«Загрузить распакованное» → распакованная папка. Затем откройте попап → ⚙ и введите ключи.
 
 ### Tampermonkey и другие менеджеры userscript-ов
 
-Установите `dist/amo-stickers.user.js`. Ключи вводятся так же: попап → ⚙.
+Установите в менеджер `amo-stickers.user.js` из релиза. Ключи вводятся так же: попап → ⚙.
+
+### Из исходников
+
+`pnpm build` (см. «Сборка»), затем расширение — из `dist/extension`, userscript — `dist/amo-stickers.user.js`.
+
+## CI
+
+На каждый PR в `master` GitHub Actions гоняет линт, типы, тесты, сборку и проверку версии: она должна совпадать в
+`package.json`, `manifest.json` и заголовке userscript и быть выше, чем в `master`. Сборка PR доступна артефактом
+прогона.
 
 ## Стенд
 

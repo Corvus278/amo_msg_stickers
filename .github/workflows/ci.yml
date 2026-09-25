@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_call:
+
+permissions:
+  contents: read
+
+# В PR новый коммит отменяет прогон старого. Вне PR группа — по коммиту: в группе с
+# общим ref GitHub держит лишь один ожидающий прогон и заменяет его новым, так что
+# при серии мержей проверки — а с ними и релиз — промежуточного коммита отменились бы.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm lint:es
+      # Упавший eslint не должен прятать ошибки prettier.
+      - if: ${{ !cancelled() }}
+        run: pnpm lint:format
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      # manifest.json — в корне архива: так его принимают «Загрузить распакованное»
+      # после распаковки и Chrome Web Store.
+      - name: Архив расширения
+        run: |
+          version=$(node -p "require('./package.json').version")
+          cd dist/extension
+          zip -r "../amo-stickers-${version}.zip" .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build
+          path: |
+            dist/amo-stickers-*.zip
+            dist/amo-stickers.user.js
+          if-no-files-found: error
+
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      # Полная история — для версии package.json из базовой ветки.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Только Node: скрипт без зависимостей, но импортирует .ts — нужен Node из .mise.toml.
+      - uses: jdx/mise-action@v4
+        with:
+          install_args: node
+      - if: ${{ github.event_name == 'pull_request' }}
+        run: node scripts/check-version.mjs --base "origin/${{ github.base_ref }}"
+      - if: ${{ github.event_name != 'pull_request' }}
+        run: node scripts/check-version.mjs

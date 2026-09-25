@@ -82,7 +82,10 @@ src/
   types.d.ts      описания модулей без типов: gifenc, `*.css` строкой; флаг `window.__amoStickers`
 dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
                   и «Отправить» замоканы
-tests/            юнит-тесты, helpers/; каталога пока нет — появится с первым тестом (`vitest.config.ts` его ждёт)
+scripts/          скрипты CI: version.ts — чистая логика проверки версии (типы — version.types.ts);
+                  check-version.mjs — её запуск в CI
+tests/            юнит-тесты, helpers/
+.github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; actions/setup — окружение
 openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
                   changes/archive/ — закрытые
 local/            локальные заготовки под конкретное окружение; в .gitignore, eslint его не трогает
@@ -180,8 +183,8 @@ GIF-блобы) и недавние (до 40, повторная отправк�
 ## Тесты
 
 Стек — vitest, проект `unit` (`tests/**/*.test.{ts,tsx}`, окружение `node`). Тесты лежат плоско в `tests/`,
-хелперы — в `tests/helpers/`. Юнит-тестами покрывается чистое ядро; всё, что завязано на DOM amo и отправку,
-проверяется на стенде `dev/harness.html` и в живом amo:
+хелперы — в `tests/helpers/`. Юнит-тестами покрывается любой важный код с логикой — ядро, скрипты сборки и CI; всё,
+что завязано на DOM amo и отправку, проверяется на стенде `dev/harness.html` и в живом amo:
 
 ```bash
 python3 -m http.server 8777 -b 127.0.0.1
@@ -208,6 +211,19 @@ eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + s
 
 `.claude/hooks/lint.sh` — PostToolUse-хук: после каждой правки гоняет по файлу eslint (+`tsc --noEmit` для `.ts`/
 `.tsx`). Ошибки в правленом файле блокируют правку.
+
+## CI и релизы
+
+GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-action`) — те же версии, что локально.
+
+- **PR в `master`** (`ci.yml`): отдельные статусы `lint` (eslint + prettier), `typecheck`, `test` (полный прогон, а
+  не `--changed`), `build`, `version`. Новый коммит в PR отменяет прогон старого. Сборка PR лежит артефактом `build`
+  прогона: `amo-stickers-<версия>.zip` и `amo-stickers.user.js` — для ручной проверки до мержа.
+- **`version`** падает, если версия в трёх местах расходится или не выше версии `package.json` в `master`
+  (`scripts/check-version.mjs --base origin/master`, сравнение по числам).
+- **Мерж в `master`** (`release.yml`): те же проверки, затем тег `v<версия>` и GitHub Release с zip расширения
+  (`manifest.json` в корне) и userscript-ом, заметки — автогенерация по PR. Если тег уже есть, релиз пропускается с
+  предупреждением, прогон зелёный: версия, не поднятая при прямом push в `master`, релиза не даёт.
 
 ## Воркфлоу задачи
 
