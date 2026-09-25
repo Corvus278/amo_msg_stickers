@@ -10,7 +10,7 @@ const isWatch = process.argv.includes('--watch');
 
 const USERSCRIPT_BANNER = `// ==UserScript==
 // @name         amo stickers
-// @version      0.1.0
+// @version      0.2.0
 // @match        https://*.amo.tm/*
 // @match        http://localhost:3000/*
 // @grant        none

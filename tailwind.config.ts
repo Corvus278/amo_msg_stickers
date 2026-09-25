@@ -11,7 +11,12 @@ import type { Config } from 'tailwindcss';
  */
 export const tailwindConfig = {
   darkMode: 'selector',
-  content: ['src/core/ui/**/*.{ts,tsx}'],
+  /**
+   * Только `.tsx`: классы пикера живут в разметке компонентов. В `.ts` из `ui` классы
+   * есть лишь у иконки кнопки стикеров (`icons.ts`) — это классы amo, их CSS даёт
+   * страница, а не бандл пикера.
+   */
+  content: ['src/core/ui/**/*.tsx'],
   theme: {
     colors: {
       transparent: 'transparent',

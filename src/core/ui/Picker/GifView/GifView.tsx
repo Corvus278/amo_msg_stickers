@@ -1,4 +1,4 @@
-import type { FunctionComponent as FC, JSX } from 'preact';
+import type { FunctionComponent as FC, TargetedEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
 import type { GifFeed } from '../../../sources/gifs.types';
@@ -64,7 +64,7 @@ export const GifView: FC<GifViewProps> = (props) => {
     selectFeed(nextFeed);
   };
 
-  const handleBodyScroll = (event: JSX.TargetedEvent<HTMLDivElement>) => {
+  const handleBodyScroll = (event: TargetedEvent<HTMLDivElement>) => {
     checkScroll(event.currentTarget);
   };
 

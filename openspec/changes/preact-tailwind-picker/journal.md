@@ -97,3 +97,12 @@
 Вне группы, в итог: userscript не качает api.telegram.org/file (нет CORS; стенд исполнителя шёл с --disable-web-security; расширение обходит service worker) — было и до правок; HTTP 400 сырым текстом из host.fetchJson; спека custom-stickers ждёт превью 256×256, конвертер отдаёт 512 (STICKER_SIZE); обложка вкладки после удаления стикера-обложки — буквы названия.
 Для итогового аудита памяти: useTelegramImport пишет в state после ухода с вкладки во время импорта (задумано, jsdoc); кэш useObjectUrls переживает закрытие пикера (живых URL = стикеров открытого пака).
 Долг: JSX.TargetedEvent/TargetedDragEvent deprecated в DropZone.tsx:27,34,47, TextInput.tsx:18, GifView.tsx:67 — заменить на `import type { TargetedEvent, TargetedDragEvent } from 'preact'` в G6; save без защиты от двойного клика (дубль стикера, как в старом); usePack switchTo('recent') дважды при удалении пака.
+
+### G6 · Уборка, документация, версия, гейт
+
+Сделано: 5.1 (удалён старый пикер, icons.ts → stickerIcon), 5.2 (CLAUDE.md: стек, структура, «Пикер», «Сборка CSS»), 5.3 (0.2.0 в трёх местах), 6.1 (lint/test, eslint --max-warnings=0 без кэша), 6.2, 6.3.
+6.2: content.js 254 435→288 497 Б (+34 062 / gzip +10 872), user.js 254 671→288 733 (+34 062 / gzip +10 880), background.js 763→763. Состав: preact+clsx +14,8 КБ, CSS +8,7 КБ (preflight 2,4, сброс --tw-* 2,3), JS UI +10,5 КБ. Пользователь принял рост как есть.
+6.3: все сценарии specs/* пройдены на стенде против старого пикера (2f379a4) на реальных API в обеих темах. Расхождения: цвет ошибки (ожидаемо); нет пустой шахматной полосы 12 px во вкладке «Добавить» без файла — пользователь принял; «@BotFather» < 1 px.
+Отступления: content Tailwind сужен до src/core/ui/**/*.tsx (долг G1); JSX.Targeted* заменены (долг G5); версия в package.json правкой файла — pnpm version отказывается на грязном дереве; строка tests/ в CLAUDE.md с пометкой «каталога пока нет».
+Аудит: 1 круг, ok (аудитор возобновлён после обрыва сессии координатора). Эстафета исполнителей после 59 вызовов.
+Долг: CLAUDE.md:72 — types.d.ts описан как «(gifenc)», а там теперь и `declare module '*.css'`.

@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import type { FunctionComponent as FC, JSX } from 'preact';
+import type { FunctionComponent as FC, TargetedDragEvent, TargetedEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
 import type { DropZoneProps } from './DropZone.types';
@@ -24,14 +24,14 @@ export const DropZone: FC<DropZoneProps> = (props) => {
   const { fileName, onPick } = props;
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleFileChange = (event: JSX.TargetedEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: TargetedEvent<HTMLInputElement>) => {
     onPick(event.currentTarget.files?.[0]);
   };
 
   /**
    * Без `preventDefault` на `dragover` браузер не примет `drop` и откроет файл сам.
    */
-  const handleZoneDragOver = (event: JSX.TargetedDragEvent<HTMLLabelElement>) => {
+  const handleZoneDragOver = (event: TargetedDragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     event.stopPropagation();
     setIsDragOver(true);
@@ -44,7 +44,7 @@ export const DropZone: FC<DropZoneProps> = (props) => {
   /**
    * amo слушает `drop` на `body` и прикрепит файл к сообщению — не пускаем.
    */
-  const handleZoneDrop = (event: JSX.TargetedDragEvent<HTMLLabelElement>) => {
+  const handleZoneDrop = (event: TargetedDragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     event.stopPropagation();
     setIsDragOver(false);

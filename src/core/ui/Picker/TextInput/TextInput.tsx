@@ -1,4 +1,4 @@
-import type { FunctionComponent as FC, JSX } from 'preact';
+import type { FunctionComponent as FC, TargetedEvent } from 'preact';
 
 import type { TextInputProps } from './TextInput.types';
 
@@ -15,7 +15,7 @@ const FIELD_CLASS = [
 export const TextInput: FC<TextInputProps> = (props) => {
   const { id, type, value, placeholder, autoComplete, inputRef, onInput } = props;
 
-  const handleFieldInput = (event: JSX.TargetedEvent<HTMLInputElement>) => {
+  const handleFieldInput = (event: TargetedEvent<HTMLInputElement>) => {
     onInput(event.currentTarget.value);
   };
 

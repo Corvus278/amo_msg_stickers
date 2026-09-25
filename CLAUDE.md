@@ -12,9 +12,11 @@ amo stickers — стикеры и GIF для мессенджера amo (web). 
 
 ## Стек и сборка
 
-TypeScript (strict) + esbuild, без фреймворка: UI пикера сейчас собран из DOM вручную (`h()` в `ui/picker.ts`) и
-переписывается на Preact. GIF кодирует `gifenc`, `.tgs` рендерит `lottie-web` (light canvas-плеер: без `eval`,
-который не пропускает CSP расширения). Пакетный менеджер — pnpm, версии Node и pnpm — в `.mise.toml`.
+TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSource: 'preact'`, классы собирает `clsx`),
+стили — Tailwind 3 с токенами amo в `tailwind.config.ts`: цвета, шрифты, тени и шкала отступов совпадают с
+tailwind-классами страницы amo, поэтому класс из её вёрстки значит в пикере то же самое. GIF кодирует `gifenc`, `.tgs`
+рендерит `lottie-web` (light canvas-плеер: без `eval`, который не пропускает CSP расширения). Пакетный менеджер —
+pnpm, версии Node и pnpm — в `.mise.toml`.
 
 ```bash
 pnpm i
@@ -55,14 +57,22 @@ src/
     db.ts         IndexedDB: паки, стикеры, недавние
     host.ts       интерфейс окружения (`Host`) и настройки (ключи GIPHY/KLIPY, токен Telegram-бота)
     sources/      gifs.ts — поиск GIPHY и KLIPY; telegram.ts — импорт пака через Bot API
-    ui/           picker.ts — пикер в Shadow DOM, styles.ts — его CSS, icons.ts — svg-иконки
+    ui/
+      createPicker.tsx  фасад пикера для `app.ts`: shadow root, `open`/`close`/`setTheme`, рендер Preact-дерева
+      picker.css        вход Tailwind: base/components/utilities и сброс наследования `:host`
+      icons.ts          `stickerIcon` — svg-строка кнопки стикеров в DOM amo
+      Picker/           компоненты и хуки пикера, каждый в своём каталоге:
+                        Picker.tsx — панель; PickerProvider/ — контекст (окружение, настройки, паки, статус,
+                        отправка, object URL); Tabs/, Tab/, TabIcon/ — вкладки; RecentView/, GifView/, PackView/,
+                        AddView/, SettingsView/ — представления; Button/, TextInput/, EmptyState/, StatusBar/ —
+                        примитивы; StickerGrid/, StickerCell/, MasonryGrid/ — сетки; use*/ — хуки
   extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
                   messages.types.ts (протокол content ↔ background), manifest.json
   userscript/     index.ts — Host для менеджеров userscript-ов
   types.d.ts      описания вендорных модулей без типов (gifenc)
 dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
                   и «Отправить» замоканы
-tests/            юнит-тесты, helpers/
+tests/            юнит-тесты, helpers/; каталога пока нет — появится с первым тестом (`vitest.config.ts` его ждёт)
 openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
                   changes/archive/ — закрытые
 local/            локальные заготовки под конкретное окружение; в .gitignore, eslint его не трогает
@@ -83,8 +93,28 @@ CLAUDE.local.md   локальные заметки; в .gitignore
 `aria-label="Send message"`, `aria-label="cancel edit"`) и стабильные tailwind-классы. Знание о DOM amo живёт только
 в этом файле — при правке вёрстки amo меняется он один.
 
+### Пикер
+
 Пикер — Shadow DOM, его хост вставляется внутрь кнопки: `position: fixed` считается от предка с transform —
-контейнера поля ввода, как у родного попапа эмодзи. Тема следует за классом `dark` на `<html>`.
+контейнера поля ввода, как у родного попапа эмодзи. Shadow root отрезает CSS amo от пикера и CSS пикера от amo:
+preflight Tailwind не сбрасывает вёрстку страницы.
+
+`app.ts` живёт в DOM amo без Preact и управляет пикером через фасад `createPicker(host, { onSend, onClose })`:
+`open()`, `close()`, `setTheme(isDark)`. Фасад перерисовывает дерево `render()` на каждое изменение, а закрытый
+пикер остаётся смонтированным — вкладка и запрос поиска переживают повторное открытие. Данные и действия
+(настройки, паки, статус, отправка) компоненты берут из `usePicker()` провайдера `PickerProvider`, текущее
+представление — из `usePickerView()`.
+
+Тема следует за классом `dark` на `<html>`: `app.ts` следит за ним MutationObserver-ом и зовёт `setTheme`, корень
+пикера получает класс `dark`, а `dark:`-варианты Tailwind (`darkMode: 'selector'`) срабатывают внутри shadow root.
+Цвета в компонентах — только токены из `tailwind.config.ts`, без hex-литералов и inline-цветов.
+
+### Сборка CSS
+
+`picker.css` собирает esbuild-плагин `tailwind` в `build.mjs`: PostCSS с Tailwind по конфигу из
+`tailwind.config.ts`, в сборке — минификация (в `watch` CSS остаётся читаемым), и в бандл CSS попадает строкой (loader `text`, `declare module '*.css'` в
+`src/types.d.ts`). Фасад кладёт её `<style>` в shadow root. Tailwind ищет классы в `src/core/ui/**/*.tsx`; конфиг и
+компоненты плагин отдаёт в `watchFiles`, поэтому `pnpm watch` пересобирает CSS при их правке.
 
 ### Отправка
 

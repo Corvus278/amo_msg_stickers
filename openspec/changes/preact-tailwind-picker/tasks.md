@@ -31,14 +31,14 @@
 
 ## 5. Уборка и документация
 
-- [ ] 5.1 Удалить `picker.ts`, `styles.ts`, `picker.types.ts` и `h()`; проверка — `rg -n "PICKER_CSS|from './picker'" src` пусто, `pnpm build` проходит
-- [ ] 5.2 Обновить `CLAUDE.md`: стек (Preact, Tailwind 3 с токенами amo), структура `src/core/ui`, раздел о пикере и теме, сборка CSS плагином; проверка — в `CLAUDE.md` нет упоминаний `h()` и `styles.ts`
-- [ ] 5.3 Поднять версию до 0.2.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка — `rg -n '0\.2\.0' package.json src/extension/manifest.json build.mjs` находит три строки
+- [x] 5.1 Удалить `picker.ts`, `styles.ts`, `picker.types.ts` и `h()`; проверка — `rg -n "PICKER_CSS|from './picker'" src` пусто, `pnpm build` проходит
+- [x] 5.2 Обновить `CLAUDE.md`: стек (Preact, Tailwind 3 с токенами amo), структура `src/core/ui`, раздел о пикере и теме, сборка CSS плагином; проверка — в `CLAUDE.md` нет упоминаний `h()` и `styles.ts`
+- [x] 5.3 Поднять версию до 0.2.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка — `rg -n '0\.2\.0' package.json src/extension/manifest.json build.mjs` находит три строки
 
 ## 6. Проверка
 
-- [ ] 6.1 `pnpm lint` и `pnpm test` без ошибок и предупреждений в новом коде; проверка — вывод команд
-- [ ] 6.2 Сравнить размер бандлов с замером из 1.2 и записать разницу в PR; проверка — рост не больше ~10 КБ на бандл, иначе разобрать причину до PR
-- [ ] 6.3 Полный ручной прогон на стенде `dev/harness.html` в светлой и тёмной теме по сценариям `openspec/specs/*` (composer-integration, gif-search, telegram-import, custom-stickers, sticker-library, sticker-sending): вкладки, отправка, блокировка при черновике, импорт, создание, удаление, настройки; проверка — все сценарии пройдены, расхождения с текущим пикером только в цвете ошибки
+- [x] 6.1 `pnpm lint` и `pnpm test` без ошибок и предупреждений в новом коде; проверка — вывод команд
+- [x] 6.2 Сравнить размер бандлов с замером из 1.2 и записать разницу в PR; проверка — рост не больше ~10 КБ на бандл, иначе разобрать причину до PR
+- [x] 6.3 Полный ручной прогон на стенде `dev/harness.html` в светлой и тёмной теме по сценариям `openspec/specs/*` (composer-integration, gif-search, telegram-import, custom-stickers, sticker-library, sticker-sending): вкладки, отправка, блокировка при черновике, импорт, создание, удаление, настройки; проверка — все сценарии пройдены, расхождения с текущим пикером только в цвете ошибки
 - [ ] 6.4 Проверка в живом amo (расширение и userscript): попап на месте эмодзи-попапа, стили amo не протекают в пикер и обратно, хоткеи amo не срабатывают при вводе в поиске, смена темы при открытом попапе; проверка — стикер отправлен, в консоли нет ошибок
 - [ ] 6.5 PR с `Closes #<N>`, аудит и резолв тредов по воркфлоу `CLAUDE.md`; проверка — нерезолвнутых тредов нет, PR смержен squash
