@@ -2,7 +2,7 @@
 
 - [x] 1.1 Завести issue «CI: проверки PR и релиз из master» (`gh issue create --label enhancement`), ветку
   `chore/<N>-ci-cd` от свежего `master`; проверка: `git log master..HEAD` пуст до первых правок
-- [x] 1.2 Поднять версию до `0.3.0` в `package.json` (`pnpm version 0.3.0 --no-git-tag-version`),
+- [x] 1.2 Поднять версию до `0.4.0` в `package.json` (`pnpm version 0.4.0 --no-git-tag-version`),
   `src/extension/manifest.json` и `@version` в `build.mjs`; проверка: `rg '0\.3\.0' package.json build.mjs src/extension/manifest.json` — три совпадения
 
 ## 2. Проверка версии
@@ -16,7 +16,7 @@
   строковое — откатить)
 - [x] 2.3 Написать обёртку `scripts/check-version.mjs`: чтение трёх файлов, `--base <ref>` через `git show`, импорт
   `./version.ts`, `::error::` и код 1; проверка: без флага на ветке — код 0; `node scripts/check-version.mjs --base
-  master` при `0.3.0` против `0.2.0` — код 0; временно вернуть `manifest.json` на `0.2.0` — код 1 с тремя значениями;
+  master` при `0.4.0` против `0.3.0` — код 0; временно вернуть `manifest.json` на `0.3.0` — код 1 с тремя значениями;
   временные правки откатить (`git diff` чистый вне задачи)
 
 ## 3. Workflow проверок
@@ -48,14 +48,14 @@
 ## 6. Проверка на GitHub
 
 - [x] 6.1 `pnpm lint` и `pnpm test` локально зелёные; push ветки, PR с `Closes #<N>`; проверка: в PR пять зелёных
-  статусов (`lint`, `typecheck`, `test`, `build`, `version`), в прогоне артефакт с `amo-stickers-0.3.0.zip` и
+  статусов (`lint`, `typecheck`, `test`, `build`, `version`), в прогоне артефакт с `amo-stickers-0.4.0.zip` и
   `amo-stickers.user.js`
 - [x] 6.2 Негативная проверка в PR: временный коммит с нарушением prettier — падает только `lint`; откатить коммит
   (revert), статусы снова зелёные
 - [ ] 6.3 Скачать артефакт PR, распаковать zip, «Загрузить распакованное» в Chrome; проверка: расширение без ошибок
-  манифеста, версия `0.3.0`
-- [ ] 6.4 После мержа (squash) — проверка: прогон `release.yml` зелёный, есть тег `v0.3.0` на коммите мержа и релиз
-  `v0.3.0` с `amo-stickers-0.3.0.zip` и `amo-stickers.user.js` (`gh release view v0.3.0`)
+  манифеста, версия `0.4.0`
+- [ ] 6.4 После мержа (squash) — проверка: прогон `release.yml` зелёный, есть тег `v0.4.0` на коммите мержа и релиз
+  `v0.4.0` с `amo-stickers-0.4.0.zip` и `amo-stickers.user.js` (`gh release view v0.4.0`)
 - [ ] 6.5 Перезапустить прогон релиза (`gh run rerun`); проверка: прогон зелёный, предупреждение «уже выпущена»,
   файлы релиза не изменились
 - [ ] 6.6 Передать пользователю ручной шаг: защита `master` с обязательными проверками `lint`, `typecheck`, `test`,

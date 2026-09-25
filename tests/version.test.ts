@@ -46,6 +46,13 @@ describe('readBannerVersion', () => {
     expect(readBannerVersion(banner)).toBe('0.3.0');
   });
 
+  it('находит @version в заголовке из строковых литералов, как в build.mjs', () => {
+    const source =
+      "const USERSCRIPT_BANNER = [\n  '// ==UserScript==',\n  '// @version      0.4.0',\n].join('\\n');";
+
+    expect(readBannerVersion(source)).toBe('0.4.0');
+  });
+
   it('возвращает undefined, если @version нет', () => {
     expect(
       readBannerVersion('// ==UserScript==\n// @name amo\n// ==/UserScript==')

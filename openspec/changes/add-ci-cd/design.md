@@ -3,7 +3,7 @@
 Репозиторий публичный, на GitHub (`Corvus278/amo_msg_stickers`), CI нет (`.github/` отсутствует), тегов и релизов нет,
 защиты `master` нет. Проверки — только `.husky/pre-commit`. Версии Node и pnpm заданы в `.mise.toml` (`node 26.10.0`,
 `pnpm 12.6.0`), `packageManager` в `package.json` — `pnpm@12.6.0`. Скрипты: `lint:es`, `lint:format`, `typecheck`,
-`test` (`--passWithNoTests`: каталога `tests/` пока нет), `build`. Версия `0.2.0` записана в трёх местах, одинаково.
+`test`, `build`. Версия `0.3.0` записана в трёх местах, одинаково.
 Мотивация — proposal.md, требования — `specs/ci-cd/spec.md`.
 
 ## Goals / Non-Goals
@@ -116,8 +116,8 @@ Job `release` в `release.yml`: `permissions: contents: write` (только у 
 
 ## Migration Plan
 
-1. PR этой задачи поднимает версию до `0.3.0`; его прогон — первая проверка `ci.yml` на живом GitHub.
-2. После мержа `release.yml` выпускает `v0.3.0` — проверка релиза.
+1. PR этой задачи поднимает версию до `0.4.0`; его прогон — первая проверка `ci.yml` на живом GitHub.
+2. После мержа `release.yml` выпускает `v0.4.0` — проверка релиза.
 3. Руками: в настройках репозитория правило защиты `master` с обязательными проверками `lint`, `typecheck`,
    `test`, `build`, `version`.
 

@@ -33,9 +33,11 @@ export type VersionSource = {
 const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
 
 /**
- * Строка `@version` в заголовке userscript: `// @version      0.3.0`.
+ * `@version` из заголовка userscript. В `build.mjs` заголовок собран из строковых
+ * литералов (`'// @version      0.3.0',`), поэтому строка не якорится к началу, а
+ * значение обрывается на кавычке.
  */
-const BANNER_VERSION_PATTERN = /^\/\/\s*@version\s+(\S+)\s*$/m;
+const BANNER_VERSION_PATTERN = /\/\/\s*@version\s+([^\s'"`]+)/;
 
 /**
  * Разбирает `MAJOR.MINOR.PATCH`. Пре-релизы и метки сборки не поддерживаются:
