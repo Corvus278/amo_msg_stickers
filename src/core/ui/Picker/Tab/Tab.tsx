@@ -1,11 +1,11 @@
 import type { FunctionComponent as FC, TargetedKeyboardEvent } from 'preact';
 
+import { TAB_PANEL_ID, tabId } from '../tabIds/tabIds';
 import { usePickerView } from '../usePickerView/usePickerView';
 
 import { isSameView } from './isSameView';
 import { moveTabFocus } from './moveTabFocus';
 import type { TabProps } from './Tab.types';
-import { TAB_PANEL_ID, tabId } from './tabIds';
 
 /**
  * Шрифт задаётся явно: подпись «GIF» и буквы пака без обложки — 11px жирным, мельче

@@ -7,7 +7,7 @@ import { PackView } from './PackView/PackView';
 import { RecentView } from './RecentView/RecentView';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
-import { TAB_PANEL_ID, tabId } from './Tab/tabIds';
+import { TAB_PANEL_ID, tabId } from './tabIds/tabIds';
 import { Tabs } from './Tabs/Tabs';
 import { useOpenLoad } from './useOpenLoad/useOpenLoad';
 import { usePickerView } from './usePickerView/usePickerView';
