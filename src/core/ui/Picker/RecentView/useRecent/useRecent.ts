@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
 import { deleteRecent, getSticker, listRecent } from '../../../../db';
 import type { RecentRec, SendItem } from '../../../../db.types';
+import { errorMessage } from '../../PickerProvider/errorMessage';
 import type { PickerContextValue } from '../../PickerProvider/PickerProvider.types';
 import { usePicker } from '../../PickerProvider/usePicker';
 
@@ -47,7 +48,7 @@ const itemUrl = async (
  * @returns недавние и удаление из них
  */
 export const useRecent = (isOpen: boolean): Recent => {
-  const { urlOf } = usePicker();
+  const { urlOf, showError } = usePicker();
   const [entries, setEntries] = useState<RecentEntry[] | null>(null);
 
   /**
@@ -90,10 +91,14 @@ export const useRecent = (isOpen: boolean): Recent => {
 
   const removeItem = useCallback(
     async (item: SendItem) => {
-      await deleteRecent(item);
-      await reload();
+      try {
+        await deleteRecent(item);
+        await reload();
+      } catch (error) {
+        showError(errorMessage(error));
+      }
     },
-    [reload]
+    [reload, showError]
   );
 
   return { entries, removeItem };

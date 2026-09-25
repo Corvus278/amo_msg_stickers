@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import type { Settings } from '../../../../host.types';
+import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
 
 import type { SettingsDraft } from './useSettingsDraft.types';
@@ -13,7 +14,7 @@ import type { SettingsDraft } from './useSettingsDraft.types';
  * @returns значения полей, их правка и сохранение
  */
 export const useSettingsDraft = (): SettingsDraft => {
-  const { env, settings, refreshSettings, showStatus } = usePicker();
+  const { env, settings, refreshSettings, showStatus, showError } = usePicker();
   const [draft, setDraft] = useState<Settings>(settings);
 
   useEffect(() => {
@@ -29,15 +30,19 @@ export const useSettingsDraft = (): SettingsDraft => {
   const save = useCallback(async () => {
     const { giphyKey, klipyKey, telegramToken } = draft;
 
-    await env.setSettings({
-      giphyKey: giphyKey.trim(),
-      klipyKey: klipyKey.trim(),
-      telegramToken: telegramToken.trim(),
-    });
+    try {
+      await env.setSettings({
+        giphyKey: giphyKey.trim(),
+        klipyKey: klipyKey.trim(),
+        telegramToken: telegramToken.trim(),
+      });
 
-    await refreshSettings();
-    showStatus('Сохранено');
-  }, [draft, env, refreshSettings, showStatus]);
+      await refreshSettings();
+      showStatus('Сохранено');
+    } catch (error) {
+      showError(errorMessage(error));
+    }
+  }, [draft, env, refreshSettings, showStatus, showError]);
 
   return { draft, changeField, save };
 };

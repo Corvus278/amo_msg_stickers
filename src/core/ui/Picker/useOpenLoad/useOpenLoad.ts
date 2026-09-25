@@ -1,18 +1,20 @@
 import { useEffect, useRef } from 'preact/hooks';
 
 import { ensureCustomPack, listRecent } from '../../../db';
+import { errorMessage } from '../PickerProvider/errorMessage';
 import { usePicker } from '../PickerProvider/usePicker';
 import { usePickerView } from '../usePickerView/usePickerView';
 
 /**
  * Загрузка на каждое открытие пикера: сброс статуса, свежие настройки и паки (их могли
  * поменять в другой вкладке). Без истории отправок открывается «GIF» вместо пустых
- * недавних; выбранная пользователем вкладка не трогается.
+ * недавних; выбранная пользователем вкладка не трогается. Сбой загрузки (окружение или
+ * база недоступны) показывается ошибкой в статусе.
  *
  * @param isOpen — открыт ли пикер
  */
 export const useOpenLoad = (isOpen: boolean) => {
-  const { refreshSettings, refreshPacks, clearStatus } = usePicker();
+  const { refreshSettings, refreshPacks, clearStatus, showError } = usePicker();
   const { view, switchTo } = usePickerView();
 
   /**
@@ -30,14 +32,21 @@ export const useOpenLoad = (isOpen: boolean) => {
 
     const load = async () => {
       clearStatus();
-      await refreshSettings();
-      await ensureCustomPack();
-      await refreshPacks();
-      const recent = await listRecent();
 
-      if (viewRef.current.kind === 'recent' && !recent.length) switchTo({ kind: 'gifs' });
+      try {
+        await refreshSettings();
+        await ensureCustomPack();
+        await refreshPacks();
+        const recent = await listRecent();
+
+        if (viewRef.current.kind === 'recent' && !recent.length) {
+          switchTo({ kind: 'gifs' });
+        }
+      } catch (error) {
+        showError(errorMessage(error));
+      }
     };
 
     void load();
-  }, [isOpen, refreshSettings, refreshPacks, clearStatus, switchTo]);
+  }, [isOpen, refreshSettings, refreshPacks, clearStatus, showError, switchTo]);
 };

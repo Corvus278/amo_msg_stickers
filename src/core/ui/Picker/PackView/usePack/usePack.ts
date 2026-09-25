@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import { deletePack, deleteSticker, listStickers } from '../../../../db';
+import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
 import { usePickerView } from '../../usePickerView/usePickerView';
 
@@ -18,7 +19,7 @@ import type { PackState, PackSticker, PackStickers } from './usePack.types';
  * @returns пак, его стикеры и удаление стикера или пака целиком
  */
 export const usePack = (packId: string): PackState => {
-  const { packs, refreshPacks, urlOf, dropUrl } = usePicker();
+  const { packs, refreshPacks, urlOf, dropUrl, showError } = usePicker();
   const { switchTo } = usePickerView();
   const [loaded, setLoaded] = useState<PackStickers | null>(null);
 
@@ -64,20 +65,28 @@ export const usePack = (packId: string): PackState => {
 
   const removeSticker = useCallback(
     async (stickerId: string) => {
-      await deleteSticker(stickerId);
-      dropUrl(stickerId);
-      await refreshPacks();
+      try {
+        await deleteSticker(stickerId);
+        dropUrl(stickerId);
+        await refreshPacks();
+      } catch (error) {
+        showError(errorMessage(error));
+      }
     },
-    [dropUrl, refreshPacks]
+    [dropUrl, refreshPacks, showError]
   );
 
   const removePack = useCallback(async () => {
-    await deletePack(packId);
+    try {
+      await deletePack(packId);
 
-    for (const { id } of stickers || []) dropUrl(id);
-    await refreshPacks();
-    switchTo({ kind: 'recent' });
-  }, [packId, stickers, dropUrl, refreshPacks, switchTo]);
+      for (const { id } of stickers || []) dropUrl(id);
+      await refreshPacks();
+      switchTo({ kind: 'recent' });
+    } catch (error) {
+      showError(errorMessage(error));
+    }
+  }, [packId, stickers, dropUrl, refreshPacks, switchTo, showError]);
 
   return { pack, stickers, removeSticker, removePack };
 };
