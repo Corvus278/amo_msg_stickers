@@ -45,9 +45,10 @@
 - `version`: `node scripts/check-version.mjs` (ниже); на `pull_request` — с `--base origin/master` (рост версии), на
   `workflow_call` — без него (только согласованность). Зависимости не нужны — job без `pnpm i`.
 
-`concurrency: group: ci-${{ github.ref }}, cancel-in-progress: ${{ github.event_name == 'pull_request' }}` на
-`ci.yml` отменяет прогон старого коммита PR. В master отмена выключена: при вызове из релиза `github.ref` —
-`refs/heads/master` у всех прогонов, и отмена сняла бы проверки предыдущего мержа, а с ними и его релиз.
+`concurrency` на `ci.yml`: в PR группа — `github.ref` с отменой, новый коммит снимает прогон старого. Вне PR группа —
+`github.sha` без отмены: в группе GitHub держит один выполняющийся и один ожидающий прогон, а новый ожидающий
+заменяет прежний независимо от `cancel-in-progress`. С общей группой на `refs/heads/master` серия мержей сняла бы
+проверки — а с ними и релиз — промежуточного коммита.
 
 ### Окружение: composite action `.github/actions/setup` на `jdx/mise-action`
 
@@ -100,8 +101,9 @@ Job `release` в `release.yml`: `permissions: contents: write` (только у 
 4. `gh release create v<версия> --target $GITHUB_SHA --title v<версия> --generate-notes <zip> <user.js>` — тег
    создаётся вместе с релизом, заметки — по PR с прошлого тега.
 
-`concurrency: group: release, cancel-in-progress: false` — два мержа подряд выпускаются по очереди, а не отменяют
-друг друга.
+Группы `concurrency` у `release.yml` нет по той же причине: очередь из одного ожидающего прогона теряла бы
+промежуточные версии. Параллельные прогоны выпускают разные теги и не конфликтуют; повтор той же версии ловит проверка
+тега. Цена — при почти одновременных мержах релизы могут появиться не в порядке версий.
 
 ## Risks / Trade-offs
 

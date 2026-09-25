@@ -8,11 +8,11 @@ on:
 permissions:
   contents: read
 
-# В PR новый коммит отменяет прогон старого. В master отмены нет: из релиза все
-# прогоны идут с одним ref, и отмена сняла бы проверки — а с ними и релиз —
-# предыдущего мержа.
+# В PR новый коммит отменяет прогон старого. Вне PR группа — по коммиту: в группе с
+# общим ref GitHub держит лишь один ожидающий прогон и заменяет его новым, так что
+# при серии мержей проверки — а с ними и релиз — промежуточного коммита отменились бы.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

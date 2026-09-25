@@ -24,7 +24,7 @@
 - [x] 3.1 Создать `.github/actions/setup/action.yml`: `jdx/mise-action`, кэш pnpm store по хэшу `pnpm-lock.yaml`,
   `pnpm i --frozen-lockfile` с `HUSKY=0`; проверка — в 3.3
 - [x] 3.2 Создать `.github/workflows/ci.yml`: триггеры `pull_request` в `master` и `workflow_call`, `permissions:
-  contents: read`, `concurrency` с отменой только на `pull_request`, job-ы `lint` (eslint, prettier с `if: !cancelled()`), `typecheck`,
+  contents: read`, `concurrency` по ref с отменой на `pull_request`, по sha вне PR, job-ы `lint` (eslint, prettier с `if: !cancelled()`), `typecheck`,
   `test`, `build` (сборка, zip `amo-stickers-<версия>.zip` из `dist/extension` с `manifest.json` в корне, артефакт с
   zip и `amo-stickers.user.js`), `version` (`fetch-depth: 0`, `--base origin/master` только на `pull_request`);
   проверка: `pnpm lint:format` чистый, YAML разбирается (`node -e` с чтением через `yaml`, либо `actionlint`, если
@@ -33,7 +33,7 @@
 ## 4. Workflow релиза
 
 - [x] 4.1 Создать `.github/workflows/release.yml`: `push` в `master`, job `ci` через `uses: ./.github/workflows/ci.yml`,
-  job `release` с `needs: ci`, `permissions: contents: write`, `concurrency: release` без отмены; шаги: версия из
+  job `release` с `needs: ci`, `permissions: contents: write`, без группы `concurrency`; шаги: версия из
   `package.json`, пропуск с `::warning::` при существующем теге `v<версия>`, `download-artifact`,
   `gh release create v<версия> --target $GITHUB_SHA --generate-notes` с zip и userscript-ом; проверка: YAML
   разбирается, `pnpm lint:format` чистый
@@ -52,7 +52,7 @@
   `amo-stickers.user.js`
 - [x] 6.2 Негативная проверка в PR: временный коммит с нарушением prettier — падает только `lint`; откатить коммит
   (revert), статусы снова зелёные
-- [ ] 6.3 Скачать артефакт PR, распаковать zip, «Загрузить распакованное» в Chrome; проверка: расширение без ошибок
+- [x] 6.3 Скачать артефакт PR, распаковать zip, «Загрузить распакованное» в Chrome; проверка: расширение без ошибок
   манифеста, версия `0.4.0`
 - [ ] 6.4 После мержа (squash) — проверка: прогон `release.yml` зелёный, есть тег `v0.4.0` на коммите мержа и релиз
   `v0.4.0` с `amo-stickers-0.4.0.zip` и `amo-stickers.user.js` (`gh release view v0.4.0`)
