@@ -1,14 +1,14 @@
 ## 1. Подготовка
 
-- [ ] 1.1 Завести issue «UI пикера на Preact и Tailwind» и ветку `feature/<N>-preact-tailwind-picker` от свежего `master` по воркфлоу `CLAUDE.md`; проверка — `gh issue view <N>` открыт, `git branch --show-current` совпадает
-- [ ] 1.2 Замерить размер `dist/extension/content.js` и `dist/amo-stickers.user.js` после `pnpm build` на `master` и записать цифры в описание будущего PR; проверка — цифры записаны
+- [x] 1.1 Завести issue «UI пикера на Preact и Tailwind» и ветку `feature/<N>-preact-tailwind-picker` от свежего `master` по воркфлоу `CLAUDE.md`; проверка — `gh issue view <N>` открыт, `git branch --show-current` совпадает
+- [x] 1.2 Замерить размер `dist/extension/content.js` и `dist/amo-stickers.user.js` после `pnpm build` на `master` и записать цифры в описание будущего PR; проверка — цифры записаны
 
 ## 2. Сборка и токены
 
-- [ ] 2.1 Добавить зависимости: `preact` в `dependencies`, `clsx` в `dependencies`, `tailwindcss@^3.4` и `postcss` в `devDependencies`; проверка — `pnpm i` без ошибок, версии в `package.json`
-- [ ] 2.2 Включить JSX Preact в `tsconfig.json` (`jsx: react-jsx`, `jsxImportSource: preact`) и в общих опциях `build.mjs`; добавить `tailwind.config.ts` в `include` tsconfig, чтобы его видел projectService eslint; проверка — `pnpm typecheck` и `pnpm lint:es` проходят на пустом `.tsx`-компоненте
-- [ ] 2.3 Создать `tailwind.config.ts`: `darkMode: 'selector'`, `content: ['src/core/ui/**/*.{ts,tsx}']`, палитра, `fontSize`, `boxShadow`, `dropShadow` на уровне `theme`, `borderRadius`, `fontFamily`, `spacing`, `transitionDuration`, `transitionTimingFunction`, `zIndex` в `extend` — значения один в один с токенами amo (D2); проверка — выборочная сверка 10 токенов (все цвета из таблицы в `design.md` Context, `text-xsm`, `rounded-lgx`, `duration-base`) с `dev/amo.css`
-- [ ] 2.4 Создать `src/core/ui/picker.css` (директивы Tailwind, `:host { all: initial }`) и плагин esbuild в `build.mjs`: `onLoad` прогоняет `picker.css` через `postcss([tailwindcss(config)])`, отдаёт `loader: 'text'`, `watchFiles` — `src/core/ui/**/*.tsx` и `tailwind.config.ts`; проверка — `pnpm build` кладёт в оба бандла CSS с классом из тестового компонента, в `pnpm watch` новый класс в `.tsx` появляется в бандле без перезапуска
+- [x] 2.1 Добавить зависимости: `preact` в `dependencies`, `clsx` в `dependencies`, `tailwindcss@^3.4` и `postcss` в `devDependencies`; проверка — `pnpm i` без ошибок, версии в `package.json`
+- [x] 2.2 Включить JSX Preact в `tsconfig.json` (`jsx: react-jsx`, `jsxImportSource: preact`) и в общих опциях `build.mjs`; добавить `tailwind.config.ts` в `include` tsconfig, чтобы его видел projectService eslint; проверка — `pnpm typecheck` и `pnpm lint:es` проходят на пустом `.tsx`-компоненте
+- [x] 2.3 Создать `tailwind.config.ts`: `darkMode: 'selector'`, `content: ['src/core/ui/**/*.{ts,tsx}']`, палитра, `fontSize`, `boxShadow`, `dropShadow` на уровне `theme`, `borderRadius`, `fontFamily`, `spacing`, `transitionDuration`, `transitionTimingFunction`, `zIndex` в `extend` — значения один в один с токенами amo (D2); проверка — выборочная сверка 10 токенов (все цвета из таблицы в `design.md` Context, `text-xsm`, `rounded-lgx`, `duration-base`) с `dev/amo.css`
+- [x] 2.4 Создать `src/core/ui/picker.css` (директивы Tailwind, `:host { all: initial }`) и плагин esbuild в `build.mjs`: `onLoad` прогоняет `picker.css` через `postcss([tailwindcss(config)])`, отдаёт `loader: 'text'`, `watchFiles` — `src/core/ui/**/*.tsx` и `tailwind.config.ts`; проверка — `pnpm build` кладёт в оба бандла CSS с классом из тестового компонента, в `pnpm watch` новый класс в `.tsx` появляется в бандле без перезапуска
 
 ## 3. Фасад и каркас пикера
 
