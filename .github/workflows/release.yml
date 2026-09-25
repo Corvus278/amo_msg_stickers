@@ -9,7 +9,8 @@ permissions:
 
 # Группы concurrency нет намеренно: GitHub держит в группе лишь один ожидающий
 # прогон и заменяет его новым — при серии мержей промежуточная версия осталась бы
-# без релиза. Параллельные прогоны выпускают разные теги и друг другу не мешают.
+# без релиза. Параллельные прогоны выпускают разные теги; «Latest» выставляет шаг
+# после создания релиза.
 
 jobs:
   ci:
@@ -55,5 +56,16 @@ jobs:
             --target "${GITHUB_SHA}" \
             --title "${TAG}" \
             --generate-notes \
+            --latest=false \
             "release/amo-stickers-${VERSION}.zip" \
             release/amo-stickers.user.js
+
+      # «Latest» (на него ведёт README) — всегда наибольшая версия, а не последний
+      # завершившийся прогон: параллельный прогон меньшей версии может закончиться
+      # позже. Последний завершившийся прогон видит все теги и ставит верный.
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(git ls-remote --tags --refs origin 'v*' | sed 's#.*refs/tags/##' | sort -V | tail -n 1)
+          gh release edit "${latest}" --latest
