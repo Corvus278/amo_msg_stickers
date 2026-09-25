@@ -1,8 +1,3 @@
-/**
- * Сетка иконок вкладок пикера.
- */
-const VIEW_BOX_24 = '0 0 24 24';
-
 const svg = (viewBox: string, body: string, attrs = '') => {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" ${attrs}>${body}</svg>`;
 };
@@ -17,23 +12,3 @@ export const stickerIcon = (className: string) => {
     `class="${className}"`
   );
 };
-
-export const CLOCK_ICON = svg(
-  VIEW_BOX_24,
-  '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.8a8.2 8.2 0 1 0 0 16.4 8.2 8.2 0 0 0 0-16.4Zm0 2.7c.5 0 .9.4.9.9v4.23l2.74 2.74a.9.9 0 1 1-1.28 1.27l-3-3a.9.9 0 0 1-.26-.64V7.4c0-.5.4-.9.9-.9Z"/>'
-);
-
-export const PLUS_ICON = svg(
-  VIEW_BOX_24,
-  '<path d="M12 4c.5 0 .9.4.9.9v6.2h6.2a.9.9 0 1 1 0 1.8h-6.2v6.2a.9.9 0 1 1-1.8 0v-6.2H4.9a.9.9 0 1 1 0-1.8h6.2V4.9c0-.5.4-.9.9-.9Z"/>'
-);
-
-export const SETTINGS_ICON = svg(
-  VIEW_BOX_24,
-  '<path fill-rule="evenodd" d="M4 6.1h9.2a2.5 2.5 0 0 1 4.6 0H20a.9.9 0 1 1 0 1.8h-2.2a2.5 2.5 0 0 1-4.6 0H4a.9.9 0 0 1 0-1.8Zm11.5.2a.7.7 0 1 0 0 1.4.7.7 0 0 0 0-1.4ZM4 16.1h2.2a2.5 2.5 0 0 1 4.6 0H20a.9.9 0 1 1 0 1.8h-9.2a2.5 2.5 0 0 1-4.6 0H4a.9.9 0 0 1 0-1.8Zm4.5.2a.7.7 0 1 0 0 1.4.7.7 0 0 0 0-1.4Z"/>'
-);
-
-export const SMILE_ICON = svg(
-  VIEW_BOX_24,
-  '<path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 1.8a8.2 8.2 0 1 0 0 16.4 8.2 8.2 0 0 0 0-16.4Zm-4.07 9.5a.9.9 0 0 1 1.23.3 3.3 3.3 0 0 0 5.68 0 .9.9 0 1 1 1.53.94 5.1 5.1 0 0 1-8.74 0 .9.9 0 0 1 .3-1.24ZM9 8.2a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6Zm6 0a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6Z"/>'
-);

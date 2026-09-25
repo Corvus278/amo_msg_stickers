@@ -44,6 +44,11 @@ export type GiphyItem = {
   id: string;
 
   /**
+   * Название GIF; пустая строка — названия нет.
+   */
+  title?: string;
+
+  /**
    * Рендишны по имени (`original`, `downsized`, `fixed_width` …); набор зависит от GIF,
    * каждый проверяется `isGiphyImage` при выборе.
    */
@@ -98,6 +103,11 @@ export type TenorResult = {
   id: string;
 
   /**
+   * Описание GIF; нет или пустая строка — описания нет.
+   */
+  content_description?: string;
+
+  /**
    * Файлы по формату (`gif`, `tinygif`); приходят только запрошенные в `media_filter`,
    * каждый проверяется `isTenorMedia` при выборе.
    */
@@ -142,6 +152,7 @@ export const isGiphyItem = (value: unknown): value is GiphyItem => {
     isObject(value) &&
     'id' in value &&
     typeof value.id === 'string' &&
+    (!('title' in value) || typeof value.title === 'string') &&
     'images' in value &&
     isObject(value.images)
   );
@@ -182,6 +193,8 @@ export const isTenorResult = (value: unknown): value is TenorResult => {
     isObject(value) &&
     'id' in value &&
     typeof value.id === 'string' &&
+    (!('content_description' in value) ||
+      typeof value.content_description === 'string') &&
     'media_formats' in value &&
     isObject(value.media_formats)
   );

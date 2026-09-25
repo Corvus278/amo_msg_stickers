@@ -78,6 +78,16 @@ declare module 'gifenc' {
 }
 
 /**
+ * CSS собирается плагином в `build.mjs` и приходит в бандл строкой: её вставляют
+ * `<style>` в shadow root пикера. Экспорт по умолчанию — форма, которую даёт loader
+ * `text` esbuild.
+ */
+declare module '*.css' {
+  const css: string;
+  export default css;
+}
+
+/**
  * Расширение глобального `Window` возможно только через `interface`: у `type` нет
  * слияния объявлений.
  */

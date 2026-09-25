@@ -1,6 +1,6 @@
 {
   "name": "amo-stickers",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.6.0",
@@ -33,14 +33,18 @@
     "globals": "17.4.0",
     "husky": "9.1.7",
     "lint-staged": "17.1.0",
+    "postcss": "^8.5.28",
     "prettier": "3.9.5",
+    "tailwindcss": "^3.4.19",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
     "typescript-native": "npm:typescript@^7.0.2",
     "vitest": "^5.0.1"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
     "gifenc": "^1.0.3",
-    "lottie-web": "^5.13.0"
+    "lottie-web": "^5.13.0",
+    "preact": "^10.29.8"
   }
 }

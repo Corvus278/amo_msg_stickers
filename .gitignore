@@ -10,3 +10,4 @@ dev/amo.css
 local/
 *.local.*
 CLAUDE.local.md
+.env

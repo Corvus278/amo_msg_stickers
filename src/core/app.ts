@@ -1,5 +1,5 @@
+import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
-import { Picker } from './ui/picker';
 import { composerOf, findComposers, isDarkTheme } from './amoDom';
 import type { Composer } from './amoDom.types';
 import { getSticker, pushRecent } from './db';
@@ -78,7 +78,7 @@ export const start = (host: Host) => {
     await pushRecent(item);
   };
 
-  const picker = new Picker(host, {
+  const picker = createPicker(host, {
     onSend: send,
     onClose: () => {
       setIconOpen(activeButton, false);
@@ -101,9 +101,9 @@ export const start = (host: Host) => {
      * Хост попапа живёт внутри кнопки: position:fixed считается от ближайшего предка
      * с transform — контейнера поля ввода, как у родного попапа эмодзи.
      */
-    button.append(picker.host);
+    button.append(picker.element);
     setIconOpen(button, true);
-    void picker.open();
+    picker.open();
   };
 
   const mount = ({ emojiWrap }: Composer) => {
@@ -131,7 +131,7 @@ export const start = (host: Host) => {
       if (!composer.row.querySelector(`:scope > [${MARK}]`)) mount(composer);
     }
 
-    if (picker.isOpen && !picker.host.isConnected) picker.close();
+    if (picker.isOpen && !picker.element.isConnected) picker.close();
   };
 
   let isScanScheduled = false;

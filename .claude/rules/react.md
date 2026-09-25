@@ -21,6 +21,8 @@ UI пишется на Preact; правила сформулированы в т
 11. Для compound-компонентов используй слоты, композицию, контекст — вместо флагов и props drilling.
 12. Хендлеры именуй по схеме `handle{Объект}{Событие}` (`handleConfirmClick`, `handleCancelClick`,
     `handleSearchInput`). *(см. ниже)*
+13. Классы по варианту или состоянию — через `cva` (`class-variance-authority`), не `switch`, тернарником или
+    условной склейкой. *(см. ниже)*
 
 ## Практики React
 
@@ -59,6 +61,63 @@ const handleSearchInput = (event: Event) => search(event.currentTarget.value);
 const handleConfirm = () => onConfirm(value);
 const handleCancel = () => dismiss();
 const handleClick = () => {};
+```
+
+---
+
+### #13. Варианты классов — через `cva`
+
+**Why:** `cva` держит все варианты компонента в одной декларации: видно, какие классы у какого значения, тип пропа
+выводится из неё же (`VariantProps`), а новое значение варианта — одна строка вместо ветки `switch`.
+
+**Когда применять:** классы выбираются по пропу, состоянию или флагу — вид кнопки, «занято», «перетаскивают файл».
+Несколько независимых осей — отдельные ключи `variants`; сочетание осей — `compoundVariants`; вид по умолчанию —
+`defaultVariants`. Декларация — `camelCase` с суффиксом `Variants` и живёт в `.tsx` компонента: Tailwind ищет классы
+только в `src/core/ui/**/*.tsx`, и классы из `.ts` в CSS пикера не попадут. Тип пропа в `*.types.ts` берётся из неё
+через `VariantProps` (`import type` из файла компонента).
+
+**Когда не применять:** состояние, которое уже выражено вариантом Tailwind по атрибуту или предку (`aria-selected:`,
+`aria-pressed:`, `disabled:`, `group-hover:`, `dark:`), — это не условный класс, он остаётся в строке классов.
+Склейка без вариантов — `cx` из `class-variance-authority`, отдельный `clsx` не ставим. `tailwind-merge` не берём:
+конфликтующих утилит на одном элементе нет, а токены amo ломают merge без отдельного конфига.
+
+**Хорошо** (`Button.tsx`):
+
+```tsx
+export const buttonVariants = cva('shrink-0 rounded-lg disabled:opacity-50', {
+  variants: {
+    variant: {
+      primary: 'h-8 px-3.5 bg-blue-50 text-white-0',
+      danger: 'h-5.5 px-1.5 bg-transparent text-red-30',
+    },
+  },
+});
+
+<button className={buttonVariants({ variant })} />
+```
+
+**Хорошо** (`Button.types.ts`):
+
+```ts
+import type { VariantProps } from 'class-variance-authority';
+
+import type { buttonVariants } from './Button';
+
+export type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
+```
+
+**Плохо:**
+
+```tsx
+const getVariantClass = (variant: ButtonVariant) => {
+  switch (variant) {
+    case 'primary':
+      return 'h-8 px-3.5 bg-blue-50 text-white-0';
+    // …
+  }
+};
+
+<div className={cx('group relative', isBusy && 'pointer-events-none opacity-40')} />
 ```
 
 ---

@@ -110,6 +110,7 @@ const giphy = async (
       acc.push({
         id: item.id,
         provider: 'giphy',
+        title: item.title || undefined,
         url: send.url,
         previewUrl: preview.url,
         width: Number(preview.width),
@@ -158,6 +159,7 @@ const klipy = async (
       acc.push({
         id: result.id,
         provider: 'klipy',
+        title: result.content_description || undefined,
         url: send.url,
         previewUrl: preview.url,
         width,
