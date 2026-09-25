@@ -18,8 +18,6 @@ export const buttonVariants = cva(
       variant: {
         primary:
           'h-8 px-3.5 text-xsm font-semibold bg-blue-50 text-white-0 dark:bg-beige-70 dark:text-gray-10',
-        secondary:
-          'h-8 px-3.5 text-xsm font-semibold bg-cadetGray-30/[.12] text-gray-30 dark:bg-white-0/[.06] dark:text-gray-40',
         danger: 'h-5.5 px-1.5 text-xs font-normal bg-transparent text-red-30',
       },
     },

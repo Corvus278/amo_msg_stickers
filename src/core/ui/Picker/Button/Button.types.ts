@@ -11,8 +11,8 @@ export type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['var
 
 export type ButtonProps = {
   /**
-   * Вид кнопки: основная — акцентная заливка, второстепенная — заливка поля ввода,
-   * опасная — мелкая текстовая кнопка цвета ошибки.
+   * Вид кнопки: основная — акцентная заливка, опасная — мелкая текстовая кнопка цвета
+   * ошибки.
    */
   variant: ButtonVariant;
 
