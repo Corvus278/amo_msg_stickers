@@ -14,7 +14,9 @@ const BYTES_IN_KB = 1024;
 /**
  * Черновик своего стикера: исходный файл, подпись и собранный из них GIF с превью.
  *
- * Пока идёт пересборка, на экране остаётся прежнее превью, а сохранение недоступно.
+ * Пока идёт пересборка, на экране остаётся прежнее превью, а сохранение недоступно. Пока
+ * стикер сохраняется, повторное сохранение тоже недоступно: иначе двойной клик записал бы
+ * два одинаковых стикера.
  * Результат пересборки, которую обогнала следующая (новый файл, новая подпись) или
  * размонтирование формы, отбрасывается, и URL для него не создаётся. При ошибке
  * конвертации превью убирается: сохранять нечего.
@@ -32,6 +34,7 @@ export const useStickerDraft = (): StickerDraftState => {
   const [captionText, setCaptionText] = useState('');
   const [draft, setDraft] = useState<StickerDraft | null>(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -95,8 +98,10 @@ export const useStickerDraft = (): StickerDraftState => {
   }, []);
 
   const save = useCallback(async () => {
-    if (!draft || isConverting) return;
+    if (!draft || isConverting || isSaving) return;
     const { blob, width, height } = draft.gif;
+
+    setIsSaving(true);
 
     try {
       await putSticker({
@@ -111,14 +116,16 @@ export const useStickerDraft = (): StickerDraftState => {
       switchTo({ kind: 'pack', packId: CUSTOM_PACK_ID });
     } catch (error) {
       showError(errorMessage(error));
+    } finally {
+      setIsSaving(false);
     }
-  }, [draft, isConverting, refreshPacks, switchTo, showError]);
+  }, [draft, isConverting, isSaving, refreshPacks, switchTo, showError]);
 
   return {
     fileName: source?.name || null,
     caption,
     previewUrl: draft?.url || null,
-    isSavable: !!draft && !isConverting,
+    isSavable: !!draft && !isConverting && !isSaving,
     pickFile,
     changeCaption,
     save,

@@ -34,7 +34,7 @@ export type StickerDraftState = {
   previewUrl: string | null;
 
   /**
-   * Стикер готов и не пересобирается: его можно сохранить.
+   * Стикер готов, не пересобирается и ещё не сохраняется: его можно сохранить.
    */
   isSavable: boolean;
 
