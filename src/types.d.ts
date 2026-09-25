@@ -63,6 +63,11 @@ declare module 'gifenc' {
      * Байты GIF, записанные на текущий момент.
      */
     bytes(): Uint8Array<ArrayBuffer>;
+
+    /**
+     * Вид на записанные байты без копирования; действителен до следующей записи.
+     */
+    bytesView(): Uint8Array<ArrayBuffer>;
   };
   export function GIFEncoder(): Encoder;
   export function quantize(

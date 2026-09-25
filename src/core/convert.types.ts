@@ -76,31 +76,6 @@ export type CanvasBox = {
 };
 
 /**
- * Кадр, переведённый в индексы палитры GIF.
- */
-export type IndexedFrame = {
-  /**
-   * Индекс цвета палитры для каждого пикселя.
-   */
-  index: Uint8Array;
-
-  /**
-   * Палитра кадра в rgb; при прозрачности последний цвет — зарезервированный прозрачный.
-   */
-  palette: number[][];
-
-  /**
-   * Есть ли в кадре прозрачные пиксели.
-   */
-  hasTransparent: boolean;
-
-  /**
-   * Индекс прозрачного цвета в палитре; имеет смысл только при `hasTransparent`.
-   */
-  transparentIndex: number;
-};
-
-/**
  * Поля Lottie JSON, нужные для раскадровки.
  */
 export type LottieJson = {
