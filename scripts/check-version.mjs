@@ -46,11 +46,10 @@ if (consistencyError) {
 }
 
 if (base) {
-  const baseVersion = JSON.parse(
-    execFileSync('git', ['show', `${base}:package.json`], { encoding: 'utf8' })
-  ).version;
-
   try {
+    const baseVersion = JSON.parse(
+      execFileSync('git', ['show', `${base}:package.json`], { encoding: 'utf8' })
+    ).version;
     const growthError = checkVersionGrowth(version, baseVersion);
 
     if (growthError) {
