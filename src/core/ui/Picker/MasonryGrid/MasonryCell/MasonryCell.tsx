@@ -2,7 +2,7 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
 import type { SendItem } from '../../../../db.types';
-import { useCellSend } from '../../StickerCell/useCellSend/useCellSend';
+import { useCellSend } from '../../useCellSend/useCellSend';
 
 import type { MasonryCellProps } from './MasonryCell.types';
 

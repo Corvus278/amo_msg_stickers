@@ -2,11 +2,12 @@ import type { FunctionComponent as FC } from 'preact';
 
 import { usePicker } from '../PickerProvider/usePicker';
 import { Tab } from '../Tab/Tab';
-import { ClockIcon } from '../TabIcon/ClockIcon/ClockIcon';
-import { PlusIcon } from '../TabIcon/PlusIcon/PlusIcon';
-import { SettingsIcon } from '../TabIcon/SettingsIcon/SettingsIcon';
 import { TabIcon } from '../TabIcon/TabIcon';
 import type { View } from '../usePickerView/usePickerView.types';
+
+import { ClockIcon } from './ClockIcon/ClockIcon';
+import { PlusIcon } from './PlusIcon/PlusIcon';
+import { SettingsIcon } from './SettingsIcon/SettingsIcon';
 
 const RECENT_VIEW: View = { kind: 'recent' };
 

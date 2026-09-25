@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'preact/hooks';
 
-import type { SendItem } from '../../../../db.types';
-import { usePicker } from '../../PickerProvider/usePicker';
+import type { SendItem } from '../../../db.types';
+import { usePicker } from '../PickerProvider/usePicker';
 
 import type { CellSend } from './useCellSend.types';
 

@@ -1,7 +1,8 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
-import { useCellSend } from './useCellSend/useCellSend';
+import { useCellSend } from '../useCellSend/useCellSend';
+
 import type { StickerCellProps } from './StickerCell.types';
 
 /**
