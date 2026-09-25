@@ -64,9 +64,10 @@ src/
       icons.ts          `stickerIcon` — svg-строка кнопки стикеров в DOM amo
       Picker/           компоненты и хуки пикера, каждый в своём каталоге:
                         Picker.tsx — панель; PickerProvider/ — контекст (окружение, настройки, паки, статус,
-                        отправка, object URL); Tabs/, Tab/, TabIcon/ — вкладки; RecentView/, GifView/, PackView/,
-                        AddView/, SettingsView/ — представления; Button/, TextInput/, EmptyState/, StatusBar/ —
-                        примитивы; StickerGrid/, StickerCell/, MasonryGrid/ — сетки; use*/ — хуки
+                        отправка, object URL, импорт из Telegram); Tabs/, Tab/, TabIcon/ — вкладки; RecentView/,
+                        GifView/, PackView/, AddView/, SettingsView/ — представления; Button/, TextInput/,
+                        EmptyState/, StatusBar/ — примитивы; StickerGrid/, StickerCell/, MasonryGrid/ — сетки;
+                        use*/ — хуки
   extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
                   messages.types.ts (протокол content ↔ background), manifest.json
   userscript/     index.ts — Host для менеджеров userscript-ов

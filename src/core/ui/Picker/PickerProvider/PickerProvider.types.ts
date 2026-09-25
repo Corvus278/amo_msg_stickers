@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 
 import type { Pack, SendItem } from '../../../db.types';
 import type { Host, Settings } from '../../../host.types';
-import type { PickerViewValue } from '../usePickerView/usePickerView.types';
+import type { PickerViewValue, View } from '../usePickerView/usePickerView.types';
 
 export type PickerStatus = {
   /**
@@ -78,6 +78,62 @@ export type PickerContextValue = {
    * Отзывает URL удалённого стикера.
    */
   dropUrl: (id: string) => void;
+
+  /**
+   * Импорт пака из Telegram: его ход переживает уход с вкладки «Добавить стикеры».
+   */
+  packImport: PackImportState;
+};
+
+export type PackImportState = {
+  /**
+   * Идёт импорт: повторный запуск недоступен, в том числе после возврата на вкладку.
+   */
+  isImporting: boolean;
+
+  /**
+   * Доля обработанных стикеров в процентах; `null` — импорт ещё не запускался, полоса
+   * прогресса скрыта.
+   */
+  percent: number | null;
+
+  /**
+   * Импортирует пак по ссылке или имени; пока идёт импорт, вызов ничего не делает.
+   * Промис не отклоняется: ошибка уходит в статус, по успеху открывается вкладка пака.
+   */
+  importPack: (link: string) => Promise<void>;
+};
+
+export type PackImportOptions = {
+  /**
+   * Окружение: сеть для Bot API и загрузки файлов.
+   */
+  env: Host;
+
+  /**
+   * Настройки с токеном Telegram-бота.
+   */
+  settings: Settings;
+
+  /**
+   * Перечитывает паки: вкладка пака появляется после первого стикера и по завершении.
+   */
+  refreshPacks: () => Promise<void>;
+
+  /**
+   * Показывает ход импорта и итог в статусе.
+   */
+  showStatus: (text: string) => void;
+
+  /**
+   * Показывает ошибку импорта в статусе.
+   */
+  showError: (text: string) => void;
+
+  /**
+   * Открывает вкладку импортированного пака.
+   */
+  switchTo: (view: View) => void;
 };
 
 export type PickerProviderProps = {

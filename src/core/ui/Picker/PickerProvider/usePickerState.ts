@@ -13,6 +13,7 @@ import type {
   PickerStateValue,
   PickerStatus,
 } from './PickerProvider.types';
+import { usePackImport } from './usePackImport';
 
 const INITIAL_VIEW: View = { kind: 'recent' };
 
@@ -71,6 +72,15 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
     setStatus(null);
   }, []);
 
+  const packImport = usePackImport({
+    env,
+    settings,
+    refreshPacks,
+    showStatus,
+    showError,
+    switchTo,
+  });
+
   return {
     picker: {
       env,
@@ -85,6 +95,7 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
       send,
       urlOf,
       dropUrl,
+      packImport,
     },
     view: { view, switchTo },
   };
