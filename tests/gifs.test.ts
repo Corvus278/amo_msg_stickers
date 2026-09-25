@@ -70,14 +70,19 @@ describe('fetchGifs: GIPHY', () => {
     ).toEqual(['ok']);
   });
 
-  it.each([{}, { data: [] }, { data: 'x', pagination: {} }, null, 'html'])(
-    'битый ответ %j — ошибка источника',
-    async (json) => {
-      await expect(
-        fetchGifs(fakeHost({ json }), SETTINGS, 'giphy-gifs', '', null)
-      ).rejects.toThrow('GIPHY: неожиданный ответ');
-    }
-  );
+  it.each([
+    {},
+    { data: [] },
+    { data: 'x', pagination: { offset: 0, count: 0, total_count: 0 } },
+    { data: [], pagination: {} },
+    { data: [], pagination: { offset: '0', count: 0, total_count: 0 } },
+    null,
+    'html',
+  ])('битый ответ %j — ошибка источника', async (json) => {
+    await expect(
+      fetchGifs(fakeHost({ json }), SETTINGS, 'giphy-gifs', '', null)
+    ).rejects.toThrow('GIPHY: неожиданный ответ');
+  });
 });
 
 describe('fetchGifs: KLIPY', () => {

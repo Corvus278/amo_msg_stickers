@@ -47,6 +47,6 @@ describe('readTgs', () => {
   });
 
   it('отклоняет не-gzip', async () => {
-    await expect(readTgs(new Blob(['{"w":1}']))).rejects.toThrow();
+    await expect(readTgs(new Blob(['{"w":1}']))).rejects.toThrow('Файл .tgs повреждён');
   });
 });

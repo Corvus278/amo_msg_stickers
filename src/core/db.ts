@@ -96,9 +96,7 @@ export const putPack = async (pack: Pack) => {
 };
 
 export const ensureCustomPack = async (): Promise<Pack> => {
-  const existing = await promisify<Pack | undefined>(
-    (await store(STORE.packs)).get(CUSTOM_PACK_ID)
-  );
+  const existing = await getPack(CUSTOM_PACK_ID);
 
   if (existing) return existing;
   const pack: Pack = {

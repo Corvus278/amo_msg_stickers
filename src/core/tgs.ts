@@ -8,6 +8,24 @@ import { BYTES_IN_MB, readLimited } from './net';
 const MAX_TGS_JSON_BYTES = 8 * BYTES_IN_MB;
 
 const NOT_LOTTIE = 'Файл .tgs не похож на Lottie-анимацию';
+const BROKEN_GZIP = 'Файл .tgs повреждён';
+
+/**
+ * Битый gzip распаковщик отдаёт `TypeError` с текстом браузера, а пикер показывает текст
+ * ошибки как есть — подменяем его своим. Ошибка лимита — обычный `Error`, она проходит
+ * без изменений.
+ *
+ * @param stream — распакованный поток `.tgs`
+ * @returns байты JSON
+ */
+const readUnzipped = async (stream: ReadableStream<Uint8Array>) => {
+  try {
+    return await readLimited(stream, MAX_TGS_JSON_BYTES);
+  } catch (error) {
+    if (error instanceof TypeError) throw new Error(BROKEN_GZIP, { cause: error });
+    throw error;
+  }
+};
 
 /**
  * Распаковывает `.tgs` и проверяет, что внутри Lottie, пригодный для раскадровки. Больше
@@ -17,9 +35,8 @@ const NOT_LOTTIE = 'Файл .tgs не похож на Lottie-анимацию';
  * @returns Lottie JSON
  */
 export const readTgs = async (blob: Blob) => {
-  const bytes = await readLimited(
-    blob.stream().pipeThrough(new DecompressionStream('gzip')),
-    MAX_TGS_JSON_BYTES
+  const bytes = await readUnzipped(
+    blob.stream().pipeThrough(new DecompressionStream('gzip'))
   );
   let json: unknown;
 

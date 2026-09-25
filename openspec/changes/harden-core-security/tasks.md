@@ -1,6 +1,6 @@
 ## 1. Сетевая политика и лимит загрузки
 
-- [x] 1.1 `src/core/net.ts`: `isAllowedUrl` (https, хосты `api.telegram.org` / `giphy.com` / `klipy.com` с поддоменами, разбор через `URL`) и `readLimited(stream, maxBytes)` с `reader.cancel()` при превышении; проверка — `tests/net.test.ts`: разрешённые хосты, `http:`, `giphy.com.evil.example`, `evilgiphy.com`, `https://api.telegram.org@evil.example/`, битый URL; поток меньше, равный и больше лимита, отмена источника при превышении
+- [x] 1.1 `src/core/net.ts`: `isAllowedUrl` (https, хост `api.telegram.org` точно, `giphy.com` / `klipy.com` с поддоменами, разбор через `URL`) и `readLimited(stream, maxBytes)` с `reader.cancel()` при превышении; проверка — `tests/net.test.ts`: разрешённые хосты, `http:`, `giphy.com.evil.example`, `evilgiphy.com`, `https://api.telegram.org@evil.example/`, битый URL; поток меньше, равный и больше лимита, отмена источника при превышении
 - [x] 1.2 Контракт `Host` (`host.types.ts`): `fetchJson(url): Promise<unknown>`, `fetchBlob(url, maxBytes)`; `FetchRequest.maxBytes` в `messages.types.ts`; проверка — `pnpm typecheck` проходит, в `src/extension/content.ts` и `src/userscript/index.ts` нет `as T`
 - [x] 1.3 Service worker: политика до `fetch` и по `res.url` после, проверка `sender.id === chrome.runtime.id` и `sender.tab`, `Content-Length` + `readLimited`; проверка — `tests/background.test.ts` с заглушкой `chrome`: чужой хост → `ok: false` без вызова `fetch`, редирект на чужой хост → `ok: false`, чужой `sender.id` или сообщение без `tab` → слушатель возвращает `false`, тело больше лимита → «Файл больше N МБ»
 - [x] 1.4 Userscript: та же политика и лимит через общие `fetchChecked` / `readResponseLimited` из `core/net.ts`; проверка — `tests/net.test.ts`: чужой хост не вызывает `fetch`, редирект на чужой хост и превышение лимита → ошибка (сам `userscript/index.ts` при импорте запускает `start()` и в Node не тестируется)
@@ -22,7 +22,7 @@
 
 ## 5. Версия, документация, приёмка
 
-- [x] 5.1 Версия 0.2.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка — `grep -n '0\.2\.0'` находит все три места, `grep -rn '0\.1\.0' package.json src/extension/manifest.json build.mjs` пуст
+- [x] 5.1 Версия 0.3.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка — `grep -n '0\.3\.0'` находит все три места, `grep -rn '0\.2\.0' package.json src/extension/manifest.json build.mjs` пуст
 - [x] 5.2 `CLAUDE.md`: новые модули `net.ts`, `gif.ts`, `tgs.ts` в «Структуре», сетевая политика и лимиты в «Как работает», `localhost` только в `pnpm watch`; проверка — `grep -n 'net.ts\|gif.ts\|tgs.ts\|localhost' CLAUDE.md` находит новые строки, описание совпадает с кодом
 - [x] 5.3 `pnpm lint`, `pnpm test`, `pnpm build` зелёные; в `dist/extension/content.js` по-прежнему нет `eval(` и `new Function(`; проверка — вывод команд приложен к PR
 - [x] 5.4 Стенд `dev/harness.html` с userscript-сборкой: отправка своего стикера по-прежнему работает, импорт `.tgs` через «Добавить» даёт анимацию; проверка — скриншот стенда

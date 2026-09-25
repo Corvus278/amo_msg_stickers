@@ -81,7 +81,7 @@ describe('importTelegramSet', () => {
     expect(onProgress).toHaveBeenLastCalledWith({ done: 2, total: 2, title: 'Пак' });
   });
 
-  it.each(['/etc/passwd', 'a?x=1', 'a#b', 'a%2e%2e/b', ''])(
+  it.each(['stickers/../../getMe', '/etc/passwd', 'a?x=1', 'a#b', 'a%2e%2e/b', ''])(
     'не запрашивает файл по пути %j',
     async (path) => {
       const host = fakeHost({

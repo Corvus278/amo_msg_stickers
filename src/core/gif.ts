@@ -13,11 +13,17 @@ const SIGNATURE_BYTES = 6;
  * Сигнатура и Logical Screen Descriptor.
  */
 const HEADER_BYTES = 13;
+const SCREEN_HEIGHT_OFFSET = 8;
 const SCREEN_PACKED_OFFSET = 10;
 
 const EXTENSION_INTRODUCER = 0x21;
 const IMAGE_SEPARATOR = 0x2c;
 const TRAILER = 0x3b;
+
+/**
+ * Интродьюсер расширения и байт его метки — за ними начинаются sub-block-и.
+ */
+const EXTENSION_HEADER_BYTES = 2;
 
 /**
  * Image Descriptor (без таблицы цветов) и байт минимального размера кода LZW за ним.
@@ -96,7 +102,7 @@ const hasGifSignature = (bytes: Uint8Array) => {
 export const inspectGif = (bytes: Uint8Array): GifInfo | null => {
   if (bytes.length < HEADER_BYTES || !hasGifSignature(bytes)) return null;
   const width = readU16(bytes, SIGNATURE_BYTES);
-  const height = readU16(bytes, SIGNATURE_BYTES + 2);
+  const height = readU16(bytes, SCREEN_HEIGHT_OFFSET);
 
   if (!width || !height) return null;
   let pos = HEADER_BYTES + colorTableBytes(bytes[SCREEN_PACKED_OFFSET] || 0);
@@ -109,10 +115,7 @@ export const inspectGif = (bytes: Uint8Array): GifInfo | null => {
   while (pos >= 0 && pos < bytes.length) {
     switch (bytes[pos]) {
       case EXTENSION_INTRODUCER: {
-        /**
-         * За интродьюсером — байт метки расширения, затем его sub-block-и.
-         */
-        pos = skipSubBlocks(bytes, pos + 2);
+        pos = skipSubBlocks(bytes, pos + EXTENSION_HEADER_BYTES);
         break;
       }
 
