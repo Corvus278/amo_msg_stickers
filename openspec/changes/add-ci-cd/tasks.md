@@ -3,7 +3,7 @@
 - [x] 1.1 Завести issue «CI: проверки PR и релиз из master» (`gh issue create --label enhancement`), ветку
   `chore/<N>-ci-cd` от свежего `master`; проверка: `git log master..HEAD` пуст до первых правок
 - [x] 1.2 Поднять версию до `0.4.0` в `package.json` (`pnpm version 0.4.0 --no-git-tag-version`),
-  `src/extension/manifest.json` и `@version` в `build.mjs`; проверка: `rg '0\.3\.0' package.json build.mjs src/extension/manifest.json` — три совпадения
+  `src/extension/manifest.json` и `@version` в `build.mjs`; проверка: `rg '0\.4\.0' package.json build.mjs src/extension/manifest.json` — три совпадения
 
 ## 2. Проверка версии
 
