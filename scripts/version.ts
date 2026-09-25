@@ -56,9 +56,14 @@ export const readBannerVersion = (banner: string): string | undefined => {
 
 /**
  * @param sources — версии из всех мест, где она записана
- * @returns текст ошибки со всеми значениями и источниками; `undefined` — версии совпадают
+ * @returns текст ошибки со всеми значениями и источниками; `undefined` — версии совпадают.
+ * Пустой список — ошибка: сверять не с чем, и молчаливый успех спрятал бы поломку вызова.
  */
 export const checkVersionConsistency = (sources: VersionSource[]): string | undefined => {
+  if (sources.length === 0) {
+    return 'Не заданы источники версии';
+  }
+
   const listing = sources
     .map(({ source, version }) => {
       return `${source} — ${version || 'не найдена'}`;

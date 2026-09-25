@@ -91,6 +91,10 @@ describe('checkVersionConsistency', () => {
 
     expect(error).toContain('build.mjs — не найдена');
   });
+
+  it('не считает пустой список источников согласованным', () => {
+    expect(checkVersionConsistency([])).toBe('Не заданы источники версии');
+  });
 });
 
 describe('checkVersionGrowth', () => {
