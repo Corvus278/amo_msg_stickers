@@ -54,9 +54,6 @@ const panelVariants = cva([...PANEL_CLASS, OPEN_ANIMATION_CLASS], {
       true: 'dark',
     },
   },
-  defaultVariants: {
-    isOpen: false,
-  },
 });
 
 const renderView = (view: View, isOpen: boolean) => {

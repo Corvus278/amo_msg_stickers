@@ -12,9 +12,6 @@ const statusVariants = cva(
         false: 'text-cadetGray-30 dark:text-gray-70',
       },
     },
-    defaultVariants: {
-      isError: false,
-    },
   }
 );
 

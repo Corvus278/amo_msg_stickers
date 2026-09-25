@@ -18,9 +18,6 @@ const zoneVariants = cva(
           'border-cadetGray-30/[.28] text-cadetGray-30 dark:border-white-0/[.1] dark:text-gray-70',
       },
     },
-    defaultVariants: {
-      isDragOver: false,
-    },
   }
 );
 
