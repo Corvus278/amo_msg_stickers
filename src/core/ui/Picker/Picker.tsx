@@ -21,9 +21,9 @@ import type { PickerProps } from './Picker.types';
  * `left-auto m-0 p-0` снимают стили `<dialog>` браузера: без них панель встала бы по
  * центру между `left: 0` и `right`.
  *
- * Шрифт и межстрочный интервал задаются здесь: `:host { all: initial }` в `picker.css`
- * отменяет их наследование от страницы, а preflight Tailwind вешает их на `html`,
- * которого в shadow root нет.
+ * Шрифт и межстрочный интервал задаются здесь: preflight Tailwind ставит их на `:host`,
+ * но `:host { all: initial }` в `picker.css` идёт позже и отменяет и их, и наследование
+ * от страницы.
  */
 const PANEL_CLASS = [
   'fixed bottom-9.5 right-7.5 z-[2] h-[400px] w-[352px] flex-col overflow-hidden rounded-lgx',
