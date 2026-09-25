@@ -19,7 +19,7 @@ TypeScript (strict) + esbuild, без фреймворка: UI пикера се
 ```bash
 pnpm i
 pnpm build             # dist/extension/* и dist/amo-stickers.user.js
-pnpm watch             # пересборка при изменениях, с inline-sourcemap
+pnpm watch             # пересборка при изменениях, с inline-sourcemap и адресами localhost:3000
 pnpm typecheck         # только проверка типов (TS 7)
 pnpm lint              # eslint + typecheck + prettier --check параллельно
 pnpm lint:fix          # eslint --fix
@@ -35,6 +35,9 @@ pnpm test              # vitest, проект `unit`
 Различия целей спрятаны за интерфейсом `Host` (`core/host.ts`): сеть и хранение настроек. Расширение ходит в сеть
 через service worker — обход CORS; userscript — прямым `fetch` со страницы, под её CORS. Настройки: у
 расширения `chrome.storage.local`, у userscript `localStorage`.
+
+Боевая сборка запускается только на `https://*.amo.tm/*`; `http://localhost:3000/*` и `http://127.0.0.1:3000/*`
+`build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`.
 
 TypeScript в проекте двух версий: `typescript-native` (7.x, нативный tsgo) проверяет типы, `typescript` (6.x) нужен
 только typescript-eslint, который TS 7 пока не поддерживает. `node_modules/.bin/tsc` занят одной из них — проверку
@@ -54,6 +57,10 @@ src/
     convert.ts    любой источник (картинка, GIF, видео, .tgs) → GIF: кадры, палитра, дизеринг, бюджет веса
     db.ts         IndexedDB: паки, стикеры, недавние
     host.ts       интерфейс окружения (`Host`) и настройки (ключи GIPHY/KLIPY, токен Telegram-бота)
+    net.ts        сетевая политика: разрешённые хосты, fetch с проверкой, чтение потока с лимитом
+    gif.ts        проверка GIF по блочной структуре (`inspectGif`)
+    tgs.ts        распаковка `.tgs` с лимитом и проверкой Lottie
+    guards.ts     общий первый шаг гардов ответов API (`isObject`)
     sources/      gifs.ts — поиск GIPHY и KLIPY; telegram.ts — импорт пака через Bot API
     ui/           picker.ts — пикер в Shadow DOM, styles.ts — его CSS, icons.ts — svg-иконки
   extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
@@ -114,6 +121,20 @@ amo перекодирует PNG и WebP в JPEG с белым фоном, бе�
 
 IndexedDB `amo-stickers` на домене amo: паки (`tg:<имя>` для импорта, `custom` — свои стикеры), стикеры (готовые
 GIF-блобы) и недавние (до 40, повторная отправка поднимает элемент наверх). Настройки — через `Host`.
+
+### Внешние данные
+
+Всё, что пришло из сети, проверяется на границе (`core/net.ts`):
+
+- запросы — только `https` к `api.telegram.org`, `giphy.com`, `klipy.com` и их поддоменам, по разобранному
+  `URL`; та же проверка на итоговом адресе после редиректа. Service worker отвечает только content script-ам
+  своего расширения;
+- `Host.fetchJson` возвращает `unknown`: форму ответа сужают гарды в `sources/*.types.ts`. Элемент выдачи с
+  непригодными полями или ссылкой вне политики отбрасывается, битый ответ целиком — ошибка источника;
+- `Host.fetchBlob(url, maxBytes)` читает тело потоком и обрывает его на лимите (в расширении — внутри SW):
+  GIF из поиска — 8 МБ, файл стикера Telegram — 5 МБ;
+- `file_path` Telegram — без `..`, иначе URL схлопнется и запрос с токеном уйдёт в другой метод Bot API;
+- `.tgs` распаковывается не больше 8 МБ и проходит `isLottieJson`; GIF из поиска перед вставкой — `inspectGif`.
 
 ## Тесты
 

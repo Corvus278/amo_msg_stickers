@@ -1,6 +1,7 @@
 import { start } from '../core/app';
 import { DEFAULT_SETTINGS } from '../core/host';
 import type { Host, Settings } from '../core/host.types';
+import { fetchChecked, readResponseLimited } from '../core/net';
 
 /**
  * Вариант для менеджеров userscript-ов (Tampermonkey и т. п.).
@@ -10,40 +11,18 @@ import type { Host, Settings } from '../core/host.types';
 
 const SETTINGS_KEY = 'amo-stickers:settings';
 
-/**
- * Сколько символов тела ответа попадает в текст ошибки — достаточно, чтобы понять причину,
- * и не раздувает сообщение HTML-страницей ошибки.
- */
-const ERROR_BODY_PREVIEW = 200;
-
-const fetchChecked = async (url: string) => {
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => {
-      return '';
-    });
-
-    throw new Error(`HTTP ${res.status} ${body.slice(0, ERROR_BODY_PREVIEW)}`);
-  }
-
-  return res;
-};
-
 const host: Host = {
   name: 'userscript',
-  async fetchJson<T>(url: string) {
+  async fetchJson(url) {
     const res = await fetchChecked(url);
 
-    /**
-     * Форму JSON не проверяем: по контракту `Host.fetchJson` за `T` отвечает вызывающая сторона.
-     */
-    return (await res.json()) as T;
+    return res.json();
   },
-  async fetchBlob(url: string) {
+  async fetchBlob(url, maxBytes) {
     const res = await fetchChecked(url);
+    const bytes = await readResponseLimited(res, maxBytes);
 
-    return res.blob();
+    return new Blob([bytes], { type: res.headers.get('content-type') || '' });
   },
   async getSettings() {
     try {

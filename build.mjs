@@ -1,17 +1,27 @@
-import { cpSync, mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 import * as esbuild from 'esbuild';
 
 const isWatch = process.argv.includes('--watch');
 
-const USERSCRIPT_BANNER = `// ==UserScript==
-// @name         amo stickers
-// @version      0.1.0
-// @match        https://*.amo.tm/*
-// @match        http://localhost:3000/*
-// @grant        none
-// @run-at       document-idle
-// ==/UserScript==`;
+/**
+ * Адреса локального amo добавляются только в dev-сборку (`pnpm watch`): боевая работает
+ * лишь на *.amo.tm.
+ */
+const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
+const devMatches = isWatch ? DEV_MATCHES : [];
+
+const USERSCRIPT_BANNER = [
+  '// ==UserScript==',
+  '// @name         amo stickers',
+  '// @version      0.2.0',
+  ...['https://*.amo.tm/*', ...devMatches].map((match) => {
+    return `// @match        ${match}`;
+  }),
+  '// @grant        none',
+  '// @run-at       document-idle',
+  '// ==/UserScript==',
+].join('\n');
 
 const common = {
   bundle: true,
@@ -43,7 +53,10 @@ const configs = [
 ];
 
 mkdirSync('dist/extension', { recursive: true });
-cpSync('src/extension/manifest.json', 'dist/extension/manifest.json');
+const manifest = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'));
+
+for (const script of manifest.content_scripts) script.matches.push(...devMatches);
+writeFileSync('dist/extension/manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);
 
 if (isWatch) {
   for (const config of configs) {

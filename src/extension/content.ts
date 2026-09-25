@@ -4,12 +4,8 @@ import type { Host, Settings } from '../core/host.types';
 
 import type { FetchRequest, FetchResponse } from './messages.types';
 
-const bgFetch = async (url: string, as: FetchRequest['as']) => {
-  const res: FetchResponse = await chrome.runtime.sendMessage({
-    type: 'amo-stickers:fetch',
-    url,
-    as,
-  } satisfies FetchRequest);
+const bgFetch = async (request: FetchRequest) => {
+  const res: FetchResponse = await chrome.runtime.sendMessage(request);
 
   if (!res?.ok) throw new Error(res?.error || 'fetch failed');
 
@@ -18,16 +14,18 @@ const bgFetch = async (url: string, as: FetchRequest['as']) => {
 
 const host: Host = {
   name: 'extension',
-  async fetchJson<T>(url: string) {
-    const { json } = await bgFetch(url, 'json');
+  async fetchJson(url) {
+    const { json } = await bgFetch({ type: 'amo-stickers:fetch', url, as: 'json' });
 
-    /**
-     * Форму JSON не проверяем: по контракту `Host.fetchJson` за `T` отвечает вызывающая сторона.
-     */
-    return json as T;
+    return json;
   },
-  async fetchBlob(url: string) {
-    const { base64, mime } = await bgFetch(url, 'blob');
+  async fetchBlob(url, maxBytes) {
+    const { base64, mime } = await bgFetch({
+      type: 'amo-stickers:fetch',
+      url,
+      as: 'blob',
+      maxBytes,
+    });
     const bytes = Uint8Array.from(atob(base64 || ''), (char) => {
       return char.charCodeAt(0);
     });

@@ -1,4 +1,5 @@
 import type { RemoteGif } from '../db.types';
+import { isObject } from '../guards';
 
 export type GifFeed = 'giphy-gifs' | 'giphy-stickers' | 'klipy';
 
@@ -43,9 +44,10 @@ export type GiphyItem = {
   id: string;
 
   /**
-   * Рендишны по имени (`original`, `downsized`, `fixed_width` …); набор зависит от GIF.
+   * Рендишны по имени (`original`, `downsized`, `fixed_width` …); набор зависит от GIF,
+   * каждый проверяется `isGiphyImage` при выборе.
    */
-  images: Record<string, GiphyImage | undefined>;
+  images: Record<string, unknown>;
 };
 
 export type GiphyPagination = {
@@ -67,9 +69,9 @@ export type GiphyPagination = {
 
 export type GiphyResponse = {
   /**
-   * GIF страницы выдачи.
+   * GIF страницы выдачи; каждый элемент проверяется `isGiphyItem`.
    */
-  data: GiphyItem[];
+  data: unknown[];
 
   /**
    * Положение страницы в выдаче.
@@ -96,19 +98,100 @@ export type TenorResult = {
   id: string;
 
   /**
-   * Файлы по формату (`gif`, `tinygif`); приходят только запрошенные в `media_filter`.
+   * Файлы по формату (`gif`, `tinygif`); приходят только запрошенные в `media_filter`,
+   * каждый проверяется `isTenorMedia` при выборе.
    */
-  media_formats: Record<string, TenorMedia | undefined>;
+  media_formats: Record<string, unknown>;
 };
 
 export type TenorResponse = {
   /**
-   * GIF страницы выдачи.
+   * GIF страницы выдачи; каждый элемент проверяется `isTenorResult`.
    */
-  results: TenorResult[];
+  results: unknown[];
 
   /**
-   * Курсор следующей страницы. Пустая строка — выдача закончилась.
+   * Курсор следующей страницы. Пустая строка или нет поля — выдача закончилась.
    */
-  next: string;
+  next?: string;
+};
+
+/**
+ * Гарды проверяют только то, что код читает дальше: лишние поля ответа не мешают,
+ * а без нужных элемент или страница выдачи бесполезны.
+ */
+
+const isPositiveNumeric = (value: unknown) => {
+  return typeof value === 'string' && Number(value) > 0;
+};
+
+export const isGiphyImage = (value: unknown): value is GiphyImage => {
+  return (
+    isObject(value) &&
+    'url' in value &&
+    typeof value.url === 'string' &&
+    'width' in value &&
+    isPositiveNumeric(value.width) &&
+    'height' in value &&
+    isPositiveNumeric(value.height)
+  );
+};
+
+export const isGiphyItem = (value: unknown): value is GiphyItem => {
+  return (
+    isObject(value) &&
+    'id' in value &&
+    typeof value.id === 'string' &&
+    'images' in value &&
+    isObject(value.images)
+  );
+};
+
+export const isGiphyResponse = (value: unknown): value is GiphyResponse => {
+  return (
+    isObject(value) &&
+    'data' in value &&
+    Array.isArray(value.data) &&
+    'pagination' in value &&
+    isObject(value.pagination) &&
+    'offset' in value.pagination &&
+    typeof value.pagination.offset === 'number' &&
+    'count' in value.pagination &&
+    typeof value.pagination.count === 'number' &&
+    'total_count' in value.pagination &&
+    typeof value.pagination.total_count === 'number'
+  );
+};
+
+export const isTenorMedia = (value: unknown): value is TenorMedia => {
+  return (
+    isObject(value) &&
+    'url' in value &&
+    typeof value.url === 'string' &&
+    'dims' in value &&
+    Array.isArray(value.dims) &&
+    value.dims.length === 2 &&
+    value.dims.every((dim) => {
+      return typeof dim === 'number' && dim > 0;
+    })
+  );
+};
+
+export const isTenorResult = (value: unknown): value is TenorResult => {
+  return (
+    isObject(value) &&
+    'id' in value &&
+    typeof value.id === 'string' &&
+    'media_formats' in value &&
+    isObject(value.media_formats)
+  );
+};
+
+export const isTenorResponse = (value: unknown): value is TenorResponse => {
+  return (
+    isObject(value) &&
+    'results' in value &&
+    Array.isArray(value.results) &&
+    (!('next' in value) || typeof value.next === 'string')
+  );
 };
