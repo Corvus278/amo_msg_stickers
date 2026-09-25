@@ -46,7 +46,7 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
       <>
         <style>{css}</style>
 
-        <PickerProvider env={env} onSend={onSend} onClose={close}>
+        <PickerProvider env={env} onSend={onSend} onClose={close} isOpen={isOpen}>
           <Picker isOpen={isOpen} isDark={isDark} onClose={close} />
         </PickerProvider>
       </>,

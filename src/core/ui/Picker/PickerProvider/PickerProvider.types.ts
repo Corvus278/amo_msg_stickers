@@ -69,7 +69,8 @@ export type PickerContextValue = {
   send: (item: SendItem) => Promise<void>;
 
   /**
-   * Object URL блоба стикера: для одного id всегда один и тот же URL.
+   * Object URL блоба стикера: для одного id один и тот же URL, пока пикер открыт. При
+   * закрытии URL отзываются, после открытия `urlOf` создаёт новые.
    */
   urlOf: (id: string, blob: Blob) => string;
 
@@ -96,6 +97,11 @@ export type PickerProviderProps = {
   onClose: () => void;
 
   /**
+   * Открыт ли пикер: при закрытии отзываются object URL стикеров.
+   */
+  isOpen: boolean;
+
+  /**
    * Дерево пикера.
    */
   children: ComponentChildren;
@@ -116,6 +122,11 @@ export type PickerStateOptions = {
    * Колбэк на закрытие пикера после успешной отправки.
    */
   onClose: () => void;
+
+  /**
+   * Открыт ли пикер: при закрытии отзываются object URL стикеров.
+   */
+  isOpen: boolean;
 };
 
 export type PickerStateValue = {

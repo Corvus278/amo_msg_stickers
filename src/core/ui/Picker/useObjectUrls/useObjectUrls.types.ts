@@ -1,6 +1,7 @@
 export type ObjectUrls = {
   /**
-   * Object URL блоба стикера: для одного id всегда один и тот же URL.
+   * Object URL блоба стикера: для одного id один и тот же URL, пока пикер открыт. При
+   * закрытии URL отзываются, после открытия `urlOf` создаёт новые.
    */
   urlOf: (id: string, blob: Blob) => string;
 

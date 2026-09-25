@@ -24,12 +24,12 @@ const INITIAL_VIEW: View = { kind: 'recent' };
  * @returns значения обоих контекстов провайдера
  */
 export const usePickerState = (options: PickerStateOptions): PickerStateValue => {
-  const { env, onSend, onClose } = options;
+  const { env, onSend, onClose, isOpen } = options;
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [status, setStatus] = useState<PickerStatus | null>(null);
   const [view, setView] = useState<View>(INITIAL_VIEW);
-  const { urlOf, dropUrl } = useObjectUrls();
+  const { urlOf, dropUrl } = useObjectUrls(isOpen);
 
   const refreshSettings = useCallback(async () => {
     setSettings(await env.getSettings());

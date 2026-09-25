@@ -7,8 +7,8 @@ import type { PickerProviderProps } from './PickerProvider.types';
 import { usePickerState } from './usePickerState';
 
 export const PickerProvider: FC<PickerProviderProps> = (props) => {
-  const { env, onSend, onClose, children } = props;
-  const { picker, view } = usePickerState({ env, onSend, onClose });
+  const { env, onSend, onClose, isOpen, children } = props;
+  const { picker, view } = usePickerState({ env, onSend, onClose, isOpen });
 
   return (
     <PickerContext.Provider value={picker}>
