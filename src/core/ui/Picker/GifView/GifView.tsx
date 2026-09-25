@@ -8,6 +8,9 @@ import { usePicker } from '../PickerProvider/usePicker';
 import { TextInput } from '../TextInput/TextInput';
 import { useGifFeed } from '../useGifFeed/useGifFeed';
 import { usePickerView } from '../usePickerView/usePickerView';
+import type { View } from '../usePickerView/usePickerView.types';
+import { ViewBody } from '../ViewBody/ViewBody';
+import { ViewHeader } from '../ViewHeader/ViewHeader';
 
 import { FeedChips } from './FeedChips/FeedChips';
 import { useFeedChoice } from './useFeedChoice/useFeedChoice';
@@ -23,14 +26,7 @@ const FEED_ATTRIBUTION: Record<GifFeed, string> = {
   klipy: 'Powered by KLIPY',
 };
 
-/**
- * Шапка повторяет шапку `RecentView`: отступы общие у всех представлений, и тело панели
- * не прыгает при переключении вкладок. Без ключей шапка пустая, но место под неё
- * остаётся.
- */
-const HEAD_CLASS = 'flex flex-col gap-1.5 px-2.5 pb-1.5 pt-2.5';
-
-const BODY_CLASS = 'min-h-0 flex-1 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]';
+const GIFS_VIEW: View = { kind: 'gifs' };
 
 /**
  * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — переход во
@@ -41,7 +37,7 @@ const SETTINGS_LINK_CLASS =
 
 /**
  * Поиск GIF и трендовая выдача выбранного источника. Без ключей — подсказка с переходом
- * в настройки. `data-view` — метка для проверки переключения на стенде.
+ * в настройки.
  */
 export const GifView: FC<GifViewProps> = (props) => {
   const { isOpen } = props;
@@ -71,9 +67,9 @@ export const GifView: FC<GifViewProps> = (props) => {
   if (!feed) {
     return (
       <>
-        <div className={HEAD_CLASS} />
+        <ViewHeader />
 
-        <div className={BODY_CLASS} data-view="gifs">
+        <ViewBody view={GIFS_VIEW}>
           <EmptyState>
             Для поиска GIF нужен API-ключ GIPHY или KLIPY.
             <br />
@@ -85,14 +81,14 @@ export const GifView: FC<GifViewProps> = (props) => {
               Открыть настройки
             </button>
           </EmptyState>
-        </div>
+        </ViewBody>
       </>
     );
   }
 
   return (
     <>
-      <div className={HEAD_CLASS}>
+      <ViewHeader>
         <TextInput
           type="search"
           value={query}
@@ -102,9 +98,9 @@ export const GifView: FC<GifViewProps> = (props) => {
         />
 
         <FeedChips feeds={feeds} feed={feed} onSelect={handleFeedSelect} />
-      </div>
+      </ViewHeader>
 
-      <div className={BODY_CLASS} data-view="gifs" onScroll={handleBodyScroll}>
+      <ViewBody view={GIFS_VIEW} onScroll={handleBodyScroll}>
         {isNothingFound ? (
           <EmptyState>Ничего не нашлось</EmptyState>
         ) : (
@@ -114,7 +110,7 @@ export const GifView: FC<GifViewProps> = (props) => {
         <div className="px-0.5 pt-1 text-right text-xxs text-cadetGray-30 dark:text-gray-70">
           {FEED_ATTRIBUTION[feed]}
         </div>
-      </div>
+      </ViewBody>
     </>
   );
 };

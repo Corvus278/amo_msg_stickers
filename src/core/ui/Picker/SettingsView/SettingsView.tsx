@@ -1,15 +1,20 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { Button } from '../Button/Button';
+import type { View } from '../usePickerView/usePickerView.types';
+import { ViewBody } from '../ViewBody/ViewBody';
+import { ViewHeader } from '../ViewHeader/ViewHeader';
+import { ViewTitle } from '../ViewHeader/ViewTitle/ViewTitle';
 
 import { ExternalLink } from './ExternalLink/ExternalLink';
 import { SecretField } from './SecretField/SecretField';
 import { useSettingsDraft } from './useSettingsDraft/useSettingsDraft';
 
+const SETTINGS_VIEW: View = { kind: 'settings' };
+
 /**
  * Ключи GIPHY и KLIPY и токен Telegram-бота. Сохранённые значения сразу применяются в
- * ленте GIF и импорте, без перезагрузки страницы. `data-view` — метка для проверки
- * переключения на стенде.
+ * ленте GIF и импорте, без перезагрузки страницы.
  */
 export const SettingsView: FC = () => {
   const { draft, changeField, save } = useSettingsDraft();
@@ -33,16 +38,11 @@ export const SettingsView: FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-1.5 px-2.5 pb-1.5 pt-2.5">
-        <div className="flex min-h-5.5 items-center gap-2">
-          <span className="flex-1 truncate font-semibold">Настройки</span>
-        </div>
-      </div>
+      <ViewHeader>
+        <ViewTitle title="Настройки" />
+      </ViewHeader>
 
-      <div
-        className="min-h-0 flex-1 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]"
-        data-view="settings"
-      >
+      <ViewBody view={SETTINGS_VIEW}>
         <div className="flex flex-col gap-2 px-0.5 pb-3 pt-1">
           <SecretField
             id="settings-giphy-key"
@@ -83,7 +83,7 @@ export const SettingsView: FC = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </ViewBody>
     </>
   );
 };
