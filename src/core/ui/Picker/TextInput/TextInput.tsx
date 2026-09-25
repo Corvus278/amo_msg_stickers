@@ -13,7 +13,8 @@ const FIELD_CLASS = [
 ].join(' ');
 
 export const TextInput: FC<TextInputProps> = (props) => {
-  const { id, type, value, placeholder, autoComplete, inputRef, onInput } = props;
+  const { id, type, value, placeholder, autoComplete, describedBy, inputRef, onInput } =
+    props;
 
   const handleFieldInput = (event: TargetedEvent<HTMLInputElement>) => {
     onInput(event.currentTarget.value);
@@ -27,6 +28,7 @@ export const TextInput: FC<TextInputProps> = (props) => {
       value={value}
       placeholder={placeholder}
       autoComplete={autoComplete}
+      aria-describedby={describedBy}
       className={FIELD_CLASS}
       onInput={handleFieldInput}
     />

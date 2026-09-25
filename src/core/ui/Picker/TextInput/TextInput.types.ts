@@ -28,6 +28,11 @@ export type TextInputProps = {
   autoComplete?: string;
 
   /**
+   * id элемента с описанием поля — подсказки под ним.
+   */
+  describedBy?: string;
+
+  /**
    * Ссылка на DOM-поле — чтобы поставить в него фокус.
    */
   inputRef?: Ref<HTMLInputElement>;
