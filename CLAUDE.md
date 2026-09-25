@@ -82,7 +82,8 @@ src/
   types.d.ts      описания модулей без типов: gifenc, `*.css` строкой; флаг `window.__amoStickers`
 dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
                   и «Отправить» замоканы
-scripts/          скрипты CI: version.ts — чистая логика проверки версии; check-version.mjs — её запуск в CI
+scripts/          скрипты CI: version.ts — чистая логика проверки версии (типы — version.types.ts);
+                  check-version.mjs — её запуск в CI
 tests/            юнит-тесты, helpers/
 .github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; actions/setup — окружение
 openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
