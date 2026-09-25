@@ -1,0 +1,46 @@
+{
+  "name": "amo-stickers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "node node_modules/typescript-native/bin/tsc --noEmit",
+    "test": "vitest run --project=unit --passWithNoTests",
+    "test:watch": "vitest --project=unit",
+    "lint": "concurrently --kill-others-on-fail \"pnpm lint:es\" \"pnpm typecheck\" \"pnpm lint:format\"",
+    "lint:es": "eslint . --cache --cache-strategy=content",
+    "lint:fix": "eslint . --fix",
+    "lint:format": "prettier --check .",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@types/chrome": "^0.3.0",
+    "concurrently": "10.0.3",
+    "esbuild": "^0.28.2",
+    "eslint": "9.39.4",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-jsdoc": "63.0.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "5.5.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-simple-import-sort": "12.1.1",
+    "eslint-plugin-unicorn": "65.0.0",
+    "globals": "17.4.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.1.0",
+    "prettier": "3.9.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "typescript-native": "npm:typescript@^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "gifenc": "^1.0.3",
+    "lottie-web": "^5.13.0"
+  }
+}

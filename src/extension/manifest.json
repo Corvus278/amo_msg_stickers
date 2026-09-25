@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "amo stickers",
+  "version": "0.1.0",
+  "description": "Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://api.giphy.com/*",
+    "https://*.giphy.com/*",
+    "https://api.klipy.com/*",
+    "https://*.klipy.com/*",
+    "https://api.telegram.org/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.amo.tm/*",
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

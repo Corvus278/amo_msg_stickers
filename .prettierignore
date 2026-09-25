@@ -1,0 +1,6 @@
+node_modules
+dist
+pnpm-lock.yaml
+
+# Документация и спеки свёрстаны руками, Prettier ломает выравнивание таблиц.
+*.md

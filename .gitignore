@@ -1,0 +1,11 @@
+node_modules
+dist
+dev/amo.css
+*.DS_Store
+*.log
+
+.eslintcache
+
+# Локальное, в репозиторий не попадает: заметки и заготовки под конкретное окружение
+local/
+CLAUDE.local.md

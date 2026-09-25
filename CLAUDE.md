@@ -1,0 +1,257 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Что это
+
+amo stickers — стикеры и GIF для мессенджера amo (web). В строке ввода рядом с кнопкой эмодзи появляется
+кнопка стикеров, по клику открывается пикер: недавние, поиск GIF (GIPHY, KLIPY), паки, импортированные из Telegram, и
+свои стикеры из картинки, GIF, видео или `.tgs` с подписью. Стикер отправляется кликом.
+
+Публичного API для отправки сообщений у amo нет, поэтому код живёт внутри чужой страницы и отправляет стикер штатным путём пользователя: вставкой файла в поле ввода и кликом «Отправить».
+
+## Стек и сборка
+
+TypeScript (strict) + esbuild, без фреймворка: UI пикера сейчас собран из DOM вручную (`h()` в `ui/picker.ts`) и
+переписывается на Preact. GIF кодирует `gifenc`, `.tgs` рендерит `lottie-web` (light canvas-плеер: без `eval`,
+который не пропускает CSP расширения). Пакетный менеджер — pnpm, версии Node и pnpm — в `.mise.toml`.
+
+```bash
+pnpm i
+pnpm build             # dist/extension/* и dist/amo-stickers.user.js
+pnpm watch             # пересборка при изменениях, с inline-sourcemap
+pnpm typecheck         # только проверка типов (TS 7)
+pnpm lint              # eslint + typecheck + prettier --check параллельно
+pnpm lint:fix          # eslint --fix
+pnpm format            # prettier --write
+pnpm test              # vitest, проект `unit`
+```
+
+Одно ядро (`src/core`) собирается в две цели (`build.mjs`, формат IIFE, `target: chrome120`):
+
+- **расширение** Chrome / Яндекс / Edge (MV3): content script + service worker, `dist/extension/`;
+- **userscript** для Tampermonkey и других менеджеров: `dist/amo-stickers.user.js` с заголовком `==UserScript==`.
+
+Различия целей спрятаны за интерфейсом `Host` (`core/host.ts`): сеть и хранение настроек. Расширение ходит в сеть
+через service worker — обход CORS; userscript — прямым `fetch` со страницы, под её CORS. Настройки: у
+расширения `chrome.storage.local`, у userscript `localStorage`.
+
+TypeScript в проекте двух версий: `typescript-native` (7.x, нативный tsgo) проверяет типы, `typescript` (6.x) нужен
+только typescript-eslint, который TS 7 пока не поддерживает. `node_modules/.bin/tsc` занят одной из них — проверку
+типов запускай через `pnpm typecheck`.
+
+## Структура
+
+```
+build.mjs package.json tsconfig.json vitest.config.ts               # сборка двух целей, конфиги
+eslint.config.mjs .prettierrc .prettierignore .editorconfig          # линтеры
+.lintstagedrc.mjs .husky/pre-commit                                  # гейт коммита
+src/
+  core/
+    app.ts        старт: поиск полей ввода MutationObserver-ом, кнопка рядом с эмодзи, открытие пикера, отправка
+    amoDom.ts     всё знание о DOM amo: селекторы поля ввода, эмодзи, «Отправить», отмены редактирования, темы
+    sender.ts     отправка файла: paste → ожидание вложения → клик «Отправить», проверки черновика
+    convert.ts    любой источник (картинка, GIF, видео, .tgs) → GIF: кадры, палитра, дизеринг, бюджет веса
+    db.ts         IndexedDB: паки, стикеры, недавние
+    host.ts       интерфейс окружения (`Host`) и настройки (ключи GIPHY/KLIPY, токен Telegram-бота)
+    sources/      gifs.ts — поиск GIPHY и KLIPY; telegram.ts — импорт пака через Bot API
+    ui/           picker.ts — пикер в Shadow DOM, styles.ts — его CSS, icons.ts — svg-иконки
+  extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
+                  messages.types.ts (протокол content ↔ background), manifest.json
+  userscript/     index.ts — Host для менеджеров userscript-ов
+  types.d.ts      описания вендорных модулей без типов (gifenc)
+dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
+                  и «Отправить» замоканы
+tests/            юнит-тесты, helpers/
+openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
+                  changes/archive/ — закрытые
+local/            локальные заготовки под конкретное окружение; в .gitignore, eslint его не трогает
+CLAUDE.local.md   локальные заметки; в .gitignore
+```
+
+## Как работает
+
+### Встраивание в amo
+
+`start(host)` в `core/app.ts` запускается один раз на страницу (флаг `window.__amoStickers`). MutationObserver на
+`body` (с группировкой в `requestAnimationFrame`) ищет поля ввода и вставляет кнопку сразу после обёртки эмодзи.
+Классы обёртки и иконки повторяют родную кнопку эмодзи — tailwind-стили amo применяются к ней без своего CSS, а
+цвет иконки открытого/закрытого пикера переключается заменой классов: базовый `fill` заменяется, а не дополняется,
+иначе из двух `fill-*` победит тот, что позже в CSS amo.
+
+`data-testid` в amo нет: селекторы в `amoDom.ts` держатся за aria-атрибуты (`aria-placeholder`,
+`aria-label="Send message"`, `aria-label="cancel edit"`) и стабильные tailwind-классы. Знание о DOM amo живёт только
+в этом файле — при правке вёрстки amo меняется он один.
+
+Пикер — Shadow DOM, его хост вставляется внутрь кнопки: `position: fixed` считается от предка с transform —
+контейнера поля ввода, как у родного попапа эмодзи. Тема следует за классом `dark` на `<html>`.
+
+### Отправка
+
+```
+blob → File(image/gif) → paste в contenteditable → вложение → click [aria-label="Send message"]
+```
+
+В `DataTransfer` кладётся **только** файл: при наличии `text/plain` поле вставит текст, а не вложение.
+Вложение ждём до 15 с по появлению кнопки «Отправить». Если в поле есть текст или вложения, либо идёт
+редактирование, отправка блокируется `SendError` — иначе стикер ушёл бы вместе с черновиком.
+
+### Конвертация
+
+amo перекодирует PNG и WebP в JPEG с белым фоном, без изменений проходит только GIF — поэтому любой источник
+приводится к GIF с 1-битной прозрачностью (`convert.ts`):
+
+- размер — 512 px (родной у Telegram), при весе больше 2 МБ — 384 / 320 / 256 px по очереди;
+- анимация — до 100 кадров и 4 с, 25 fps (40 мс — ровно 4 сотых: у GIF задержка в сотых);
+- палитра строится в rgb565 только по непрозрачным пикселям, прозрачность — отдельный индекс;
+- упорядоченный дизеринг Байера 4×4 включается, если средняя ошибка цвета без него выше порога: узор привязан к
+  координатам и не мерцает в анимации;
+- GIF без подписи и в пределах бюджета проходит как есть.
+
+Источники: картинки — `ImageDecoder` с фолбэком на `createImageBitmap`; видео — покадровым seek; `.tgs` — Lottie.
+
+### Хранение
+
+IndexedDB `amo-stickers` на домене amo: паки (`tg:<имя>` для импорта, `custom` — свои стикеры), стикеры (готовые
+GIF-блобы) и недавние (до 40, повторная отправка поднимает элемент наверх). Настройки — через `Host`.
+
+## Тесты
+
+Стек — vitest, проект `unit` (`tests/**/*.test.{ts,tsx}`, окружение `node`). Тесты лежат плоско в `tests/`,
+хелперы — в `tests/helpers/`. Юнит-тестами покрывается чистое ядро; всё, что завязано на DOM amo и отправку,
+проверяется на стенде `dev/harness.html` и в живом amo:
+
+```bash
+python3 -m http.server 8777 -b 127.0.0.1
+open http://127.0.0.1:8777/dev/harness.html
+```
+
+Гейт коммита гоняет только тесты по изменённым файлам (`vitest --changed`); полный прогон — `pnpm test`.
+
+## Линтинг
+
+```
+eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + simple-import-sort + unicorn +
+                         # react-hooks и jsx-a11y на **/*.tsx
+.lintstagedrc.mjs        # eslint --fix / prettier --write по staged-файлам
+.husky/pre-commit        # lint-staged + tsc + vitest --changed параллельно
+```
+
+Осознанные послабления:
+
+- `no-undef` выключен для TS: необъявленное имя ловит `tsc`.
+- `no-console` разрешает `warn` и `info` наравне с `error`: код исполняется в чужой странице amo, консоль —
+  единственный канал диагностики.
+- `local/**` в eslint игнорируется: каталог в `.gitignore`, в нём локальные заготовки вне tsconfig.
+
+`.claude/hooks/lint.sh` — PostToolUse-хук: после каждой правки гоняет по файлу eslint (+`tsc --noEmit` для `.ts`/
+`.tsx`). Ошибки в правленом файле блокируют правку.
+
+## Воркфлоу задачи
+
+Одна задача — один issue, одна ветка, один PR. Репозиторий на GitHub, поэтому CLI — `gh` (`glab` здесь не
+применяется). Номер issue — сквозной идентификатор: он в имени ветки, в теле PR и в коммитах. Требования и план
+крупной задачи ведутся в OpenSpec (`openspec/changes/<change>`, артефакты на русском).
+
+1. **Issue.** Задача заводится в репозитории до правок — чтобы у PR был предмет, с которым аудит сверяет результат.
+   Тело описывает наблюдаемое поведение и критерий готовности, а не план правок.
+
+   ```bash
+   gh issue create --title '<кратко, что должно измениться>' --label enhancement --body '<описание и критерий готовности>'
+   ```
+
+   Метки из набора репозитория: `bug`, `enhancement`, `documentation`.
+2. **Ветка от master.** Только от свежего `master`, не от текущей ветки: иначе в PR приедут чужие коммиты.
+   Имя — `<type>/<номер issue>-<краткое-имя>`, где `type` — `feature`, `fix`, `chore`, `docs`.
+
+   ```bash
+   git switch master && git pull --ff-only
+   git switch -c feature/42-preact-picker
+   ```
+3. **Правки и PR.** Правки идут в этой ветке; перед PR — `pnpm lint` и `pnpm test` (гейт коммита их не заменяет:
+   `.husky/pre-commit` гоняет vitest только по изменённым файлам). PR привязывается к issue ключевым словом в теле,
+   иначе issue придётся закрывать руками.
+
+   **Каждый PR поднимает версию**: обычный PR — минор, глобальное изменение (несовместимая смена схемы IndexedDB,
+   переделка продукта) — мажор с обнулением минора. Версия записана в трёх местах, и они должны совпадать:
+   `package.json` (`pnpm version <версия> --no-git-tag-version`), `src/extension/manifest.json` и `@version` в
+   заголовке userscript в `build.mjs`.
+
+   ```bash
+   git push -u origin HEAD
+   gh pr create --base master --fill --body 'Closes #42
+
+   <что сделано и почему так>'
+   ```
+4. **Аудит.** Пользовательский скилл `review-staged` (`~/.claude/skills/`, не в репозитории) в режиме «ветка
+   против master». Без него аудит идёт вручную по тому же диффу и тем же `.claude/rules/*.md`, с тем же
+   требованием к находке: файл, строка, цитата из файла.
+
+   Находки ложатся **inline-комментами в PR** — привязанными к файлу и строке, а не одним общим комментом:
+   резолвить на повторном аудите можно только тред, заведённый на строке.
+
+   Тело ревью лежит в файле (`/tmp/review.json`), а не в флагах: у `gh api` нет формы для массива объектов.
+
+   ```json
+   {
+     "commit_id": "<sha головы ветки>",
+     "event": "COMMENT",
+     "comments": [
+       {"path": "src/core/sender.ts", "line": 42, "side": "RIGHT", "body": "<находка и что с ней делать>"}
+     ]
+   }
+   ```
+
+   ```bash
+   gh api --method POST repos/Corvus278/amo_msg_stickers/pulls/<N>/reviews --input /tmp/review.json
+   ```
+
+   Один тред — одна находка. `event: COMMENT`, а не `REQUEST_CHANGES`: автор PR и ревьюер здесь одно лицо, и
+   GitHub не даёт запросить правки у самого себя.
+
+   `line` берётся только из строк, попавших в дифф PR, — на остальные GitHub отвечает 422. Находка в строке,
+   которой дифф не касался (у `review-staged` это `pre_existing`), идёт комментом к файлу целиком
+   (`"subject_type": "file"` вместо `line` и `side`) либо в общий тред PR (`gh pr comment`). Общий тред резолву
+   на шаге 6 не поддаётся — его закрывает ответ автора.
+5. **Правка комментов.** Каждая находка правится отдельно и пушится в ту же ветку. Спорную не правят молча —
+   ответ в треде с обоснованием тоже закрывает находку.
+
+   ```bash
+   gh api --method POST repos/Corvus278/amo_msg_stickers/pulls/<N>/comments/<databaseId первого коммента треда>/replies -f body='<как поправлено или почему нет>'
+   ```
+
+   Ответ идёт на **комментарий**, а не на тред: у REST есть только `databaseId` первого коммента, а резолв (шаг 6)
+   просит `id` треда из GraphQL. Оба берутся одним запросом ниже.
+6. **Повторный аудит и резолв.** Тот же `review-staged` по обновлённой ветке. Резолвится только тред, правка
+   которого подтверждена в коде: «ответил» и «поправил» — разные вещи. Резолв идёт через GraphQL — у REST такой
+   операции нет.
+
+   ```bash
+   # нерезолвнутые треды с путями и строками
+   gh api graphql -f query='query($owner:String!,$repo:String!,$pr:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$pr){reviewThreads(first:100){nodes{id isResolved path line comments(first:1){nodes{databaseId body}}}}}}}' \
+     -F owner=Corvus278 -F repo=amo_msg_stickers -F pr=<N> --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved | not) | {id, path, line, commentId: .comments.nodes[0].databaseId}'
+
+   gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -F id=<id треда>
+   ```
+
+   Находки, всплывшие на повторном аудите заново, — новые треды: шаги 5 и 6 повторяются, пока нерезолвнутых не
+   останется. Мерж — после этого: squash, чтобы в `master` от задачи остался один коммит, и с удалением ветки —
+   issue закроется сама по `Closes` из тела PR.
+
+   ```bash
+   gh pr merge <N> --squash --delete-branch
+   ```
+
+## Правила для агентов
+
+`.claude/rules/*.md`, читать перед правкой соответствующих файлов:
+
+| Файл | О чём |
+|---|---|
+| `react.md`, `react-architecture.md` | UI на Preact: компоненты, хуки, хендлеры, `FC<Props>` |
+| `typescript.md` | типы, `as`, jsdoc на полях, где лежат тесты |
+| `code-style.md` | стиль кода: экспорты, `switch`, `||`, `reduce`, jsdoc |
+| `naming.md` | именование, префиксы булевых |
+| `linting.md` | конфиги линтеров, поток проверки, что нельзя отключать |
+| `comments.md` | комментарии: «почему», а не «что» |
+| `testing.md` | vitest, что покрывается тестами, а что стендом |

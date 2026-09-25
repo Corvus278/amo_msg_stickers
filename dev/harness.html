@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>amo stickers — стенд</title>
+    <!-- CSS страницы web.amo.tm, сохранённый из DevTools (в git не лежит). Разметка ниже
+     повторяет поле ввода со страницы; вставка файла и отправка замоканы. -->
+    <link rel="stylesheet" href="amo.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Helvetica Neue', arial, sans-serif;
+      }
+      #chat {
+        position: absolute;
+        inset: 0 0 70px;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      #chat img {
+        max-width: 200px;
+        border-radius: 12px;
+      }
+      #tools {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 5;
+        display: flex;
+        gap: 6px;
+      }
+      #attachments {
+        display: flex;
+        gap: 6px;
+        padding: 8px 12px 0;
+      }
+      #attachments:empty {
+        display: none;
+      }
+      #attachments img {
+        height: 48px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body class="bg-white-0 dark:bg-black-70">
+    <div id="tools">
+      <button id="theme">тема</button>
+      <label><input type="checkbox" id="slow" /> медленная загрузка</label>
+    </div>
+    <div class="relative h-screen">
+      <div id="chat"></div>
+      <div class="absolute inset-x-0 bottom-0 translate-y-0">
+        <div class="z-10 flex w-full flex-nowrap px-2.5 pb-1.5 pt-0">
+          <div
+            role="button"
+            tabindex="-1"
+            aria-label="cancel edit"
+            class="ml-0 size-0 shrink-0 cursor-pointer self-end rounded-full bg-blue-50 fill-white-0 p-0 opacity-0 shadow-xxl outline-none duration-lg dark:bg-beige-70 dark:fill-black-70"
+          ></div>
+          <div class="w-full">
+            <div
+              class="relative flex flex-col bg-white-0 dark:bg-gray-10 rounded-[18px] shadow-lg"
+            >
+              <div id="attachments"></div>
+              <div class="flex size-full">
+                <div class="relative z-10 min-h-[17px] w-full px-3.5 pb-2 pt-[9px]">
+                  <div
+                    contenteditable="true"
+                    role="textbox"
+                    aria-placeholder="Написать сообщение"
+                    data-placeholder="Написать сообщение..."
+                    class="max-h-[225px] w-full overflow-hidden overflow-y-scroll p-0 pr-5 text-sm leading-4 text-gray-30 outline-none dark:text-gray-40"
+                  ></div>
+                </div>
+                <div
+                  class="relative z-100 mb-0 mr-3 flex h-full w-4.5 cursor-default items-end"
+                >
+                  <div class="flex h-8 items-center">
+                    <svg
+                      class="pointer-events-auto size-4.5 cursor-pointer fill-cadetGray-30 p-0 transition-all duration-base ease-linear dark:fill-gray-70"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 18 18"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 0C4.0364 0 0 4.03642 0 9C0 13.9636 4.0364 18 9 18C13.9636 18 18 13.9636 18 9C18 4.03642 13.9636 0 9 0V0ZM9 1.17391C13.3292 1.17391 16.8261 4.67084 16.8261 9C16.8261 13.3292 13.3292 16.8261 9 16.8261C4.67082 16.8261 1.17391 13.3292 1.17391 9C1.17391 4.67084 4.67082 1.17391 9 1.17391V1.17391ZM5.67391 5.28261C4.9175 5.28261 4.30435 5.89578 4.30435 6.65217C4.30435 7.40857 4.9175 8.02174 5.67391 8.02174C6.4303 8.02174 7.04348 7.40857 7.04348 6.65217C7.04348 5.89578 6.4303 5.28261 5.67391 5.28261ZM12.3261 5.28261C11.5697 5.28261 10.9565 5.89578 10.9565 6.65217C10.9565 7.40857 11.5697 8.02174 12.3261 8.02174C13.0825 8.02174 13.6957 7.40857 13.6957 6.65217C13.6957 5.89578 13.0825 5.28261 12.3261 5.28261ZM4.63451 10.7609C4.44592 10.7718 4.27375 10.8783 4.16984 11.0666C4.07078 11.2559 4.08414 11.4967 4.20652 11.6719C5.25573 13.2413 7.01345 14.2826 9 14.2826C10.9866 14.2826 12.7443 13.2413 13.7935 11.6719C13.9648 11.4158 13.8906 11.03 13.6345 10.8587C13.3784 10.6874 12.9865 10.7616 12.8152 11.0177C11.9678 12.2853 10.5786 13.1087 9 13.1087C7.42142 13.1087 6.03219 12.2853 5.18478 11.0177C5.02587 10.8312 4.8231 10.7499 4.63451 10.7609Z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            role="button"
+            aria-label="Send message"
+            tabindex="-1"
+            class="ml-0 size-0 shrink-0 cursor-pointer self-end rounded-full bg-blue-50 fill-white-0 p-0 opacity-0 shadow-xxl outline-none dark:bg-beige-70 dark:fill-black-70 duration-lg"
+          >
+            <svg
+              class="size-0"
+              width="19"
+              height="19"
+              viewBox="0 0 19 19"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M0.583197 17.7245L2.10885 11.1177C2.16907 10.8366 2.40996 10.6157 2.71108 10.5755L11.2427 9.6919C11.4836 9.67182 11.4836 9.31035 11.2427 9.27019L2.71108 8.44685C2.40996 8.42676 2.16907 8.20587 2.10885 7.92473L0.583197 1.33798C0.442676 0.775692 1.04491 0.313817 1.56684 0.574877L18.2486 8.9288C18.7505 9.18986 18.7505 9.9128 18.2486 10.1739L1.56684 18.4876C1.04491 18.7487 0.442676 18.2868 0.583197 17.7245Z"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // --- мок amo: вставка файла + кнопка «Отправить» ---
+      const editable = document.querySelector('[contenteditable]');
+      const sendBtn = document.querySelector('[aria-label="Send message"]');
+      const attachments = document.getElementById('attachments');
+      const chat = document.getElementById('chat');
+      let files = [];
+
+      function syncSend() {
+        const visible = files.length > 0 || editable.textContent.trim().length > 0;
+        ['size-8.5', 'opacity-100', 'ml-1.5', 'pl-2.5', 'pt-2', 'pb-0'].forEach((c) =>
+          sendBtn.classList.toggle(c, visible)
+        );
+        sendBtn.querySelector('svg').classList.toggle('size-4.5', visible);
+      }
+
+      editable.addEventListener('input', syncSend);
+      editable.addEventListener('paste', async (e) => {
+        const f = Array.from(e.clipboardData?.files || []);
+        if (!f.length) return;
+        e.preventDefault();
+        if (document.getElementById('slow').checked)
+          await new Promise((r) => setTimeout(r, 1500));
+        files.push(...f);
+        attachments.replaceChildren(
+          ...files.map((x) =>
+            Object.assign(document.createElement('img'), { src: URL.createObjectURL(x) })
+          )
+        );
+        syncSend();
+        console.log(
+          '[harness] attached',
+          f.map((x) => `${x.name} ${x.type} ${x.size}b`)
+        );
+      });
+      sendBtn.addEventListener('click', () => {
+        for (const f of files)
+          chat.append(
+            Object.assign(document.createElement('img'), {
+              src: URL.createObjectURL(f),
+              title: f.name,
+            })
+          );
+        if (editable.textContent.trim())
+          chat.append(
+            Object.assign(document.createElement('div'), {
+              textContent: editable.textContent,
+            })
+          );
+        console.log('[harness] sent', files.length, 'files');
+        files = [];
+        attachments.replaceChildren();
+        editable.textContent = '';
+        syncSend();
+        chat.scrollTop = chat.scrollHeight;
+      });
+      document.getElementById('theme').onclick = () =>
+        document.documentElement.classList.toggle('dark');
+    </script>
+    <script src="../dist/amo-stickers.user.js"></script>
+  </body>
+</html>

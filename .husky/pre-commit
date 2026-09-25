@@ -1,0 +1,3 @@
+# Гейт коммита: параллельная проверка staged-файлов (lint-staged),
+# типов (tsc) и тестов по изменённым файлам — шаги независимы.
+pnpm exec concurrently --kill-others-on-fail "pnpm exec lint-staged" "pnpm typecheck" "pnpm exec vitest --project=unit --changed --run --passWithNoTests" || exit 1
