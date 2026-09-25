@@ -1,3 +1,5 @@
+import { fetchChecked, readResponseLimited } from '../core/net';
+
 import type { FetchRequest, FetchResponse } from './messages.types';
 
 /**
@@ -12,14 +14,7 @@ import type { FetchRequest, FetchResponse } from './messages.types';
  */
 const BASE64_CHUNK_SIZE = 0x80_00;
 
-/**
- * Сколько символов тела ответа попадает в текст ошибки — достаточно, чтобы понять причину,
- * и не раздувает сообщение HTML-страницей ошибки.
- */
-const ERROR_BODY_PREVIEW = 200;
-
-const toBase64 = (buf: ArrayBuffer) => {
-  const bytes = new Uint8Array(buf);
+const toBase64 = (bytes: Uint8Array) => {
   let bin = '';
 
   for (let i = 0; i < bytes.length; i += BASE64_CHUNK_SIZE) {
@@ -29,48 +24,53 @@ const toBase64 = (buf: ArrayBuffer) => {
   return btoa(bin);
 };
 
-const readBody = async (
-  res: Response,
-  as: FetchRequest['as']
-): Promise<FetchResponse> => {
-  switch (as) {
+const readBody = async (res: Response, request: FetchRequest): Promise<FetchResponse> => {
+  const { as: format } = request;
+
+  switch (request.as) {
     case 'json': {
       return { ok: true, json: await res.json() };
     }
 
     case 'blob': {
-      const blob = await res.blob();
+      const bytes = await readResponseLimited(res, request.maxBytes);
 
-      return { ok: true, base64: toBase64(await blob.arrayBuffer()), mime: blob.type };
+      return {
+        ok: true,
+        base64: toBase64(bytes),
+        mime: res.headers.get('content-type') || '',
+      };
     }
 
     default: {
-      const unknownAs: never = as;
+      request satisfies never;
 
-      throw new Error(`Unknown response format: ${String(unknownAs)}`);
+      /**
+       * Только формат, без запроса целиком: в `url` запроса к Telegram лежит токен бота.
+       */
+      throw new Error(`Неизвестный формат ответа: ${String(format)}`);
     }
   }
 };
 
-const handleFetch = async ({ url, as }: FetchRequest): Promise<FetchResponse> => {
+const handleFetch = async (request: FetchRequest): Promise<FetchResponse> => {
   try {
-    const res = await fetch(url);
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => {
-        return '';
-      });
-
-      return {
-        ok: false,
-        error: `HTTP ${res.status} ${body.slice(0, ERROR_BODY_PREVIEW)}`,
-      };
-    }
-
-    return await readBody(res, as);
+    return await readBody(await fetchChecked(request.url), request);
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
+};
+
+/**
+ * Без `externally_connectable` сюда и так приходят только контексты расширения, но
+ * отвечаем лишь его content script-ам: других потребителей сети у SW нет, и новая страница
+ * расширения не получит сеть в обход этой проверки случайно.
+ *
+ * @param sender — отправитель сообщения
+ * @returns true, если сообщение от content script этого расширения
+ */
+const isOwnContentScript = ({ id, tab }: chrome.runtime.MessageSender) => {
+  return id === chrome.runtime.id && Boolean(tab);
 };
 
 const respond = async (
@@ -83,8 +83,8 @@ const respond = async (
 /**
  * Слушатель синхронный: `true` держит канал открытым до асинхронного `sendResponse`.
  */
-chrome.runtime.onMessage.addListener((msg: FetchRequest, _sender, sendResponse) => {
-  if (msg?.type !== 'amo-stickers:fetch') return false;
+chrome.runtime.onMessage.addListener((msg: FetchRequest, sender, sendResponse) => {
+  if (msg?.type !== 'amo-stickers:fetch' || !isOwnContentScript(sender)) return false;
   void respond(msg, sendResponse);
 
   return true;

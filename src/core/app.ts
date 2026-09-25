@@ -5,9 +5,16 @@ import type { Composer } from './amoDom.types';
 import { getSticker, pushRecent } from './db';
 import type { SendItem } from './db.types';
 import type { Host } from './host.types';
-import { SendError, sendFile, toGifFile } from './sender';
+import { BYTES_IN_MB } from './net';
+import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
 
 const MARK = 'data-amo-stickers';
+
+/**
+ * Спека ждёт на отправку вариант около 2 МБ (downsized у GIPHY), но KLIPY размер своего
+ * `gif` не гарантирует: лимит — с запасом, чтобы не отсечь рабочую выдачу.
+ */
+const MAX_REMOTE_GIF_BYTES = 8 * BYTES_IN_MB;
 
 /**
  * Классы повторяют обёртку кнопки эмодзи — tailwind-стили amo применяются без своего CSS.
@@ -49,9 +56,9 @@ export const start = (host: Host) => {
       }
 
       case 'remote': {
-        const blob = await host.fetchBlob(item.gif.url);
+        const blob = await host.fetchBlob(item.gif.url, MAX_REMOTE_GIF_BYTES);
 
-        return toGifFile(new Blob([blob], { type: 'image/gif' }), 'gif');
+        return toCheckedGifFile(blob, 'gif');
       }
 
       default: {

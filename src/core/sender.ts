@@ -1,5 +1,6 @@
 import { isDraftEmpty, isEditing } from './amoDom';
 import type { Composer } from './amoDom.types';
+import { inspectGif } from './gif';
 
 export class SendError extends Error {}
 
@@ -69,4 +70,20 @@ export const sendFile = async (composer: Composer, file: File) => {
 
 export const toGifFile = (blob: Blob, name = 'sticker') => {
   return new File([blob], `${name}.gif`, { type: 'image/gif' });
+};
+
+/**
+ * То же, что `toGifFile`, но для файла из сети: байты проверяются как GIF, иначе
+ * `SendError` — в поле ввода не попадёт HTML-страница ошибки или обрезанный файл.
+ *
+ * @param blob — скачанный файл
+ * @param name — имя файла без расширения
+ * @returns файл для вставки в поле ввода
+ */
+export const toCheckedGifFile = async (blob: Blob, name?: string) => {
+  if (!inspectGif(new Uint8Array(await blob.arrayBuffer()))) {
+    throw new SendError('Файл не похож на GIF');
+  }
+
+  return toGifFile(blob, name);
 };

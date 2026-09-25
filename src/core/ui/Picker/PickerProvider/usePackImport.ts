@@ -56,6 +56,11 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
         switchTo({ kind: 'pack', packId: pack.id });
         showStatus(`Пак «${pack.title}» добавлен`);
       } catch (error) {
+        /**
+         * Вкладка пака могла появиться на первом шаге импорта, а упавший импорт пак убирает
+         * или возвращает прежним — список перечитываем, чтобы вкладка не осталась пустой.
+         */
+        await refreshPacks();
         showError(errorMessage(error));
       } finally {
         setIsImporting(false);

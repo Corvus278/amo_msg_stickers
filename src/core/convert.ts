@@ -9,10 +9,10 @@ import {
   type FrameSet,
   type GifResult,
   type IndexedFrame,
-  isLottieJson,
   type SourceKind,
   type ToStickerGifOptions,
 } from './convert.types';
+import { readTgs } from './tgs';
 
 /**
  * amo отправляет PNG/WebP как JPEG с белым фоном, без изменений проходит только GIF.
@@ -441,11 +441,7 @@ const tgsFrames = async (
   decorate?: Decorate,
   fps = ANIMATION_FPS
 ): Promise<FrameSet> => {
-  const json: unknown = await new Response(
-    blob.stream().pipeThrough(new DecompressionStream('gzip'))
-  ).json();
-
-  if (!isLottieJson(json)) throw new Error('Файл .tgs не похож на Lottie-анимацию');
+  const json = await readTgs(blob);
   const [w, h] = fit(json.w, json.h, max);
   const { ctx } = makeCanvas(w, h);
 

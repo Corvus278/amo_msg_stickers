@@ -118,6 +118,32 @@ export type LottieJson = {
    * Исходная частота кадров. Нет — считаем 60.
    */
   fr?: number;
+
+  /**
+   * Первый кадр анимации.
+   */
+  ip: number;
+
+  /**
+   * Кадр, на котором анимация заканчивается; больше `ip`.
+   */
+  op: number;
+
+  /**
+   * Слои композиции; содержимое разбирает lottie-web.
+   */
+  layers: unknown[];
+};
+
+/**
+ * Границы отсекают файлы, на которых рендер заведомо бессмыслен или неподъёмен: холст
+ * больше 4096 px и частоту выше 120 fps стикеры Telegram не используют.
+ */
+const MAX_LOTTIE_SIDE = 4096;
+const MAX_LOTTIE_FPS = 120;
+
+const isInRange = (value: unknown, max: number) => {
+  return typeof value === 'number' && value > 0 && value <= max;
 };
 
 export const isLottieJson = (value: unknown): value is LottieJson => {
@@ -125,9 +151,16 @@ export const isLottieJson = (value: unknown): value is LottieJson => {
     !!value &&
     typeof value === 'object' &&
     'w' in value &&
-    typeof value.w === 'number' &&
+    isInRange(value.w, MAX_LOTTIE_SIDE) &&
     'h' in value &&
-    typeof value.h === 'number' &&
-    (!('fr' in value) || typeof value.fr === 'number')
+    isInRange(value.h, MAX_LOTTIE_SIDE) &&
+    (!('fr' in value) || isInRange(value.fr, MAX_LOTTIE_FPS)) &&
+    'ip' in value &&
+    typeof value.ip === 'number' &&
+    'op' in value &&
+    typeof value.op === 'number' &&
+    value.op > value.ip &&
+    'layers' in value &&
+    Array.isArray(value.layers)
   );
 };

@@ -1,4 +1,4 @@
-export type FetchRequest = {
+type FetchRequestBase = {
   /**
    * Метка сообщения: service worker отвечает только на свои запросы.
    */
@@ -8,12 +8,29 @@ export type FetchRequest = {
    * Адрес запроса.
    */
   url: string;
+};
+
+type FetchJsonRequest = {
+  /**
+   * Вернуть тело ответа распарсенным JSON.
+   */
+  as: 'json';
+};
+
+type FetchBlobRequest = {
+  /**
+   * Вернуть тело ответа base64-байтами.
+   */
+  as: 'blob';
 
   /**
-   * Как вернуть тело ответа: распарсенным JSON или base64-байтами.
+   * Предел размера тела: service worker прерывает чтение на превышении, не передавая байты
+   * в content script.
    */
-  as: 'json' | 'blob';
+  maxBytes: number;
 };
+
+export type FetchRequest = FetchRequestBase & (FetchJsonRequest | FetchBlobRequest);
 
 export type FetchResponse =
   | {

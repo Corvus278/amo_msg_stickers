@@ -1,12 +1,19 @@
 import type { RemoteGif } from '../db.types';
 import type { Host, Settings } from '../host.types';
+import { isAllowedUrl } from '../net';
 
-import type {
-  GifFeed,
-  GifPage,
-  GiphyKind,
-  GiphyResponse,
-  TenorResponse,
+import {
+  type GifFeed,
+  type GifPage,
+  type GiphyImage,
+  type GiphyKind,
+  isGiphyImage,
+  isGiphyItem,
+  isGiphyResponse,
+  isTenorMedia,
+  isTenorResponse,
+  isTenorResult,
+  type TenorMedia,
 } from './gifs.types';
 
 export const FEED_LABELS: Record<GifFeed, string> = {
@@ -41,6 +48,38 @@ const KLIPY_CLIENT_KEY = 'amo-stickers';
 const KLIPY_MEDIA_FILTER = 'gif,tinygif';
 const KLIPY_CONTENT_FILTER = 'medium';
 
+/**
+ * Рендишны по убыванию предпочтения. `original` GIPHY отдаёт почти всегда, остальные — не
+ * у каждого GIF.
+ */
+const GIPHY_PREVIEW_RENDITIONS = ['fixed_width_small', 'fixed_width', 'original'];
+const GIPHY_SEND_RENDITIONS = ['downsized', 'original'];
+const KLIPY_PREVIEW_FORMATS = ['tinygif', 'gif'];
+const KLIPY_SEND_FORMATS = ['gif', 'tinygif'];
+
+/**
+ * Первый пригодный вариант файла: правильной формы и со ссылкой в пределах сетевой
+ * политики. null — ни один не подошёл, элемент выдачи отбрасывается.
+ *
+ * @param variants — варианты файла по имени
+ * @param names — имена по убыванию предпочтения
+ * @param isVariant — гард формы варианта
+ * @returns вариант или null
+ */
+const pickVariant = <T extends GiphyImage | TenorMedia>(
+  variants: Record<string, unknown>,
+  names: string[],
+  isVariant: (value: unknown) => value is T
+): T | null => {
+  for (const name of names) {
+    const variant = variants[name];
+
+    if (isVariant(variant) && isAllowedUrl(variant.url)) return variant;
+  }
+
+  return null;
+};
+
 const giphy = async (
   host: Host,
   key: string,
@@ -57,27 +96,30 @@ const giphy = async (
 
   if (q) params.set('q', q);
   const endpoint = q ? 'search' : 'trending';
-  const { data, pagination } = await host.fetchJson<GiphyResponse>(
-    `${GIPHY_BASE}/${kind}/${endpoint}?${params}`
-  );
+  const response = await host.fetchJson(`${GIPHY_BASE}/${kind}/${endpoint}?${params}`);
 
-  const items = data.map(({ id, title, images }): RemoteGif => {
-    /**
-     * `original` GIPHY отдаёт у каждого GIF, остальные рендишны — не всегда.
-     */
-    const preview = images.fixed_width_small || images.fixed_width || images.original!;
-    const send = images.downsized || images.original!;
+  if (!isGiphyResponse(response)) throw new Error('GIPHY: неожиданный ответ');
+  const { data, pagination } = response;
 
-    return {
-      id,
-      provider: 'giphy',
-      title: title || undefined,
-      url: send.url,
-      previewUrl: preview.url,
-      width: Number(preview.width),
-      height: Number(preview.height),
-    };
-  });
+  const items = data.reduce<RemoteGif[]>((acc, item) => {
+    if (!isGiphyItem(item)) return acc;
+    const preview = pickVariant(item.images, GIPHY_PREVIEW_RENDITIONS, isGiphyImage);
+    const send = pickVariant(item.images, GIPHY_SEND_RENDITIONS, isGiphyImage);
+
+    if (preview && send) {
+      acc.push({
+        id: item.id,
+        provider: 'giphy',
+        title: item.title || undefined,
+        url: send.url,
+        previewUrl: preview.url,
+        width: Number(preview.width),
+        height: Number(preview.height),
+      });
+    }
+
+    return acc;
+  }, []);
   const consumed = pagination.offset + pagination.count;
 
   return { items, next: consumed < pagination.total_count ? String(consumed) : null };
@@ -100,30 +142,33 @@ const klipy = async (
   if (q) params.set('q', q);
   if (next) params.set('pos', next);
   const endpoint = q ? 'search' : 'featured';
-  const { results, next: nextPos } = await host.fetchJson<TenorResponse>(
-    `${KLIPY_BASE}/${endpoint}?${params}`
-  );
+  const response = await host.fetchJson(`${KLIPY_BASE}/${endpoint}?${params}`);
 
-  const items = results.map((result): RemoteGif => {
-    const { id, content_description: title, media_formats: formats } = result;
+  if (!isTenorResponse(response)) throw new Error('KLIPY: неожиданный ответ');
+  const { results, next: nextPos } = response;
 
-    /**
-     * `gif` запрошен в `media_filter` и приходит у каждого результата.
-     */
-    const preview = formats.tinygif || formats.gif!;
-    const send = formats.gif || preview;
-    const [width, height] = preview.dims;
+  const items = results.reduce<RemoteGif[]>((acc, result) => {
+    if (!isTenorResult(result)) return acc;
+    const formats = result.media_formats;
+    const preview = pickVariant(formats, KLIPY_PREVIEW_FORMATS, isTenorMedia);
+    const send = pickVariant(formats, KLIPY_SEND_FORMATS, isTenorMedia);
 
-    return {
-      id,
-      provider: 'klipy',
-      title: title || undefined,
-      url: send.url,
-      previewUrl: preview.url,
-      width,
-      height,
-    };
-  });
+    if (preview && send) {
+      const [width, height] = preview.dims;
+
+      acc.push({
+        id: result.id,
+        provider: 'klipy',
+        title: result.content_description || undefined,
+        url: send.url,
+        previewUrl: preview.url,
+        width,
+        height,
+      });
+    }
+
+    return acc;
+  }, []);
 
   return { items, next: nextPos || null };
 };
