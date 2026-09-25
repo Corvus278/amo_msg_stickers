@@ -131,6 +131,13 @@ export type TenorResponse = {
  * а без нужных элемент или страница выдачи бесполезны.
  */
 
+/**
+ * GIPHY отдаёт размеры строками: `"480"`. Нечисловая строка и 0 не проходят — размер
+ * нужен сетке для раскладки.
+ *
+ * @param value — поле ответа
+ * @returns true, если это строка с положительным числом
+ */
 const isPositiveNumeric = (value: unknown) => {
   return typeof value === 'string' && Number(value) > 0;
 };

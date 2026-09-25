@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { putPack, putSticker } from '../src/core/db';
+import { deletePack, getPack, putPack, putSticker } from '../src/core/db';
+import type { Pack } from '../src/core/db.types';
 import { importTelegramSet } from '../src/core/sources/telegram';
 
 import { fakeHost } from './helpers/fakeHost';
@@ -18,11 +19,18 @@ vi.mock('../src/core/convert', () => {
 });
 
 vi.mock('../src/core/db', () => {
-  return { putPack: vi.fn(async () => {}), putSticker: vi.fn(async () => {}) };
+  return {
+    getPack: vi.fn(async () => {}),
+    putPack: vi.fn(async () => {}),
+    putSticker: vi.fn(async () => {}),
+    deletePack: vi.fn(async () => {}),
+  };
 });
 
 const TOKEN = '123456:secret';
 const FILE_API = `https://api.telegram.org/file/bot${TOKEN}/`;
+
+const NO_STICKERS = 'Telegram: в паке нет пригодных стикеров';
 
 const sticker = (id: string) => {
   return { file_id: `f-${id}`, file_unique_id: id, is_animated: false, is_video: false };
@@ -83,8 +91,9 @@ describe('importTelegramSet', () => {
         ),
       });
 
-      await importTelegramSet(host, TOKEN, 'Pack', vi.fn());
-
+      await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+        NO_STICKERS
+      );
       expect(host.fetchBlob).not.toHaveBeenCalled();
     }
   );
@@ -118,6 +127,38 @@ describe('importTelegramSet', () => {
       'Telegram: неожиданный ответ'
     );
     expect(putPack).not.toHaveBeenCalled();
+  });
+
+  it.each([[[{}]], [[]]])(
+    'пак без пригодных стикеров %j — ошибка, новый пак удалён',
+    async (stickers) => {
+      const host = fakeHost({ onJson: botApi({ name: 'Pack', title: 'Пак', stickers }) });
+
+      await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+        NO_STICKERS
+      );
+      expect(deletePack).toHaveBeenCalledWith('tg:Pack');
+    }
+  );
+
+  it('неудачный повтор импорта не удаляет ранее импортированный пак', async () => {
+    const previous: Pack = {
+      id: 'tg:Pack',
+      title: 'Пак',
+      source: 'telegram',
+      createdAt: 1,
+    };
+
+    vi.mocked(getPack).mockResolvedValueOnce(previous);
+    const host = fakeHost({
+      onJson: botApi({ name: 'Pack', title: 'Пак', stickers: [{}] }),
+    });
+
+    await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+      NO_STICKERS
+    );
+    expect(deletePack).not.toHaveBeenCalled();
+    expect(putPack).toHaveBeenLastCalledWith(previous);
   });
 
   it('ответ не в формате Bot API — ошибка', async () => {

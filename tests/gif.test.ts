@@ -43,6 +43,14 @@ describe('inspectGif', () => {
     expect(inspectGif(TEXT.encode('GIF89a'))).toBeNull();
   });
 
+  it('отклоняет GIF с заголовком и trailer, но без кадров', () => {
+    const header = makeGif(4, 4).subarray(0, 13);
+
+    header[10] = 0;
+
+    expect(inspectGif(new Uint8Array([...header, 0x3b]))).toBeNull();
+  });
+
   it('отклоняет нулевые размеры', () => {
     const gif = makeGif(4, 4);
 

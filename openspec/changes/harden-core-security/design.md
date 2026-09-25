@@ -27,7 +27,7 @@
 ## Decisions
 
 ### S1. Политика адресов — модуль ядра `core/net.ts`
-`isAllowedUrl(url)` принимает только `https:` с хостом `api.telegram.org`, `giphy.com` или `klipy.com`, в том числе их поддомены. Хост сравнивается по `new URL(url).hostname`, а не регуляркой по строке: так отсекаются `giphy.com.evil.example`, `evilgiphy.com` и `https://api.telegram.org@evil.example/`. Список совпадает с `host_permissions` в manifest.
+`isAllowedUrl(url)` принимает только `https:` с хостом `api.telegram.org` (точно, без поддоменов: у Bot API один хост), `giphy.com` или `klipy.com` со всеми их поддоменами (медиа раздают CDN). Хост сравнивается по `new URL(url).hostname`, а не регуляркой по строке: так отсекаются `giphy.com.evil.example`, `evilgiphy.com` и `https://api.telegram.org@evil.example/`. Список совпадает с `host_permissions` в manifest.
 - **Почему в ядре, а не только в service worker:** userscript иначе вёл бы себя по-другому. Скачал бы ссылку, которую подсунул ответ API, с IP и `Referer` пользователя amo.
 - **Альтернатива: только `host_permissions`.** Они не запрещают SW `fetch` к другим хостам, а только подчиняют такой запрос CORS: сам запрос всё равно уходит.
 

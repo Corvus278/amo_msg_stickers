@@ -29,6 +29,7 @@ describe('isAllowedUrl', () => {
     'https://evilgiphy.com/x.gif',
     'https://api.telegram.org@evil.example/',
     'https://telegram.org/',
+    'https://sub.api.telegram.org/',
     'javascript:alert(1)',
     'не адрес',
     '',

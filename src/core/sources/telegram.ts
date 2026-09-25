@@ -1,6 +1,6 @@
 import { toStickerGif } from '../convert';
 import type { SourceKind } from '../convert.types';
-import { putPack, putSticker } from '../db';
+import { deletePack, getPack, putPack, putSticker } from '../db';
 import type { Pack } from '../db.types';
 import type { Host } from '../host.types';
 import { BYTES_IN_MB } from '../net';
@@ -129,6 +129,7 @@ export const importTelegramSet = async (
     sourceRef: setName,
     createdAt: Date.now(),
   };
+  const previous = await getPack(pack.id);
 
   await putPack(pack);
 
@@ -145,8 +146,9 @@ export const importTelegramSet = async (
       const file = await call(host, token, 'getFile', { file_id: fileId });
 
       if (!isTgFile(file)) throw new Error('Telegram: недопустимый путь файла');
+      const { file_path: filePath } = file;
       const raw = await host.fetchBlob(
-        `${TG_API}/file/bot${token}/${file.file_path}`,
+        `${TG_API}/file/bot${token}/${filePath}`,
         MAX_STICKER_FILE_BYTES
       );
       const kind = toSourceKind(sticker);
@@ -173,6 +175,15 @@ export const importTelegramSet = async (
 
     done++;
     onProgress({ done, total, title });
+  }
+
+  /**
+   * Ни одного стикера не импортировано — это ошибка, а не пустая вкладка. Пак, импортированный
+   * раньше, не сносим: неудачный повтор (например, без сети) вернёт его запись как была.
+   */
+  if (!pack.coverId) {
+    await (previous ? putPack(previous) : deletePack(pack.id));
+    throw new Error('Telegram: в паке нет пригодных стикеров');
   }
 
   return pack;

@@ -30,6 +30,14 @@ const COLOR_TABLE_FLAG = 0x80;
 const COLOR_TABLE_SIZE_MASK = 0x07;
 const RGB_BYTES = 3;
 
+/**
+ * Числа в GIF — 16 бит little-endian. Байт за концом файла читается как 0: обрезанный
+ * заголовок даст нулевой размер и отсечётся проверкой размеров.
+ *
+ * @param bytes — файл
+ * @param offset — позиция младшего байта
+ * @returns число
+ */
 const readU16 = (bytes: Uint8Array, offset: number) => {
   return (bytes[offset] || 0) | ((bytes[offset + 1] || 0) << 8);
 };
@@ -67,6 +75,10 @@ const skipSubBlocks = (bytes: Uint8Array, from: number) => {
   return -1;
 };
 
+/**
+ * @param bytes — файл
+ * @returns true, если файл начинается с сигнатуры GIF87a или GIF89a
+ */
 const hasGifSignature = (bytes: Uint8Array) => {
   return GIF_SIGNATURES.includes(
     String.fromCharCode(...bytes.subarray(0, SIGNATURE_BYTES))

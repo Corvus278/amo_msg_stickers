@@ -87,6 +87,10 @@ export const listPacks = async (): Promise<Pack[]> => {
   });
 };
 
+export const getPack = async (id: string): Promise<Pack | undefined> => {
+  return promisify<Pack | undefined>((await store(STORE.packs)).get(id));
+};
+
 export const putPack = async (pack: Pack) => {
   await promisify((await store(STORE.packs, 'readwrite')).put(pack));
 };

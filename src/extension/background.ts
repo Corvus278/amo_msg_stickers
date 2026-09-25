@@ -25,6 +25,8 @@ const toBase64 = (bytes: Uint8Array) => {
 };
 
 const readBody = async (res: Response, request: FetchRequest): Promise<FetchResponse> => {
+  const { as: format } = request;
+
   switch (request.as) {
     case 'json': {
       return { ok: true, json: await res.json() };
@@ -41,9 +43,12 @@ const readBody = async (res: Response, request: FetchRequest): Promise<FetchResp
     }
 
     default: {
-      const unknownRequest: never = request;
+      request satisfies never;
 
-      throw new Error(`Unknown response format: ${JSON.stringify(unknownRequest)}`);
+      /**
+       * Только формат, без запроса целиком: в `url` запроса к Telegram лежит токен бота.
+       */
+      throw new Error(`Неизвестный формат ответа: ${String(format)}`);
     }
   }
 };

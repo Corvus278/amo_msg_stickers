@@ -8,11 +8,13 @@ export const BYTES_IN_MB = 1024 * 1024;
 const ALLOWED_PROTOCOL = 'https:';
 
 /**
- * Совпадает с `host_permissions` в manifest: домен и все его поддомены. Ссылки из ответов
- * API на другие хосты не скачиваем — иначе IP и Referer пользователя amo утекают туда,
- * куда укажет ответ.
+ * Сверены с `host_permissions` в manifest. Bot API живёт на одном хосте — он сравнивается
+ * точно; медиа GIPHY и KLIPY раздают CDN на поддоменах — там разрешён домен со всеми
+ * поддоменами. Ссылки из ответов API на другие хосты не скачиваем — иначе IP и Referer
+ * пользователя amo утекают туда, куда укажет ответ.
  */
-const ALLOWED_DOMAINS = ['api.telegram.org', 'giphy.com', 'klipy.com'];
+const ALLOWED_HOSTS = ['api.telegram.org'];
+const ALLOWED_DOMAINS = ['giphy.com', 'klipy.com'];
 
 /**
  * Сколько символов тела ответа попадает в текст ошибки — достаточно, чтобы понять причину,
@@ -36,9 +38,10 @@ export const isAllowedUrl = (url: string) => {
 
   return (
     protocol === ALLOWED_PROTOCOL &&
-    ALLOWED_DOMAINS.some((domain) => {
-      return hostname === domain || hostname.endsWith(`.${domain}`);
-    })
+    (ALLOWED_HOSTS.includes(hostname) ||
+      ALLOWED_DOMAINS.some((domain) => {
+        return hostname === domain || hostname.endsWith(`.${domain}`);
+      }))
   );
 };
 
