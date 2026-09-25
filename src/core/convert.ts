@@ -1,18 +1,18 @@
-import type { AnimationItem } from 'lottie-web';
-import lottie from 'lottie-web/build/player/lottie_light_canvas';
-
 import {
   type CanvasBox,
   type Decorate,
-  type Frame,
-  type FrameSet,
   type GifResult,
   type SourceKind,
   type ToStickerGifOptions,
 } from './convert.types';
-import { createGifEncoder } from './gifEncoder';
+import { encodeLadder } from './encodeLadder';
+import type { EncodedPass } from './encodeLadder.types';
+import { createFrameSink } from './frameSink';
+import type { FrameSink } from './frameSink.types';
+import { openFrameSource } from './frameSource';
+import type { FrameSource } from './frameSource.types';
+import { fit, planItem } from './frameSourceCommon';
 import { MAX_GIF_BYTES } from './sidePick';
-import { readTgs } from './tgs';
 
 /**
  * amo отправляет PNG/WebP как JPEG с белым фоном, без изменений проходит только GIF.
@@ -25,34 +25,6 @@ import { readTgs } from './tgs';
 export const STICKER_SIZE = 512;
 
 /**
- * Если GIF не влезает в бюджет, пробуем меньшие стороны по очереди.
- */
-const FALLBACK_SIZES = [384, 320, 256];
-const MAX_FRAMES = 100;
-const MAX_DURATION_SEC = 4;
-
-/**
- * 40 мс = ровно 4 сотых: у GIF задержка в сотых, дробные fps «плывут» по скорости.
- */
-const ANIMATION_FPS = 25;
-const PASSTHROUGH_GIF_BYTES = MAX_GIF_BYTES;
-const EVENT_TIMEOUT_MS = 10_000;
-
-/**
- * Задержка кадра, если декодер её не сообщил, и нижняя граница: задержку в 0–1
- * сотую браузеры заменяют на 100 мс, и анимация резко замедлилась бы.
- */
-const DEFAULT_FRAME_DELAY_MS = 100;
-const MIN_FRAME_DELAY_MS = 20;
-
-/**
- * webm без индекса отдаёт duration=Infinity, пока не прыгнуть в конец: seek
- * заведомо дальше любой длительности.
- */
-const SEEK_TO_END_SEC = 1e9;
-const DEFAULT_LOTTIE_FPS = 60;
-
-/**
  * Пропорции подписи от высоты стикера: кегль, отступ базовой линии от низа,
  * толщина обводки от кегля и максимальная ширина строки от ширины стикера.
  */
@@ -61,12 +33,6 @@ const CAPTION_BOTTOM_RATIO = 0.3;
 const CAPTION_STROKE_RATIO = 1 / 5;
 const CAPTION_MIN_STROKE = 2;
 const CAPTION_MAX_WIDTH_RATIO = 0.94;
-
-const fit = (w: number, h: number, max: number): [number, number] => {
-  const k = Math.min(1, max / Math.max(w, h));
-
-  return [Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))];
-};
 
 const makeCanvas = (w: number, h: number): CanvasBox => {
   const canvas = document.createElement('canvas');
@@ -80,282 +46,89 @@ const makeCanvas = (w: number, h: number): CanvasBox => {
   return { canvas, ctx };
 };
 
-const once = (
-  target: EventTarget,
-  event: string,
-  timeoutMs = EVENT_TIMEOUT_MS
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      return reject(new Error(`timeout: ${event}`));
-    }, timeoutMs);
+/**
+ * Прогоняет кадры плана через приёмник: кадр источника, поверх него подпись — уже в
+ * размере холста, чтобы текст не мылился от даунскейла. Пиксели кадра уходят в приёмник
+ * сразу, и в памяти не копится больше одного несжатого кадра.
+ *
+ * @param source — открытый источник кадров
+ * @param sink — приёмник прохода
+ * @param box — холст в размере прохода
+ * @param indices — номера кадров плана по порядку
+ * @param decorate — дорисовка поверх кадра; undefined — без неё
+ */
+const writeFrames = async (
+  source: FrameSource,
+  sink: FrameSink,
+  { canvas, ctx }: CanvasBox,
+  indices: Iterable<number>,
+  decorate?: Decorate
+) => {
+  const { width, height } = canvas;
 
-    target.addEventListener(
-      event,
-      () => {
-        clearTimeout(timer);
-        resolve();
-      },
-      { once: true }
+  for (const index of indices) {
+    await source.draw(index, ctx, width, height);
+    decorate?.(ctx, width, height);
+    await sink.write(
+      ctx.getImageData(0, 0, width, height).data,
+      planItem(source.plan, index).delayMs
     );
-  });
+  }
 };
 
 /**
- * Ждёт загрузки Lottie-анимации, но не дольше таймаута: по его истечении
- * раскадровка идёт с тем, что успело загрузиться.
+ * Пробный проход в размере источника: GIF не закрывается, нужен только вес потока.
+ *
+ * @param source — открытый источник кадров
+ * @param indices — номера пробных кадров плана
+ * @param decorate — дорисовка поверх кадра; undefined — без неё
+ * @returns вес пробы в байтах
  */
-const lottieLoaded = (anim: AnimationItem, timeoutMs = EVENT_TIMEOUT_MS) => {
-  return new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, timeoutMs);
-    const removeListener = anim.addEventListener('DOMLoaded', () => {
-      clearTimeout(timer);
-      removeListener();
-      resolve();
-    });
-  });
-};
+const samplePass = async (
+  source: FrameSource,
+  indices: number[],
+  decorate?: Decorate
+) => {
+  const { width, height } = source;
+  const sink = createFrameSink({ width, height, isAnimated: source.plan.length > 1 });
 
-export const encodeGif = (frames: Frame[], width: number, height: number): Blob => {
-  const encoder = createGifEncoder({ width, height, isAnimated: frames.length > 1 });
+  try {
+    await writeFrames(source, sink, makeCanvas(width, height), indices, decorate);
 
-  for (const { data, delay } of frames) {
-    encoder.write(data.data, delay);
+    return sink.byteLength;
+  } finally {
+    sink.close();
   }
-
-  return new Blob([encoder.finish()], { type: 'image/gif' });
-};
-
-const scaleFrames = (
-  frames: Frame[],
-  width: number,
-  height: number,
-  max: number
-): FrameSet => {
-  const [w, h] = fit(width, height, max);
-  const src = makeCanvas(width, height);
-  const dst = makeCanvas(w, h);
-  const scaled = frames.map(({ data, delay }) => {
-    src.ctx.putImageData(data, 0, 0);
-    dst.ctx.clearRect(0, 0, w, h);
-    dst.ctx.drawImage(src.canvas, 0, 0, w, h);
-
-    return { data: dst.ctx.getImageData(0, 0, w, h), delay };
-  });
-
-  return { frames: scaled, width: w, height: h };
 };
 
 /**
- * Кодирует в исходном размере и уменьшает, пока GIF не влезет в MAX_GIF_BYTES.
+ * Полный проход по всему плану источника с большей стороной не больше `side`.
+ *
+ * @param source — открытый источник кадров
+ * @param side — предел большей стороны прохода
+ * @param decorate — дорисовка поверх кадра; undefined — без неё
+ * @returns готовый GIF прохода
  */
-const encodeWithinBudget = (
-  frames: Frame[],
-  width: number,
-  height: number
-): GifResult => {
-  let blob = encodeGif(frames, width, height);
-  let result: GifResult = { blob, width, height };
-  const side = Math.max(width, height);
-
-  for (const size of FALLBACK_SIZES) {
-    if (result.blob.size <= MAX_GIF_BYTES) break;
-    if (size >= side) continue;
-    const scaled = scaleFrames(frames, width, height, size);
-
-    blob = encodeGif(scaled.frames, scaled.width, scaled.height);
-    result = { blob, width: scaled.width, height: scaled.height };
-  }
-
-  return result;
-};
-
-const imageFrames = async (
-  blob: Blob,
-  max: number,
+const fullPass = async (
+  source: FrameSource,
+  side: number,
   decorate?: Decorate
-): Promise<FrameSet> => {
-  if (
-    typeof ImageDecoder !== 'undefined' &&
-    blob.type &&
-    (await ImageDecoder.isTypeSupported(blob.type))
-  ) {
-    const decoder = new ImageDecoder({ data: blob.stream(), type: blob.type });
-
-    await decoder.tracks.ready;
-    await decoder.completed;
-    const track = decoder.tracks.selectedTrack!;
-    const count = Math.min(track.frameCount, MAX_FRAMES);
-    let canvasBox: CanvasBox | null = null;
-    let size: [number, number] = [1, 1];
-    const frames: Frame[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const { image } = await decoder.decode({ frameIndex: i });
-
-      if (!canvasBox) {
-        size = fit(image.displayWidth, image.displayHeight, max);
-        canvasBox = makeCanvas(...size);
-      }
-
-      const { ctx } = canvasBox;
-      const [w, h] = size;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(image, 0, 0, w, h);
-      decorate?.(ctx, w, h);
-      frames.push({
-        data: ctx.getImageData(0, 0, w, h),
-        /**
-         * `VideoFrame.duration` — в микросекундах.
-         */
-        delay: image.duration
-          ? Math.max(MIN_FRAME_DELAY_MS, image.duration / 1000)
-          : DEFAULT_FRAME_DELAY_MS,
-      });
-      image.close();
-    }
-
-    decoder.close();
-
-    return { frames, width: size[0], height: size[1] };
-  }
-
-  const bitmap = await createImageBitmap(blob);
-  const [w, h] = fit(bitmap.width, bitmap.height, max);
-  const { ctx } = makeCanvas(w, h);
-
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  decorate?.(ctx, w, h);
-  bitmap.close();
-
-  return {
-    frames: [{ data: ctx.getImageData(0, 0, w, h), delay: 0 }],
-    width: w,
-    height: h,
-  };
-};
-
-const videoFrames = async (
-  blob: Blob,
-  max: number,
-  decorate?: Decorate,
-  fps = ANIMATION_FPS
-): Promise<FrameSet> => {
-  const url = URL.createObjectURL(blob);
-  const video = document.createElement('video');
-
-  video.muted = true;
-  video.playsInline = true;
-  video.preload = 'auto';
-  video.src = url;
+): Promise<EncodedPass> => {
+  const [width, height] = fit(source.width, source.height, side);
+  const sink = createFrameSink({ width, height, isAnimated: source.plan.length > 1 });
 
   try {
-    await once(video, 'loadeddata');
+    await writeFrames(
+      source,
+      sink,
+      makeCanvas(width, height),
+      source.plan.keys(),
+      decorate
+    );
 
-    if (!Number.isFinite(video.duration)) {
-      video.currentTime = SEEK_TO_END_SEC;
-      await once(video, 'seeked');
-    }
-
-    const duration = Math.min(video.duration || 1, MAX_DURATION_SEC);
-    const [w, h] = fit(video.videoWidth, video.videoHeight, max);
-    const { ctx } = makeCanvas(w, h);
-    const frames: Frame[] = [];
-    const step = 1 / fps;
-
-    for (let t = 0; t < duration && frames.length < MAX_FRAMES; t += step) {
-      video.currentTime = t;
-      await once(video, 'seeked');
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(video, 0, 0, w, h);
-      decorate?.(ctx, w, h);
-      frames.push({ data: ctx.getImageData(0, 0, w, h), delay: 1000 / fps });
-    }
-
-    return { frames, width: w, height: h };
+    return { bytes: await sink.finish(), width, height };
   } finally {
-    URL.revokeObjectURL(url);
-  }
-};
-
-const tgsFrames = async (
-  blob: Blob,
-  max: number,
-  decorate?: Decorate,
-  fps = ANIMATION_FPS
-): Promise<FrameSet> => {
-  const json = await readTgs(blob);
-  const [w, h] = fit(json.w, json.h, max);
-  const { ctx } = makeCanvas(w, h);
-
-  /**
-   * Каст — из-за типов lottie-web: они требуют `container` даже для canvas-рендера
-   * с готовым `context`, которому контейнер не нужен.
-   */
-  const anim = lottie.loadAnimation({
-    renderer: 'canvas',
-    loop: false,
-    autoplay: false,
-    animationData: json,
-    rendererSettings: {
-      context: ctx,
-      clearCanvas: true,
-      dpr: 1,
-      preserveAspectRatio: 'xMidYMid meet',
-    },
-  } as Parameters<typeof lottie.loadAnimation>[0]);
-
-  try {
-    if (!anim.isLoaded) await lottieLoaded(anim);
-    const sourceFps = json.fr || DEFAULT_LOTTIE_FPS;
-    const total = Math.min(anim.totalFrames, sourceFps * MAX_DURATION_SEC);
-    const frameStep = Math.max(1, sourceFps / fps);
-    const frames: Frame[] = [];
-
-    for (let f = 0; f < total && frames.length < MAX_FRAMES; f += frameStep) {
-      anim.goToAndStop(f, true);
-      decorate?.(ctx, w, h);
-      frames.push({
-        data: ctx.getImageData(0, 0, w, h),
-        /**
-         * При исходных fps ниже целевых шаг равен одному кадру, поэтому задержку
-         * берём от реального шага, а не от целевых fps.
-         */
-        delay: (frameStep / sourceFps) * 1000,
-      });
-    }
-
-    return { frames, width: w, height: h };
-  } finally {
-    anim.destroy();
-  }
-};
-
-const sourceFrames = (
-  blob: Blob,
-  kind: SourceKind,
-  max: number,
-  decorate?: Decorate
-): Promise<FrameSet> => {
-  switch (kind) {
-    case 'tgs': {
-      return tgsFrames(blob, max, decorate);
-    }
-
-    case 'video': {
-      return videoFrames(blob, max, decorate);
-    }
-
-    case 'image': {
-      return imageFrames(blob, max, decorate);
-    }
-
-    default: {
-      const unknownKind: never = kind;
-
-      throw new Error(`Unknown source kind: ${String(unknownKind)}`);
-    }
+    sink.close();
   }
 };
 
@@ -381,7 +154,7 @@ export const toStickerGif = async (
     kind === 'image' &&
     blob.type === 'image/gif' &&
     !decorate &&
-    blob.size <= PASSTHROUGH_GIF_BYTES
+    blob.size <= MAX_GIF_BYTES
   ) {
     const bitmap = await createImageBitmap(blob);
     const result = { blob, width: bitmap.width, height: bitmap.height };
@@ -391,11 +164,26 @@ export const toStickerGif = async (
     return result;
   }
 
-  const { frames, width, height } = await sourceFrames(blob, kind, max, decorate);
+  const source = await openFrameSource(blob, kind, max);
 
-  if (!frames.length) throw new Error('Не удалось извлечь кадры');
+  try {
+    if (!source.plan.length) throw new Error('Не удалось извлечь кадры');
 
-  return encodeWithinBudget(frames, width, height);
+    const { bytes, width, height } = await encodeLadder({
+      frameCount: source.plan.length,
+      side: Math.max(source.width, source.height),
+      sample: (indices) => {
+        return samplePass(source, indices, decorate);
+      },
+      encode: (side) => {
+        return fullPass(source, side, decorate);
+      },
+    });
+
+    return { blob: new Blob([bytes], { type: 'image/gif' }), width, height };
+  } finally {
+    source.dispose();
+  }
 };
 
 /**
