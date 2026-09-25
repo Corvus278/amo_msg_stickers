@@ -140,3 +140,11 @@ F2 (critical итогового аудита): useObjectUrls(isOpen) отзыв�
 Замер аудитора: 20 циклов — 30 живых URL открыт / 0 закрыт; 0 после закрытия на 4 представлениях; битых картинок при повторном открытии 0; отправка из недавних и пака без регрессий.
 Аудит: перепроверка итоговым аудитором, ok, 1 круг.
 Долг: URL, созданные чтением, завершившимся после закрытия (в т.ч. фоновый Telegram-импорт), живут до следующего закрытия — ограничено одним циклом; если listPacks упадёт при открытии, сетки останутся на отозванных URL.
+
+### F1
+
+F1 (требование пользователя «есть же cva»): class-variance-authority в dependencies, clsx удалён (приходит транзитивно через cva); на cva — Button (VariantProps вместо ручного union), StatusBar, StickerCell, MasonryCell, DropZone, панель Picker (isOpen, isDark). Tab и FeedChip — через aria-selected:/aria-pressed:, не тронуты. tailwind-merge не добавлен (design.md D7).
+Решения: cva в .tsx компонента — Tailwind сканирует только *.tsx; правило react.md #13.
+Проверка: CSS в бандле побайтно равен HEAD, class-токены совпадают, вывод cva = старый clsx на всех сочетаниях; DOM 15/15 состояний на стенде. Бандл +867 Б (gzip +~350).
+Аудит: 1 круг, ok.
+Долг: tasks.md:8 (2.1) говорит «clsx в dependencies» — теперь cva; react.md #13 пример «Хорошо» объявляет тип в .tsx, а текст требует *.types.ts; CLAUDE.md:18 висящая строка после переноса; лишние defaultVariants для обязательных boolean (Picker.tsx:57, DropZone.tsx:22, StatusBar.tsx:17).

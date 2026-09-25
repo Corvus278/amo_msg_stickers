@@ -12,9 +12,10 @@ amo stickers — стикеры и GIF для мессенджера amo (web). 
 
 ## Стек и сборка
 
-TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSource: 'preact'`, классы собирает `clsx`),
-стили — Tailwind 3 с токенами amo в `tailwind.config.ts`: цвета, шрифты, тени и шкала отступов совпадают с
-tailwind-классами страницы amo, поэтому класс из её вёрстки значит в пикере то же самое. GIF кодирует `gifenc`, `.tgs`
+TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSource: 'preact'`, классы по варианту и
+состоянию описывает `cva` из `class-variance-authority`), стили — Tailwind 3 с токенами amo в `tailwind.config.ts`:
+цвета, шрифты, тени и шкала отступов совпадают с tailwind-классами страницы amo, поэтому класс из её вёрстки значит в
+пикере то же самое. GIF кодирует `gifenc`, `.tgs`
 рендерит `lottie-web` (light canvas-плеер: без `eval`, который не пропускает CSP расширения). Пакетный менеджер —
 pnpm, версии Node и pnpm — в `.mise.toml`.
 

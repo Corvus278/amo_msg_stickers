@@ -1,8 +1,20 @@
-import { clsx } from 'clsx';
+import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
 import { useCellSend } from './useCellSend/useCellSend';
 import type { StickerCellProps } from './StickerCell.types';
+
+/**
+ * Обёртка — группа для `group-hover:` кнопок ячейки; занятая отправкой ячейка
+ * приглушена и не принимает клики до конца отправки.
+ */
+const cellVariants = cva('group relative', {
+  variants: {
+    isBusy: {
+      true: 'pointer-events-none opacity-40',
+    },
+  },
+});
 
 /**
  * Подсветка наведения висит на обёртке (`group`), а не на кнопке отправки: курсор над
@@ -42,7 +54,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
   };
 
   return (
-    <div className={clsx('group relative', isBusy && 'pointer-events-none opacity-40')}>
+    <div className={cellVariants({ isBusy })}>
       <button
         type="button"
         aria-label="Отправить"

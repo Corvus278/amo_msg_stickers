@@ -1,4 +1,4 @@
-import { clsx } from 'clsx';
+import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
 import { AddView } from './AddView/AddView';
@@ -38,6 +38,25 @@ const PANEL_CLASS = [
  */
 const OPEN_ANIMATION_CLASS =
   'transition-[opacity,transform] duration-lg ease-linear [@starting-style]:translate-y-[5px] [@starting-style]:opacity-0';
+
+/**
+ * `flex` — только у открытой панели: закрытая остаётся смонтированной и скрыта
+ * `display: none`, чтобы вкладка и запрос поиска пережили повторное открытие.
+ */
+const panelVariants = cva([...PANEL_CLASS, OPEN_ANIMATION_CLASS], {
+  variants: {
+    isOpen: {
+      true: 'flex',
+      false: 'hidden',
+    },
+    isDark: {
+      true: 'dark',
+    },
+  },
+  defaultVariants: {
+    isOpen: false,
+  },
+});
 
 const renderView = (view: View, isOpen: boolean) => {
   switch (view.kind) {
@@ -87,12 +106,7 @@ export const Picker: FC<PickerProps> = (props) => {
     <dialog
       open={isOpen}
       aria-label="Стикеры и GIF"
-      className={clsx(
-        PANEL_CLASS,
-        OPEN_ANIMATION_CLASS,
-        isOpen ? 'flex' : 'hidden',
-        isDark && 'dark'
-      )}
+      className={panelVariants({ isOpen, isDark })}
       onKeyDown={handlePanelKeyDown}
     >
       {renderView(view, isOpen)}

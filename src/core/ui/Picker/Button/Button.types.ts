@@ -1,6 +1,13 @@
+import type { VariantProps } from 'class-variance-authority';
 import type { ComponentChildren } from 'preact';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger';
+import type { buttonVariants } from './Button';
+
+/**
+ * Вид обязателен: у кнопки нет вида по умолчанию, поэтому `null` и `undefined` из
+ * `VariantProps` отрезаны.
+ */
+export type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
 
 export type ButtonProps = {
   /**

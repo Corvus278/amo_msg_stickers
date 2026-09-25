@@ -1,20 +1,28 @@
-import { clsx } from 'clsx';
+import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC, TargetedDragEvent, TargetedEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
 import type { DropZoneProps } from './DropZone.types';
 
-const ZONE_CLASS =
-  'relative block cursor-pointer rounded-lgx border-[1.5px] border-dashed p-4 text-center';
-
 /**
  * Цвета обычной и подсвеченной зоны — взаимоисключающие наборы: конфликтующих утилит
  * на одном элементе быть не должно (`tailwind-merge` не берём).
  */
-const IDLE_CLASS =
-  'border-cadetGray-30/[.28] text-cadetGray-30 dark:border-white-0/[.1] dark:text-gray-70';
-
-const OVER_CLASS = 'border-blue-50 text-blue-50 dark:border-beige-70 dark:text-beige-70';
+const zoneVariants = cva(
+  'relative block cursor-pointer rounded-lgx border-[1.5px] border-dashed p-4 text-center',
+  {
+    variants: {
+      isDragOver: {
+        true: 'border-blue-50 text-blue-50 dark:border-beige-70 dark:text-beige-70',
+        false:
+          'border-cadetGray-30/[.28] text-cadetGray-30 dark:border-white-0/[.1] dark:text-gray-70',
+      },
+    },
+    defaultVariants: {
+      isDragOver: false,
+    },
+  }
+);
 
 /**
  * Зона загрузки: поле выбора файла прозрачно и растянуто на всю зону, поэтому клик в
@@ -53,7 +61,7 @@ export const DropZone: FC<DropZoneProps> = (props) => {
 
   return (
     <label
-      className={clsx(ZONE_CLASS, isDragOver ? OVER_CLASS : IDLE_CLASS)}
+      className={zoneVariants({ isDragOver })}
       onDragOver={handleZoneDragOver}
       onDragLeave={handleZoneDragLeave}
       onDrop={handleZoneDrop}
