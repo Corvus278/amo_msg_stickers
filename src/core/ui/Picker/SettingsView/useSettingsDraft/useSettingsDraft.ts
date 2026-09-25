@@ -1,31 +1,39 @@
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 
 import type { Settings } from '../../../../host.types';
 import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
 
-import type { SettingsDraft } from './useSettingsDraft.types';
+import type { SettingsDraft, SettingsEdits } from './useSettingsDraft.types';
 
 /**
  * Черновик формы настроек. Форма заполняется заново при каждом перечитывании настроек —
  * на открытие пикера и после сохранения: несохранённый ввод при повторном открытии
  * сбрасывается к сохранённым значениям.
  *
+ * Хранятся только правки, помеченные настройками, поверх которых они сделаны, а значения
+ * полей складываются в рендере. Перечитанные настройки — новый объект, и правки поверх
+ * прежнего просто перестают применяться: без синхронизации эффектом и лишнего рендера со
+ * старым черновиком.
+ *
  * @returns значения полей, их правка и сохранение
  */
 export const useSettingsDraft = (): SettingsDraft => {
   const { env, settings, refreshSettings, showStatus, showError } = usePicker();
-  const [draft, setDraft] = useState<Settings>(settings);
+  const [edits, setEdits] = useState<SettingsEdits | null>(null);
+  const isEditsActual = !!edits && edits.base === settings;
+  const draft: Settings = isEditsActual ? { ...settings, ...edits.values } : settings;
 
-  useEffect(() => {
-    setDraft(settings);
-  }, [settings]);
+  const changeField = useCallback(
+    (key: keyof Settings, value: string) => {
+      setEdits((prev) => {
+        const values = prev && prev.base === settings ? prev.values : null;
 
-  const changeField = useCallback((key: keyof Settings, value: string) => {
-    setDraft((prev) => {
-      return { ...prev, [key]: value };
-    });
-  }, []);
+        return { base: settings, values: { ...values, [key]: value } };
+      });
+    },
+    [settings]
+  );
 
   const save = useCallback(async () => {
     const { giphyKey, klipyKey, telegramToken } = draft;

@@ -18,3 +18,16 @@ export type SettingsDraft = {
    */
   save: () => Promise<void>;
 };
+
+export type SettingsEdits = {
+  /**
+   * Настройки, поверх которых сделаны правки: после их перечитывания правки не
+   * применяются.
+   */
+  base: Settings;
+
+  /**
+   * Изменённые поля формы; остальные берутся из настроек.
+   */
+  values: Partial<Settings>;
+};
