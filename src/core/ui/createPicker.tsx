@@ -25,7 +25,12 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
   const element = document.createElement('div');
 
   element.setAttribute('data-amo-stickers-picker', '');
-  const shadowRoot = element.attachShadow({ mode: 'open' });
+  /**
+   * `closed`: во вкладке «Настройки» лежат ключи GIF и токен бота, а у открытого
+   * shadow root их прочитал бы любой скрипт страницы через `element.shadowRoot`.
+   * Ссылка на корень нужна только фасаду — она остаётся в замыкании.
+   */
+  const shadowRoot = element.attachShadow({ mode: 'closed' });
 
   let isOpen = false;
   let isDark = false;
