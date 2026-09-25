@@ -34,7 +34,7 @@ export const Tabs: FC = () => {
   const { packs } = usePicker();
 
   return (
-    <div role="tablist" className={TABS_CLASS}>
+    <div role="tablist" aria-label="Вкладки пикера" className={TABS_CLASS}>
       <Tab title="Недавние" view={RECENT_VIEW}>
         <ClockIcon />
       </Tab>

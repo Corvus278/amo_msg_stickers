@@ -7,6 +7,7 @@ import { PackView } from './PackView/PackView';
 import { RecentView } from './RecentView/RecentView';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
+import { TAB_PANEL_ID, tabId } from './Tab/tabIds';
 import { Tabs } from './Tabs/Tabs';
 import { useOpenLoad } from './useOpenLoad/useOpenLoad';
 import { usePickerView } from './usePickerView/usePickerView';
@@ -109,7 +110,18 @@ export const Picker: FC<PickerProps> = (props) => {
       className={panelVariants({ isOpen, isDark })}
       onKeyDown={handlePanelKeyDown}
     >
-      {renderView(view, isOpen)}
+      {/**
+       * Панель занимает место тела, а шапка и тело представления ложатся в неё так же,
+       * как лежали бы прямо в колонке диалога.
+       */}
+      <div
+        role="tabpanel"
+        id={TAB_PANEL_ID}
+        aria-labelledby={tabId(view)}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        {renderView(view, isOpen)}
+      </div>
 
       <StatusBar />
 
