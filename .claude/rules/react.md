@@ -81,7 +81,7 @@ const handleClick = () => {};
 Склейка без вариантов — `cx` из `class-variance-authority`, отдельный `clsx` не ставим. `tailwind-merge` не берём:
 конфликтующих утилит на одном элементе нет, а токены amo ломают merge без отдельного конфига.
 
-**Хорошо:**
+**Хорошо** (`Button.tsx`):
 
 ```tsx
 export const buttonVariants = cva('shrink-0 rounded-lg disabled:opacity-50', {
@@ -93,9 +93,17 @@ export const buttonVariants = cva('shrink-0 rounded-lg disabled:opacity-50', {
   },
 });
 
-export type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
-
 <button className={buttonVariants({ variant })} />
+```
+
+**Хорошо** (`Button.types.ts`):
+
+```ts
+import type { VariantProps } from 'class-variance-authority';
+
+import type { buttonVariants } from './Button';
+
+export type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>['variant']>;
 ```
 
 **Плохо:**
