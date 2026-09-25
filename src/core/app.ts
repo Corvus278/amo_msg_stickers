@@ -96,7 +96,7 @@ export const start = (host: Host) => {
      */
     button.append(picker.element);
     setIconOpen(button, true);
-    void picker.open();
+    picker.open();
   };
 
   const mount = ({ emojiWrap }: Composer) => {
