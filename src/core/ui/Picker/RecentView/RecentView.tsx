@@ -34,9 +34,15 @@ export const RecentView: FC<RecentViewProps> = (props) => {
 
     return (
       <StickerGrid>
-        {entries.map(({ key, item, url }) => {
+        {entries.map(({ key, item, url, name }) => {
           return (
-            <StickerCell key={key} item={item} url={url} onDelete={handleCellDelete} />
+            <StickerCell
+              key={key}
+              item={item}
+              url={url}
+              name={name}
+              onDelete={handleCellDelete}
+            />
           );
         })}
       </StickerGrid>

@@ -79,6 +79,11 @@ export type RemoteGif = {
   provider: 'giphy' | 'klipy';
 
   /**
+   * Название GIF у провайдера — для доступного имени ячейки. undefined — названия нет.
+   */
+  title?: string | undefined;
+
+  /**
    * Ссылка на полноразмерную GIF — её и отправляем.
    */
   url: string;

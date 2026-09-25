@@ -2,32 +2,39 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
 import { deleteRecent, getSticker, listRecent } from '../../../../db';
 import type { RecentRec, SendItem } from '../../../../db.types';
+import { gifCellName, stickerCellName } from '../../cellName/cellName';
 import { errorMessage } from '../../PickerProvider/errorMessage';
 import type { PickerContextValue } from '../../PickerProvider/PickerProvider.types';
 import { usePicker } from '../../PickerProvider/usePicker';
 
-import type { Recent, RecentEntry } from './useRecent.types';
+import type { Recent, RecentCell, RecentEntry } from './useRecent.types';
 
 /**
- * Адрес картинки элемента недавних.
+ * Картинка и имя элемента недавних.
  *
  * @param item — отправленный элемент
  * @param urlOf — кэш object URL стикеров из контекста
  * @returns `null` — свой стикер удалён из библиотеки, элемент не показывается
  */
-const itemUrl = async (
+const itemCell = async (
   item: SendItem,
   urlOf: PickerContextValue['urlOf']
-): Promise<string | null> => {
+): Promise<RecentCell | null> => {
   switch (item.kind) {
     case 'local': {
       const sticker = await getSticker(item.stickerId);
 
-      return sticker ? urlOf(sticker.id, sticker.blob) : null;
+      if (!sticker) return null;
+
+      const { id, blob, emoji } = sticker;
+
+      return { url: urlOf(id, blob), name: stickerCellName(emoji) };
     }
 
     case 'remote': {
-      return item.gif.previewUrl;
+      const { gif } = item;
+
+      return { url: gif.previewUrl, name: gifCellName(gif) };
     }
 
     default: {
@@ -64,15 +71,15 @@ export const useRecent = (isOpen: boolean): Recent => {
 
     const resolved = await Promise.all(
       records.map(async ({ key, item }: RecentRec) => {
-        return { key, item, url: await itemUrl(item, urlOf) };
+        return { key, item, cell: await itemCell(item, urlOf) };
       })
     );
 
     if (request !== requestRef.current) return;
 
     setEntries(
-      resolved.reduce<RecentEntry[]>((acc, { key, item, url }) => {
-        if (url) acc.push({ key, item, url });
+      resolved.reduce<RecentEntry[]>((acc, { key, item, cell }) => {
+        if (cell) acc.push({ key, item, ...cell });
 
         return acc;
       }, [])

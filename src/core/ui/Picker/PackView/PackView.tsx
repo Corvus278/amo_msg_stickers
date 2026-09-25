@@ -43,9 +43,15 @@ export const PackView: FC<PackViewProps> = (props) => {
 
     return (
       <StickerGrid>
-        {stickers.map(({ id, item, url }) => {
+        {stickers.map(({ id, item, url, name }) => {
           return (
-            <StickerCell key={id} item={item} url={url} onDelete={handleCellDelete} />
+            <StickerCell
+              key={id}
+              item={item}
+              url={url}
+              name={name}
+              onDelete={handleCellDelete}
+            />
           );
         })}
       </StickerGrid>

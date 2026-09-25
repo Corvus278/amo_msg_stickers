@@ -15,6 +15,23 @@ export type RecentEntry = {
    * Адрес картинки для ячейки: object URL своего стикера или превью GIF.
    */
   url: string;
+
+  /**
+   * Имя элемента для кнопок ячейки.
+   */
+  name: string;
+};
+
+export type RecentCell = {
+  /**
+   * Адрес картинки для ячейки: object URL своего стикера или превью GIF.
+   */
+  url: string;
+
+  /**
+   * Имя элемента для кнопок ячейки.
+   */
+  name: string;
 };
 
 export type Recent = {

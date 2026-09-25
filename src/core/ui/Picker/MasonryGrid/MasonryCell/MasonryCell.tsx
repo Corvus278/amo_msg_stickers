@@ -2,6 +2,7 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
 import type { SendItem } from '../../../../db.types';
+import { gifCellName } from '../../cellName/cellName';
 import { useCellSend } from '../../useCellSend/useCellSend';
 
 import type { MasonryCellProps } from './MasonryCell.types';
@@ -40,7 +41,7 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
   return (
     <button
       type="button"
-      aria-label="Отправить"
+      aria-label={`Отправить ${gifCellName(gif)}`}
       disabled={isBusy}
       className={cellVariants({ isBusy })}
       style={{ aspectRatio: `${width} / ${height}` }}

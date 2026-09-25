@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import { deletePack, deleteSticker, listStickers } from '../../../../db';
+import { stickerCellName } from '../../cellName/cellName';
 import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
 import { usePickerView } from '../../usePickerView/usePickerView';
@@ -48,8 +49,13 @@ export const usePack = (packId: string): PackState => {
 
       setLoaded({
         packId,
-        stickers: records.map(({ id, blob }): PackSticker => {
-          return { id, item: { kind: 'local', stickerId: id }, url: urlOf(id, blob) };
+        stickers: records.map(({ id, blob, emoji }): PackSticker => {
+          return {
+            id,
+            item: { kind: 'local', stickerId: id },
+            url: urlOf(id, blob),
+            name: stickerCellName(emoji),
+          };
         }),
       });
     };

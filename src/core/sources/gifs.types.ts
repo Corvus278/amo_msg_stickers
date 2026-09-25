@@ -43,6 +43,11 @@ export type GiphyItem = {
   id: string;
 
   /**
+   * Название GIF; пустая строка — названия нет.
+   */
+  title?: string;
+
+  /**
    * Рендишны по имени (`original`, `downsized`, `fixed_width` …); набор зависит от GIF.
    */
   images: Record<string, GiphyImage | undefined>;
@@ -94,6 +99,11 @@ export type TenorResult = {
    * Идентификатор GIF в KLIPY.
    */
   id: string;
+
+  /**
+   * Описание GIF; нет или пустая строка — описания нет.
+   */
+  content_description?: string;
 
   /**
    * Файлы по формату (`gif`, `tinygif`); приходят только запрошенные в `media_filter`.

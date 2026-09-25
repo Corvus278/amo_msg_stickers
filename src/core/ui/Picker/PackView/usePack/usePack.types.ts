@@ -15,6 +15,11 @@ export type PackSticker = {
    * Object URL картинки стикера.
    */
   url: string;
+
+  /**
+   * Имя стикера для кнопок ячейки.
+   */
+  name: string;
 };
 
 export type PackStickers = {

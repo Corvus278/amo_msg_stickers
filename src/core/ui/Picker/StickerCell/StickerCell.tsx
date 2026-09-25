@@ -28,11 +28,18 @@ const SEND_CLASS = [
 ].join(' ');
 
 /**
- * Кнопка удаления скрыта, пока курсор не над ячейкой: иначе крестики на каждом стикере
- * заслоняли бы сетку.
+ * Кнопка удаления скрыта, пока курсор не над ячейкой и в ней нет фокуса с клавиатуры:
+ * иначе крестики на каждом стикере заслоняли бы сетку.
+ *
+ * Скрыта прозрачностью, а не `display: none`: так она остаётся в порядке Tab и в дереве
+ * доступности. `pointer-events-none` не даёт невидимому крестику перехватить клик по
+ * углу стикера. Фокус — `:focus-visible`, а не `focus-within`: после клика мышью фокус
+ * остаётся на кнопке отправки, и крестик не должен висеть, когда курсор ушёл.
  */
 const DELETE_CLASS = [
-  'absolute right-0.5 top-0.5 hidden size-4.5 cursor-pointer rounded-full p-0 group-hover:block',
+  'absolute right-0.5 top-0.5 size-4.5 cursor-pointer rounded-full p-0',
+  'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100',
+  'group-has-[:focus-visible]:pointer-events-auto group-has-[:focus-visible]:opacity-100',
   'font-primary text-xsm leading-[18px]',
   'bg-white-0 text-cadetGray-30 shadow-[0_1px_3px] shadow-black-0/20 hover:text-red-30',
   'dark:bg-gray-10 dark:text-gray-70 dark:hover:text-red-30',
@@ -43,7 +50,7 @@ const DELETE_CLASS = [
  * кнопка внутри кнопки — невалидный HTML.
  */
 export const StickerCell: FC<StickerCellProps> = (props) => {
-  const { item, url, onDelete } = props;
+  const { item, url, name, onDelete } = props;
   const { isBusy, sendItem } = useCellSend(item);
 
   const handleSendClick = () => {
@@ -58,7 +65,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
     <div className={cellVariants({ isBusy })}>
       <button
         type="button"
-        aria-label="Отправить"
+        aria-label={`Отправить ${name}`}
         disabled={isBusy}
         className={SEND_CLASS}
         onClick={handleSendClick}
@@ -75,6 +82,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
         <button
           type="button"
           title="Удалить"
+          aria-label={`Удалить ${name}`}
           className={DELETE_CLASS}
           onClick={handleDeleteClick}
         >

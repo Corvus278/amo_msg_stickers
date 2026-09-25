@@ -61,7 +61,7 @@ const giphy = async (
     `${GIPHY_BASE}/${kind}/${endpoint}?${params}`
   );
 
-  const items = data.map(({ id, images }): RemoteGif => {
+  const items = data.map(({ id, title, images }): RemoteGif => {
     /**
      * `original` GIPHY отдаёт у каждого GIF, остальные рендишны — не всегда.
      */
@@ -71,6 +71,7 @@ const giphy = async (
     return {
       id,
       provider: 'giphy',
+      title: title || undefined,
       url: send.url,
       previewUrl: preview.url,
       width: Number(preview.width),
@@ -103,7 +104,9 @@ const klipy = async (
     `${KLIPY_BASE}/${endpoint}?${params}`
   );
 
-  const items = results.map(({ id, media_formats: formats }): RemoteGif => {
+  const items = results.map((result): RemoteGif => {
+    const { id, content_description: title, media_formats: formats } = result;
+
     /**
      * `gif` запрошен в `media_filter` и приходит у каждого результата.
      */
@@ -114,6 +117,7 @@ const klipy = async (
     return {
       id,
       provider: 'klipy',
+      title: title || undefined,
       url: send.url,
       previewUrl: preview.url,
       width,
