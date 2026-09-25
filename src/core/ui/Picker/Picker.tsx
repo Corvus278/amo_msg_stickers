@@ -46,7 +46,7 @@ const renderView = (view: View, isOpen: boolean) => {
     }
 
     case 'gifs': {
-      return <GifView />;
+      return <GifView isOpen={isOpen} />;
     }
 
     case 'pack': {
