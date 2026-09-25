@@ -6,6 +6,7 @@ import {
   compareVersions,
   parseVersion,
   readBannerVersion,
+  toErrorAnnotation,
 } from '../scripts/version';
 
 describe('parseVersion', () => {
@@ -118,5 +119,17 @@ describe('checkVersionGrowth', () => {
     expect(() => {
       return checkVersionGrowth('0.3.0', 'master');
     }).toThrow('MAJOR.MINOR.PATCH');
+  });
+});
+
+describe('toErrorAnnotation', () => {
+  it('держит многострочную ошибку в одной аннотации', () => {
+    expect(toErrorAnnotation('Command failed\nfatal: invalid object')).toBe(
+      '::error::Command failed%0Afatal: invalid object'
+    );
+  });
+
+  it('экранирует %, \\r и \\n, не задваивая %', () => {
+    expect(toErrorAnnotation('100%\r\n')).toBe('::error::100%25%0D%0A');
   });
 });

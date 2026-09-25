@@ -13,6 +13,7 @@ import {
   checkVersionConsistency,
   checkVersionGrowth,
   readBannerVersion,
+  toErrorAnnotation,
 } from './version.ts';
 
 const readJsonVersion = (path) => {
@@ -20,7 +21,7 @@ const readJsonVersion = (path) => {
 };
 
 const reportError = (message) => {
-  console.error(`::error::${message}`);
+  console.error(toErrorAnnotation(message));
   process.exitCode = 1;
 };
 
@@ -48,7 +49,10 @@ if (consistencyError) {
 if (base) {
   try {
     const baseVersion = JSON.parse(
-      execFileSync('git', ['show', `${base}:package.json`], { encoding: 'utf8' })
+      execFileSync('git', ['show', `${base}:package.json`], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
     ).version;
     const growthError = checkVersionGrowth(version, baseVersion);
 
