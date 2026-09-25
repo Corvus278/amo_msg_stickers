@@ -28,6 +28,7 @@ pnpm lint              # eslint + typecheck + prettier --check параллел�
 pnpm lint:fix          # eslint --fix
 pnpm format            # prettier --write
 pnpm test              # vitest, проект `unit`
+pnpm skills:update     # openspec update: перегенерация .claude/skills/openspec-* и .claude/commands/opsx
 ```
 
 Одно ядро (`src/core`) собирается в две цели (`build.mjs`, формат IIFE, `target: chrome120`):
@@ -230,6 +231,12 @@ GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-actio
 Одна задача — один issue, одна ветка, один PR. Репозиторий на GitHub, поэтому CLI — `gh` (`glab` здесь не
 применяется). Номер issue — сквозной идентификатор: он в имени ветки, в теле PR и в коммитах. Требования и план
 крупной задачи ведутся в OpenSpec (`openspec/changes/<change>`, артефакты на русском).
+
+Скилы и команды OpenSpec (`.claude/skills/openspec-*`, `.claude/commands/opsx/`) генерирует CLI, и их текст зависит
+от его версии. Версия закреплена точной в devDependencies (`@fission-ai/openspec`), поэтому перегенерация — только
+`pnpm skills:update`, а не глобальный `openspec update`: иначе скилы разъедутся с версией у соседа. Обновление
+скилов — поднятие версии пакета и `pnpm skills:update` в одном PR. Набор workflow берётся из глобального профиля
+OpenSpec (`openspec config profile`), в репозитории его не закрепить.
 
 1. **Issue.** Задача заводится в репозитории до правок — чтобы у PR был предмет, с которым аудит сверяет результат.
    Тело описывает наблюдаемое поведение и критерий готовности, а не план правок.
