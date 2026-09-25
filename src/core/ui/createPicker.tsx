@@ -37,6 +37,10 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
     onClose();
   };
 
+  const handlePickerClose = () => {
+    close();
+  };
+
   /**
    * `<style>` рендерится в том же дереве, а не вставляется в shadow root заранее:
    * первый `render()` Preact удаляет из контейнера узлы, которых нет в дереве.
@@ -46,8 +50,13 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
       <>
         <style>{css}</style>
 
-        <PickerProvider env={env} onSend={onSend} onClose={close} isOpen={isOpen}>
-          <Picker isOpen={isOpen} isDark={isDark} onClose={close} />
+        <PickerProvider
+          env={env}
+          onSend={onSend}
+          onClose={handlePickerClose}
+          isOpen={isOpen}
+        >
+          <Picker isOpen={isOpen} isDark={isDark} onClose={handlePickerClose} />
         </PickerProvider>
       </>,
       shadowRoot
