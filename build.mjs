@@ -1,5 +1,5 @@
 import { cpSync, mkdirSync } from 'node:fs';
-import { glob, readFile } from 'node:fs/promises';
+import { glob, readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import * as esbuild from 'esbuild';
@@ -27,13 +27,27 @@ const TAILWIND_CONFIG = 'tailwind.config.ts';
 const TAILWIND_WATCH_GLOB = 'src/core/ui/**/*.tsx';
 
 /**
- * Конфиг читается на каждой сборке заново: ESM-модуль кэшируется по URL, и без
- * метки в query `watch` продолжал бы собирать CSS по старым токенам.
+ * Последний загруженный конфиг и `mtime` его файла.
+ */
+const tailwindConfigCache = { mtimeMs: 0, config: undefined };
+
+/**
+ * ESM-модуль кэшируется по URL, поэтому свежий конфиг грузится с меткой `mtime` в
+ * query — иначе `watch` собирал бы CSS по старым токенам. Метка меняется только с
+ * файлом: каждый импорт по новому URL оставляет в памяти ещё один экземпляр модуля,
+ * а новый объект конфига — лишняя работа Tailwind на каждой пересборке.
  */
 const loadTailwindConfig = async () => {
-  const { tailwindConfig } = await import(`./${TAILWIND_CONFIG}?t=${Date.now()}`);
+  const { mtimeMs } = await stat(TAILWIND_CONFIG);
 
-  return tailwindConfig;
+  if (mtimeMs !== tailwindConfigCache.mtimeMs) {
+    const { tailwindConfig } = await import(`./${TAILWIND_CONFIG}?t=${mtimeMs}`);
+
+    tailwindConfigCache.mtimeMs = mtimeMs;
+    tailwindConfigCache.config = tailwindConfig;
+  }
+
+  return tailwindConfigCache.config;
 };
 
 /**
