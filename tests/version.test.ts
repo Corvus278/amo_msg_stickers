@@ -130,6 +130,12 @@ describe('toErrorAnnotation', () => {
   });
 
   it('экранирует %, \\r и \\n, не задваивая %', () => {
-    expect(toErrorAnnotation('100%\r\n')).toBe('::error::100%25%0D%0A');
+    expect(toErrorAnnotation('100%\r\nok')).toBe('::error::100%25%0D%0Aok');
+  });
+
+  it('срезает хвостовой перевод строки', () => {
+    expect(toErrorAnnotation('fatal: invalid object\n')).toBe(
+      '::error::fatal: invalid object'
+    );
   });
 });

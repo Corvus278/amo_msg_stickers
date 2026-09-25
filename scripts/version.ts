@@ -99,12 +99,15 @@ export const checkVersionGrowth = (current: string, base: string): string | unde
  * Аннотация ошибки GitHub Actions. Перевод строки обрывает workflow command, поэтому
  * `%`, `\r` и `\n` экранируются по её правилам — иначе в аннотацию попала бы только
  * первая строка многострочной ошибки (например, `git show` с причиной `fatal: …`).
+ * Хвостовой перевод строки (им кончается stderr) срезается: в аннотации он дал бы
+ * пустую последнюю строку.
  *
  * @param message — текст ошибки, возможно многострочный
  * @returns строка `::error::…` для вывода в лог
  */
 export const toErrorAnnotation = (message: string): string => {
   const escaped = message
+    .trimEnd()
     .replaceAll('%', '%25')
     .replaceAll('\r', '%0D')
     .replaceAll('\n', '%0A');
