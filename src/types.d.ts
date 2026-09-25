@@ -93,6 +93,16 @@ declare module '*.css' {
 }
 
 /**
+ * Код Worker-а кодирования GIF (`src/core/gifWorkerEntry.ts`) одним IIFE-бандлом:
+ * модуль собирает плагин в `build.mjs`, ядро запускает Worker из blob URL с этим
+ * кодом. Vitest плагина не знает — модуль, который его импортирует, юнит-тесты не
+ * грузят.
+ */
+declare module 'gif-worker:code' {
+  export const GIF_WORKER_CODE: string;
+}
+
+/**
  * Расширение глобального `Window` возможно только через `interface`: у `type` нет
  * слияния объявлений.
  */

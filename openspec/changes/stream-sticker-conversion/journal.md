@@ -51,3 +51,12 @@
 Долг G1 закрыт: у 00 в базовой линии 75 кадров.
 Аудит: ok с первого круга.
 Долг: design.md:203 и CLAUDE.local.md — «RSS 790–815 МБ» по логу g5-rss2.log верно «772–815 МБ без прогревочного окна (672 МБ)» — поправить в G7.
+
+### G6 · Worker из blob URL
+
+4.1/4.2: gifWorker.ts — чистый обработчик протокола (start/frame/ack/finish/done/error, новый start = новый GIF), gifWorkerEntry.ts — точка входа; плагин build.mjs вшивает код Worker-а строкой (gif-worker:code) в content.js и userscript, не в background.js; eval/new Function в dist — 0.
+4.3: workerSinkClient.ts — чистый клиент (кадр до первого ack уходит копией и повторяется в фолбэке), createFallbackAwareSink с флагом страницы в замыкании; workerSink.ts только подставляет Worker из blob URL (отзывается сразу после new Worker). Фолбэк — по error Worker-а и исключению конструктора; сообщение error/messageerror — ошибка конвертации. Стенд: Worker 0,42–1,65 с, long task 0, куча главного потока 5–9 МБ; SHA-256 GIF Worker-а и фолбэка совпадают. 6.2 повторена guard-плагином: тесты не грузят gif-worker:code (K5).
+Решения координатора (спека молчит): окно 1 кадр вместо 2 (D4, текст 4.3) — samplePass читает byteLength сразу после последнего write, при окне 2 проба теряла бы последний кадр (−12,5 % на 8 кадрах, больше SAFETY); окно 2 быстрее ~30 %, требует flush пробы в convert.ts. Worker на проход, а не на вызов toStickerGif (D3/D8) — K4 запрещал править convert.ts, заодно без утечки между стикерами.
+Отступление: tests/gifWorker.test.ts, gifWorkerEntry.ts, workerSinkClient.ts вне явного списка файлов — модули самой группы.
+Аудит: круг 1 — critical (флаг isWorkerBroken без теста) + долг finishWaiter; круг 2 — ok.
+Долг: tests/gifWorker.test.ts:87 («пробный и полный проход в одном Worker-е») описывает режим, которого в продукте нет; нет таймаута на зависший Worker (не специфицирован).

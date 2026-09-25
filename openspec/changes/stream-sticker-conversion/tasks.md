@@ -35,15 +35,15 @@
 
 ## 4. Приёмник кадров: Worker и фолбэк
 
-- [ ] 4.1 Точка входа Worker-а: протокол `start` / `frame` (transfer) / `ack { byteLength }` / `finish` / `done`
+- [x] 4.1 Точка входа Worker-а: протокол `start` / `frame` (transfer) / `ack { byteLength }` / `finish` / `done`
   (transfer) / `error` поверх кодировщика из 3.1; типы сообщений — в `*.types.ts`; проверка: `pnpm typecheck`
   чистый
-- [ ] 4.2 Плагин в `build.mjs`: виртуальный модуль с именованным экспортом кода Worker-а (отдельный
+- [x] 4.2 Плагин в `build.mjs`: виртуальный модуль с именованным экспортом кода Worker-а (отдельный
   `esbuild.build` с `write: false`, IIFE, `chrome120`, минификация вне `watch`, входы Worker-а — в `watchFiles`);
   описание модуля в `src/types.d.ts`; проверка: `pnpm build` проходит, в `dist/extension/content.js` и
   `dist/amo-stickers.user.js` есть код Worker-а строкой, `rg -c 'eval\(|new Function\(' dist` — 0 совпадений;
   в `pnpm watch` правка точки входа Worker-а пересобирает `content.js`
-- [ ] 4.3 Клиент Worker-а: запуск из blob URL (URL отзывается после старта), окно в 2 кадра с ожиданием `ack`,
+- [x] 4.3 Клиент Worker-а: запуск из blob URL (URL отзывается после старта), окно в 2 кадра с ожиданием `ack`,
   `finish` → байты, `terminate` при закрытии; ошибка до первого `ack` или исключение конструктора → фолбэк и флаг на
   время жизни страницы; ошибка после первого `ack` → ошибка конвертации; проверка: на стенде в DevTools Memory
   при импорте нет роста очереди сообщений (число живых `ArrayBuffer` не растёт с числом кадров)

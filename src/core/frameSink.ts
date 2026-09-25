@@ -1,6 +1,6 @@
 import type { FrameSink } from './frameSink.types';
-import { createMainThreadSink } from './frameSinkMain';
 import type { GifEncoderOptions } from './gifEncoder.types';
+import { createGifWorkerSink } from './workerSink';
 
 /**
  * Приёмник кадров одного прохода. Вызывающий зовёт `close` при любом исходе прохода.
@@ -9,5 +9,5 @@ import type { GifEncoderOptions } from './gifEncoder.types';
  * @returns приёмник кадров
  */
 export const createFrameSink = (options: GifEncoderOptions): FrameSink => {
-  return createMainThreadSink(options);
+  return createGifWorkerSink(options);
 };
