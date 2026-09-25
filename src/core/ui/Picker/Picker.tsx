@@ -7,6 +7,7 @@ import { PackView } from './PackView/PackView';
 import { RecentView } from './RecentView/RecentView';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
+import { Tabs } from './Tabs/Tabs';
 import { useOpenLoad } from './useOpenLoad/useOpenLoad';
 import { usePickerView } from './usePickerView/usePickerView';
 import type { View } from './usePickerView/usePickerView.types';
@@ -38,10 +39,10 @@ const PANEL_CLASS = [
 const OPEN_ANIMATION_CLASS =
   'transition-[opacity,transform] duration-lg ease-linear [@starting-style]:translate-y-[5px] [@starting-style]:opacity-0';
 
-const renderView = (view: View) => {
+const renderView = (view: View, isOpen: boolean) => {
   switch (view.kind) {
     case 'recent': {
-      return <RecentView />;
+      return <RecentView isOpen={isOpen} />;
     }
 
     case 'gifs': {
@@ -94,9 +95,11 @@ export const Picker: FC<PickerProps> = (props) => {
       )}
       onKeyDown={handlePanelKeyDown}
     >
-      {renderView(view)}
+      {renderView(view, isOpen)}
 
       <StatusBar />
+
+      <Tabs />
     </dialog>
   );
 };
