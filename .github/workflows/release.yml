@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# Два мержа подряд выпускаются по очереди, а не отменяют друг друга.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      # Проверяется тег, а не релиз: тег без релиза тоже значит «версия занята».
+      - id: tag
+        env:
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+            echo "::warning::Версия ${TAG} уже выпущена — релиз не создаётся"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Та же сборка, что прошла проверки в job-е build.
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: release
+
+      - if: ${{ steps.tag.outputs.exists == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "${TAG}" \
+            --target "${GITHUB_SHA}" \
+            --title "${TAG}" \
+            --generate-notes \
+            "release/amo-stickers-${VERSION}.zip" \
+            release/amo-stickers.user.js

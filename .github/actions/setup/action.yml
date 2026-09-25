@@ -1,0 +1,23 @@
+name: Окружение
+description: Node и pnpm из .mise.toml — те же версии, что локально; зависимости по pnpm-lock.yaml
+
+runs:
+  using: composite
+  steps:
+    - uses: jdx/mise-action@v4
+
+    - id: pnpm-store
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/cache@v6
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-store-${{ runner.os }}-
+
+    # Хуки husky в CI не нужны: проверки идут отдельными job-ами.
+    - shell: bash
+      run: pnpm install --frozen-lockfile
+      env:
+        HUSKY: '0'
