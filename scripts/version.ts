@@ -1,34 +1,10 @@
 /**
- * Логика проверки версии для CI. Модуль без импортов и только со стираемым
- * синтаксисом TS: `scripts/check-version.mjs` импортирует его напрямую, а Node
- * снимает типы сам, без сборки.
+ * Логика проверки версии для CI. Только стираемый синтаксис TS и без рантайм-импортов
+ * (`import type` Node удаляет целиком): `scripts/check-version.mjs` импортирует модуль
+ * напрямую, а Node снимает типы сам, без сборки.
  */
 
-export type Version = {
-  /**
-   * Несовместимые изменения: схема IndexedDB, переделка продукта.
-   */
-  major: number;
-  /**
-   * Обычный PR.
-   */
-  minor: number;
-  /**
-   * Исправления.
-   */
-  patch: number;
-};
-
-export type VersionSource = {
-  /**
-   * Где записана версия — попадает в текст ошибки.
-   */
-  source: string;
-  /**
-   * Версия; `undefined` — в источнике её не нашли.
-   */
-  version: string | undefined;
-};
+import type { Version, VersionSource } from './version.types';
 
 const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
 
