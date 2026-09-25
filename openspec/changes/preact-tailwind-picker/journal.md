@@ -54,3 +54,11 @@
 Решения: конфиг — именованный экспорт tailwindConfig, импорт .ts нативно с ?t= для watch; CSS минифицируется esbuild.transform; picker.css в watchFiles.
 Аудит: 1 круг, critical — токены вне видимого в dev/amo.css (31 цвет, 6 spacing, dropShadow.none) против CLAUDE.local.md. Пользователь решил оставить конфиг целиком по D2; находка снята.
 Долг: build.mjs:31-35 — ?t=Date.now() копит экземпляры модуля в памяти watch; tailwind.config.ts:14 — content сканирует старые picker.ts/styles.ts до G6; picker.css:10-12 — :host{all:initial} отменяет font/line-height preflight, корень пикера в G2 задаёт font-primary и leading-* сам; design.md:62 называет исходники amo web источником правды.
+
+### G2 · Фасад, провайдер, панель, примитивы
+
+Сделано: 3.1–3.5 — фасад createPicker (K2), app.ts только создание и host→element, PickerProvider/usePicker (K3), usePickerView (K4), панель <dialog> с токенами, тёмной темой и анимацией @starting-style, примитивы K5, заглушки представлений с data-view.
+Отступления (приняты аудитом): K3 расширен `status` и `refreshSettings`; новый каталог Picker/useOpenLoad/ (react.md #8); errorMessage продублирован в PickerProvider/errorMessage.ts до удаления picker.ts в G6.
+Аудит: 1 круг, ok. Три исполнителя (эстафета после 72 вызовов).
+Для G3: Tabs монтировать после <StatusBar /> — статус над вкладками, как в K8. TextInput требует id для <label htmlFor> (jsx-a11y) — нужно G4.
+Долг: createPicker.tsx:50-51 — onSend/close в on-пропсы напрямую (react.md #2); usePickerState.ts:77 — значение контекста пересоздаётся на каждый рендер; fontFamily.primary даёт `arial` строчными.

@@ -1,0 +1,102 @@
+import { clsx } from 'clsx';
+import type { FunctionComponent as FC } from 'preact';
+
+import { AddView } from './AddView/AddView';
+import { GifView } from './GifView/GifView';
+import { PackView } from './PackView/PackView';
+import { RecentView } from './RecentView/RecentView';
+import { SettingsView } from './SettingsView/SettingsView';
+import { StatusBar } from './StatusBar/StatusBar';
+import { useOpenLoad } from './useOpenLoad/useOpenLoad';
+import { usePickerView } from './usePickerView/usePickerView';
+import type { View } from './usePickerView/usePickerView.types';
+import type { PickerProps } from './Picker.types';
+
+/**
+ * Геометрия, тень и радиус повторяют попап эмодзи amo: панель встаёт на его место над
+ * правым краем поля ввода.
+ *
+ * `left-auto m-0 p-0` снимают стили `<dialog>` браузера: без них панель встала бы по
+ * центру между `left: 0` и `right`.
+ *
+ * Шрифт и межстрочный интервал задаются здесь: `:host { all: initial }` в `picker.css`
+ * отменяет их наследование от страницы, а preflight Tailwind вешает их на `html`,
+ * которого в shadow root нет.
+ */
+const PANEL_CLASS = [
+  'fixed bottom-9.5 right-7.5 z-[2] h-[400px] w-[352px] flex-col overflow-hidden rounded-lgx',
+  'left-auto m-0 p-0',
+  'font-primary text-xsm leading-[1.3]',
+  'bg-white-0 text-gray-30 dark:bg-gray-10 dark:text-gray-40',
+  'shadow-[0_3px_7px] shadow-black-0/10 ring-1 ring-cadetGray-30/[.28] dark:ring-white-0/10',
+];
+
+/**
+ * Анимация открытия — переход из `@starting-style`: панель не размонтируется при
+ * закрытии, а переход срабатывает на каждое появление после `display: none`.
+ */
+const OPEN_ANIMATION_CLASS =
+  'transition-[opacity,transform] duration-lg ease-linear [@starting-style]:translate-y-[5px] [@starting-style]:opacity-0';
+
+const renderView = (view: View) => {
+  switch (view.kind) {
+    case 'recent': {
+      return <RecentView />;
+    }
+
+    case 'gifs': {
+      return <GifView />;
+    }
+
+    case 'pack': {
+      return <PackView packId={view.packId} />;
+    }
+
+    case 'add': {
+      return <AddView />;
+    }
+
+    case 'settings': {
+      return <SettingsView />;
+    }
+
+    default: {
+      const unknownView: never = view;
+
+      throw new Error(`Unknown picker view: ${JSON.stringify(unknownView)}`);
+    }
+  }
+};
+
+export const Picker: FC<PickerProps> = (props) => {
+  const { isOpen, isDark, onClose } = props;
+  const { view } = usePickerView();
+
+  useOpenLoad(isOpen);
+
+  /**
+   * Нажатия не всплывают из попапа: иначе ввод в поиске запускал бы хоткеи amo.
+   */
+  const handlePanelKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') onClose();
+    event.stopPropagation();
+  };
+
+  return (
+    <dialog
+      open={isOpen}
+      aria-label="Стикеры и GIF"
+      className={clsx(
+        PANEL_CLASS,
+        OPEN_ANIMATION_CLASS,
+        isOpen ? 'flex' : 'hidden',
+        isDark && 'dark'
+      )}
+      onKeyDown={handlePanelKeyDown}
+    >
+      {renderView(view)}
+
+      <StatusBar />
+    </dialog>
+  );
+};

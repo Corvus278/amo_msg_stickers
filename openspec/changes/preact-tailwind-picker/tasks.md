@@ -12,11 +12,11 @@
 
 ## 3. Фасад и каркас пикера
 
-- [ ] 3.1 Написать `createPicker.tsx` (D5): хост с shadow root, `<style>` с CSS, `render(<Picker isOpen isDark onClose … />)` на каждое изменение, `PickerHandle` с `element`, `isOpen`, `open`, `close`, `setTheme`; проверка — типы `PickerHandle` в `*.types.ts`, `pnpm typecheck` проходит
-- [ ] 3.2 Перевести `app.ts` с `new Picker` на `createPicker` без изменения логики кнопки, `toggle`, `scan` и закрытия по клику вне; проверка — дифф `app.ts` затрагивает только создание пикера и имя `host` → `element`
-- [ ] 3.3 Написать `PickerProvider` (D6): `env`, `settings`, `packs` + `refreshPacks`, статус, `send` с «Отправляю…» и закрытием при успехе, кэш object URL `urlOf`/`dropUrl`; ошибка использования вне провайдера — исключение с понятным текстом; проверка — `pnpm typecheck`, `pnpm lint:es`
-- [ ] 3.4 Написать `Picker` (панель 352×400, `position: fixed`, `bottom`/`right` как у попапа эмодзи, тень, радиус, анимация открытия 0.2 s), класс `dark` на корне по `isDark` (D4), Escape и `stopPropagation` в `keydown`; загрузка при открытии и выбор стартовой вкладки «GIF» при пустых недавних; проверка — на стенде попап открывается в той же точке, тема переключается сменой класса на `<html>`
-- [ ] 3.5 Написать `StatusBar`, `EmptyState`, `Button` (основная, второстепенная, опасная), `TextInput`; проверка — визуальная сверка со скриншотом текущего пикера на стенде в обеих темах
+- [x] 3.1 Написать `createPicker.tsx` (D5): хост с shadow root, `<style>` с CSS, `render(<Picker isOpen isDark onClose … />)` на каждое изменение, `PickerHandle` с `element`, `isOpen`, `open`, `close`, `setTheme`; проверка — типы `PickerHandle` в `*.types.ts`, `pnpm typecheck` проходит
+- [x] 3.2 Перевести `app.ts` с `new Picker` на `createPicker` без изменения логики кнопки, `toggle`, `scan` и закрытия по клику вне; проверка — дифф `app.ts` затрагивает только создание пикера и имя `host` → `element`
+- [x] 3.3 Написать `PickerProvider` (D6): `env`, `settings`, `packs` + `refreshPacks`, статус, `send` с «Отправляю…» и закрытием при успехе, кэш object URL `urlOf`/`dropUrl`; ошибка использования вне провайдера — исключение с понятным текстом; проверка — `pnpm typecheck`, `pnpm lint:es`
+- [x] 3.4 Написать `Picker` (панель 352×400, `position: fixed`, `bottom`/`right` как у попапа эмодзи, тень, радиус, анимация открытия 0.2 s), класс `dark` на корне по `isDark` (D4), Escape и `stopPropagation` в `keydown`; загрузка при открытии и выбор стартовой вкладки «GIF» при пустых недавних; проверка — на стенде попап открывается в той же точке, тема переключается сменой класса на `<html>`
+- [x] 3.5 Написать `StatusBar`, `EmptyState`, `Button` (основная, второстепенная, опасная), `TextInput`; проверка — визуальная сверка со скриншотом текущего пикера на стенде в обеих темах
 
 ## 4. Вкладки и представления
 
