@@ -97,3 +97,8 @@ CLAUDE.md: «Анимация» — урезание последнего кад
 ### Версия 0.6.0
 
 origin/master уже на 0.5.0 (PR #14), а G1 сверял версию с устаревшим локальным master (0.4.1). Ветка перебазирована на свежий master (e8a5d5f), версия поднята до 0.6.0 в package.json, manifest.json и @version в build.mjs; `check-version.mjs --base origin/master` — ok, гейт — ok. Текст задачи 1.2 («0.5.0») устарел — правка артефакта через /opsx:update при желании.
+
+### 7.4: userscript и CORS Telegram
+
+Живой amo, Tampermonkey: импорт пака падает на CORS при скачивании файла `api.telegram.org/file/bot…` (нет Access-Control-Allow-Origin). Ошибка не этой задачи: сеть userscript в ветке не менялась, прямой fetch под CORS страницы — известное устройство цели. Заведён issue #15 (bug).
+Решение: 7.4 проверяется своим стикером из .webm (local/samples/video_gachi) — тот же toStickerGif → Worker → отправка; импорт целого пака проверяется в 7.3 через расширение. Критерий 7.4 «импорт дошёл до конца» в userscript недостижим до #15 — при желании поправить текст задачи через /opsx:update.
