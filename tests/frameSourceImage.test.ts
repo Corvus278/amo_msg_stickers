@@ -29,7 +29,7 @@ describe('openImageSource: ImageDecoder', () => {
       width: 1024,
       height: 512,
       durations: [40_000, 10_000],
-      supported: true,
+      isSupported: true,
     };
     FakeImageDecoder.instances = [];
     FakeVideoFrame.open = 0;
@@ -150,7 +150,7 @@ describe('openImageSource: ImageDecoder', () => {
   });
 
   it('неподдерживаемый тип идёт в createImageBitmap', async () => {
-    FakeImageDecoder.init.supported = false;
+    FakeImageDecoder.init.isSupported = false;
     const close = vi.fn();
 
     vi.stubGlobal('createImageBitmap', async () => {

@@ -34,13 +34,13 @@ export class FakeImageDecoder {
     width: 512,
     height: 512,
     durations: [],
-    supported: true,
+    isSupported: true,
   };
 
   static instances: FakeImageDecoder[] = [];
 
   static isTypeSupported = async () => {
-    return FakeImageDecoder.init.supported;
+    return FakeImageDecoder.init.isSupported;
   };
 
   tracks = {

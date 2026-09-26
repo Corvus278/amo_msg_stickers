@@ -22,7 +22,7 @@ export type FakeImageDecoderInit = {
   /**
    * Ответ `ImageDecoder.isTypeSupported`.
    */
-  supported: boolean;
+  isSupported: boolean;
 };
 
 export type FakeDecodeOptions = {
