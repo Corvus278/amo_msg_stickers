@@ -4,6 +4,7 @@ import {
   checkVersionConsistency,
   checkVersionGrowth,
   compareVersions,
+  hasProductChanges,
   parseVersion,
   readBannerVersion,
   toErrorAnnotation,
@@ -119,6 +120,43 @@ describe('checkVersionGrowth', () => {
     expect(() => {
       return checkVersionGrowth('0.3.0', 'master');
     }).toThrow('MAJOR.MINOR.PATCH');
+  });
+});
+
+describe('hasProductChanges', () => {
+  it.each([
+    ['src/core/app.ts'],
+    ['src/extension/manifest.json'],
+    ['build.mjs'],
+    ['tailwind.config.ts'],
+    ['tsconfig.json'],
+    ['package.json'],
+    ['pnpm-lock.yaml'],
+  ])('%s — файл продукта', (path) => {
+    expect(hasProductChanges(['CLAUDE.md', path])).toBe(true);
+  });
+
+  it('не считает продуктом документацию, CI, тесты и OpenSpec', () => {
+    expect(
+      hasProductChanges([
+        'CLAUDE.md',
+        'README.md',
+        '.github/workflows/ci.yml',
+        'scripts/version.ts',
+        'tests/version.test.ts',
+        'openspec/specs/ci-cd/spec.md',
+      ])
+    ).toBe(false);
+  });
+
+  it('сверяет каталог по префиксу пути, а файл — точно', () => {
+    expect(hasProductChanges(['srcs/app.ts', 'dev/build.mjs', 'build.mjs.bak'])).toBe(
+      false
+    );
+  });
+
+  it('пустой список — продукт не менялся', () => {
+    expect(hasProductChanges([])).toBe(false);
   });
 });
 
