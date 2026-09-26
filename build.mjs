@@ -18,7 +18,7 @@ const devMatches = isWatch ? DEV_MATCHES : [];
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.9.0',
+  '// @version      0.9.1',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -41,6 +41,16 @@ const USERSCRIPT_BANNER = [
   '// @run-at       document-idle',
   '// ==/UserScript==',
 ].join('\n');
+
+/**
+ * Обёртка кода userscript: `"use strict"` esbuild ставит в начало файла, а
+ * Userscripts для Safari (4.x) исполняет код как тело
+ * `Function('{GM_getValue,…}', code)` — с деструктуризацией в параметрах такой
+ * директиве быть нельзя, и скрипт падает с SyntaxError. Внутри стрелочной
+ * функции без параметров директива законна, и строгий режим ядра сохраняется.
+ */
+const USERSCRIPT_WRAP_START = '(() => {\n"use strict";';
+const USERSCRIPT_WRAP_END = '})();';
 
 const TAILWIND_CONFIG = 'tailwind.config.ts';
 
@@ -194,7 +204,8 @@ const configs = [
     ...common,
     entryPoints: ['src/userscript/index.ts'],
     outfile: 'dist/amo-stickers.user.js',
-    banner: { js: USERSCRIPT_BANNER },
+    banner: { js: `${USERSCRIPT_BANNER}\n${USERSCRIPT_WRAP_START}` },
+    footer: { js: USERSCRIPT_WRAP_END },
   },
 ];
 
