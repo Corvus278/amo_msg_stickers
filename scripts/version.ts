@@ -16,6 +16,20 @@ const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
 const BANNER_VERSION_PATTERN = /\/\/\s*@version\s+([^\s'"`]+)/;
 
 /**
+ * Файлы, из которых собирается продукт: исходники, сборка с её конфигами и зависимости.
+ * Каталог — с `/` на конце, файл — точным путём. `package.json` и `pnpm-lock.yaml`
+ * считаются целиком, с devDependencies: esbuild, Tailwind и PostCSS сами меняют сборку.
+ */
+const PRODUCT_PATHS = [
+  'src/',
+  'build.mjs',
+  'tailwind.config.ts',
+  'tsconfig.json',
+  'package.json',
+  'pnpm-lock.yaml',
+];
+
+/**
  * Разбирает `MAJOR.MINOR.PATCH`. Пре-релизы и метки сборки не поддерживаются:
  * версия расширения Chrome их не допускает.
  *
@@ -93,6 +107,23 @@ export const checkVersionGrowth = (current: string, base: string): string | unde
   }
 
   return `Версия ${current} не выше ${base} в базовой ветке — поднимите версию`;
+};
+
+/**
+ * PR без изменений продукта (документация, CI, тесты, OpenSpec) версию не поднимает:
+ * релиз с тем же кодом ничего не даёт пользователю.
+ *
+ * @param paths — пути файлов, изменённых в PR, от корня репозитория
+ * @returns `true`, если среди них есть файл продукта и версию нужно поднять
+ */
+export const hasProductChanges = (paths: string[]): boolean => {
+  return paths.some((path) => {
+    return PRODUCT_PATHS.some((productPath) => {
+      return productPath.endsWith('/')
+        ? path.startsWith(productPath)
+        : path === productPath;
+    });
+  });
 };
 
 /**
