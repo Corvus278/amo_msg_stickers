@@ -198,5 +198,24 @@ export default defineConfig(
         },
       ],
     },
+  },
+  {
+    files: ['src/core/**/*.{ts,tsx}'],
+    rules: {
+      // Ядро знает только контракты `core/host.types.ts`: окружения подключают к ним свои
+      // адаптеры, а не наоборот.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: String.raw`^(\.\./)+(userscript|extension)(/|$)`,
+              message:
+                'Граница ядра: src/core не импортирует из src/userscript и src/extension — только контракты core/host.types.ts.',
+            },
+          ],
+        },
+      ],
+    },
   }
 );

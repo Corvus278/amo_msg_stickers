@@ -18,11 +18,26 @@ const devMatches = isWatch ? DEV_MATCHES : [];
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.6.0',
+  '// @version      0.7.0',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
-  '// @grant        none',
+  '// @grant        GM_xmlhttpRequest',
+  '// @grant        GM_getValue',
+  '// @grant        GM_setValue',
+  /**
+   * Хосты сетевой политики — те же, что `ALLOWED_HOSTS` и `ALLOWED_DOMAINS` в
+   * `src/core/net.ts`; поддомены `@connect` пропускает сам.
+   */
+  '// @connect      api.telegram.org',
+  '// @connect      giphy.com',
+  '// @connect      klipy.com',
+  /**
+   * Изолированный мир (Tampermonkey — `@sandbox`, Violentmonkey — `@inject-into`):
+   * скрипты страницы не видят ни код ядра, ни GM API, ни настройки.
+   */
+  '// @sandbox      DOM',
+  '// @inject-into  content',
   '// @run-at       document-idle',
   '// ==/UserScript==',
 ].join('\n');

@@ -1,49 +1,50 @@
 import { start } from '../core/app';
-import { DEFAULT_SETTINGS } from '../core/host';
-import type { Host, Settings } from '../core/host.types';
-import { fetchChecked, readResponseLimited } from '../core/net';
+import type { Host, HostNetwork, HostSettings } from '../core/host.types';
+
+import { fetchNetwork } from './fetchNetwork';
+import type { GmGetValue, GmSetValue, GmXmlhttpRequest } from './gm.types';
+import { gmNetwork } from './gmNetwork';
+import { gmSettings, localStorageSettings } from './settings';
 
 /**
- * Вариант для менеджеров userscript-ов (Tampermonkey и т. п.).
+ * Вариант для менеджеров userscript-ов (Tampermonkey, Violentmonkey и т. п.). Режим
+ * выбирается здесь и только здесь — по тому, что выдал менеджер:
  *
- * Сеть — прямым fetch со страницы, поэтому запросы подчиняются её CORS.
+ * - есть `GM_xmlhttpRequest` — сеть через менеджер, в обход CORS страницы и без cookie
+ *   целевых сайтов; нет — прямой `fetch` со страницы, под её CORS;
+ * - есть `GM_getValue` и `GM_setValue` — настройки в хранилище менеджера, недоступном
+ *   странице, с переносом из `localStorage`; нет — в `localStorage` страницы.
+ *
+ * Без менеджера (скрипт подключён на страницу напрямую) работают оба запасных пути.
  */
 
-const SETTINGS_KEY = 'amo-stickers:settings';
+/**
+ * GM API менеджер кладёт в область видимости скрипта, а не в `window`, поэтому наличие
+ * проверяется `typeof`. Объявления живут в модуле, а не в `src/types.d.ts`: ядро не может
+ * сослаться на GM API даже по ошибке.
+ */
+declare const GM_xmlhttpRequest: GmXmlhttpRequest | undefined;
+declare const GM_getValue: GmGetValue | undefined;
+declare const GM_setValue: GmSetValue | undefined;
+
+const pickNetwork = (): HostNetwork => {
+  if (typeof GM_xmlhttpRequest === 'function') return gmNetwork(GM_xmlhttpRequest);
+
+  return fetchNetwork();
+};
+
+const pickHostSettings = (): HostSettings => {
+  if (typeof GM_getValue === 'function' && typeof GM_setValue === 'function') {
+    return gmSettings({ getValue: GM_getValue, setValue: GM_setValue }, localStorage);
+  }
+
+  return localStorageSettings(localStorage);
+};
 
 const host: Host = {
   name: 'userscript',
-  async fetchJson(url) {
-    const res = await fetchChecked(url);
-
-    return res.json();
-  },
-  async fetchBlob(url, maxBytes) {
-    const res = await fetchChecked(url);
-    const bytes = await readResponseLimited(res, maxBytes);
-
-    return new Blob([bytes], { type: res.headers.get('content-type') || '' });
-  },
-  async getSettings() {
-    try {
-      /**
-       * Ключ пишет только `setSettings` ниже, поэтому там либо пусто, либо (частичные)
-       * `Settings`; битый JSON уходит в catch.
-       */
-      const stored = JSON.parse(
-        localStorage.getItem(SETTINGS_KEY) || '{}'
-      ) as Partial<Settings>;
-
-      return { ...DEFAULT_SETTINGS, ...stored };
-    } catch {
-      return { ...DEFAULT_SETTINGS };
-    }
-  },
-  async setSettings(patch) {
-    const current = await this.getSettings();
-
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...patch }));
-  },
+  ...pickNetwork(),
+  ...pickHostSettings(),
 };
 
 const boot = () => {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   fetchChecked,
+  httpError,
   isAllowedUrl,
   readLimited,
   readResponseLimited,
@@ -70,6 +71,37 @@ describe('readResponseLimited', () => {
     const res = new Response(chunkedStream([8, 8]));
 
     await expect(readResponseLimited(res, 10)).rejects.toThrow('Файл больше');
+  });
+});
+
+describe('httpError', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('пишет HTTP-статус и начало тела', () => {
+    expect(httpError(404, 'Not Found').message).toBe('HTTP 404 Not Found');
+  });
+
+  it('обрезает тело до 200 символов', () => {
+    const { message } = httpError(500, 'x'.repeat(300));
+
+    expect(message).toBe(`HTTP 500 ${'x'.repeat(200)}`);
+  });
+
+  it('совпадает с ошибкой fetchChecked на не-2xx', async () => {
+    const body = `<html>${'y'.repeat(300)}</html>`;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        return mockResponse(body, { status: 404 });
+      })
+    );
+
+    await expect(fetchChecked('https://api.giphy.com/v1/gifs/trending')).rejects.toThrow(
+      httpError(404, body)
+    );
   });
 });
 

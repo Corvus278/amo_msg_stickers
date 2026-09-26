@@ -39,9 +39,12 @@ pnpm skills:update     # openspec update: перегенерация .claude/ski
 У сборки два esbuild-плагина: `tailwind` отдаёт ядру CSS пикера строкой, `gif-worker` — код Worker-а кодирования GIF
 («Сборка CSS и Worker-а»).
 
-Различия целей спрятаны за интерфейсом `Host` (`core/host.ts`): сеть и хранение настроек. Расширение ходит в сеть
-через service worker — обход CORS; userscript — прямым `fetch` со страницы, под её CORS. Настройки: у
-расширения `chrome.storage.local`, у userscript `localStorage`.
+Различия целей спрятаны за интерфейсом `Host` (`core/host.types.ts`): сеть и хранение настроек. Расширение ходит в
+сеть через service worker — обход CORS, настройки держит в `chrome.storage.local`. Userscript с менеджером ходит в
+сеть через `GM_xmlhttpRequest` — тоже в обход CORS и без cookie целевых сайтов, настройки держит в хранилище
+менеджера (`GM_getValue` / `GM_setValue`), недоступном странице. Без менеджера (скрипт подключён на страницу
+напрямую) — прямой `fetch` со страницы под её CORS и `localStorage`. Заголовок userscript просит гранты этих `GM_*`,
+`@connect` к хостам сетевой политики и изолированный мир (`@sandbox DOM`, `@inject-into content`).
 
 Боевая сборка запускается только на `https://*.amo.tm/*`; `http://localhost:3000/*` и `http://127.0.0.1:3000/*`
 `build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`.
@@ -70,7 +73,9 @@ src/
     workerSink*.ts   приёмник с кодированием в Worker-е: запуск из blob URL, окно кадров, переход на фолбэк
     gifWorker*.ts    Worker кодирования: протокол сообщений (`gifWorker.ts`) и точка входа бандла (`gifWorkerEntry.ts`)
     db.ts            IndexedDB: паки, стикеры, недавние
-    host.ts          интерфейс окружения (`Host`) и настройки (ключи GIPHY/KLIPY, токен Telegram-бота)
+    host*.ts         контракты окружения (`host.types.ts`: `Host`, `HostNetwork`, `HostSettings`) и настройки по
+                     умолчанию (`host.ts`: ключи GIPHY/KLIPY, токен Telegram-бота; `pickSettings` — поля
+                     сохранённых настроек для адаптеров обоих окружений)
     net.ts           сетевая политика: разрешённые хосты, fetch с проверкой, чтение потока с лимитом
     gif.ts           проверка GIF по блочной структуре (`inspectGif`)
     tgs.ts           распаковка `.tgs` с лимитом и проверкой Lottie
@@ -89,7 +94,10 @@ src/
                         useCellSend/ — отправка из ячейки; use*/ — хуки
   extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
                   messages.types.ts (протокол content ↔ background), manifest.json
-  userscript/     index.ts — Host для менеджеров userscript-ов
+  userscript/     index.ts — выбор режима по GM API и сборка Host; адаптеры: gmNetwork.ts (сеть через
+                  `GM_xmlhttpRequest`), fetchNetwork.ts (прямой `fetch`), settings.ts (хранилище менеджера с переносом
+                  из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API,
+                  settings.types.ts — типы хранилищ адаптеров настроек
   types.d.ts      описания модулей без типов: gifenc, `*.css` и `gif-worker:code` строкой; флаг `window.__amoStickers`
 dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
                   и «Отправить» замоканы
@@ -214,6 +222,23 @@ amo перекодирует PNG и WebP в JPEG с белым фоном, бе�
   intensive throttling — цепочки таймеров просыпаются примерно раз в минуту.
 - GIF без подписи и в пределах 2 МБ проходит как есть.
 
+### Окружения и адаптеры
+
+Ядро знает только контракты `core/host.types.ts`: `HostNetwork` (`fetchJson`, `fetchBlob`) и `HostSettings`
+(`getSettings`, `setSettings`), `Host = { name } & HostNetwork & HostSettings`. Окружение собирает `Host` из своих
+адаптеров и передаёт в `start(host)`; импорт из `src/userscript/` и `src/extension/` ядру запрещает eslint
+(«Линтинг»).
+
+Адаптеры userscript — чистые функции, зависимости приходят параметрами, поэтому тесты гоняют их без менеджера:
+`gmNetwork(request)`, `fetchNetwork()`, `gmSettings(gmStore, storage)`, `localStorageSettings(storage)`. Режим
+выбирается в одном месте — `src/userscript/index.ts`: `GM_*` менеджер кладёт в область видимости скрипта, а не в
+`window`, поэтому проверка — `typeof GM_xmlhttpRequest === 'function'` и так же для `GM_getValue` / `GM_setValue`.
+`declare const GM_*` живёт в этом модуле, а не в `src/types.d.ts`: ядро не может сослаться на GM API даже по ошибке.
+
+Настройки в менеджере лежат под тем же ключом `amo-stickers:settings`, объектом. Если в менеджере ключа нет, а в
+`localStorage` есть настройки прежней версии, первое `getSettings` переносит их в менеджер и удаляет из
+`localStorage`; битый JSON удаляется без переноса. Запись с менеджером идёт только в него.
+
 ### Хранение
 
 IndexedDB `amo-stickers` на домене amo: паки (`tg:<имя>` для импорта, `custom` — свои стикеры), стикеры (готовые
@@ -229,7 +254,11 @@ GIF-блобы) и недавние (до 40, повторная отправк�
 - `Host.fetchJson` возвращает `unknown`: форму ответа сужают гарды в `sources/*.types.ts`. Элемент выдачи с
   непригодными полями или ссылкой вне политики отбрасывается, битый ответ целиком — ошибка источника;
 - `Host.fetchBlob(url, maxBytes)` читает тело потоком и обрывает его на лимите (в расширении — внутри SW):
-  GIF из поиска — 8 МБ, файл стикера Telegram — 5 МБ;
+  GIF из поиска — 8 МБ, файл стикера Telegram — 5 МБ. В userscript с менеджером потока нет: запрос обрывается
+  `abort()` по `Content-Length` на заголовках или по `loaded` в `onprogress`, а ответ без них — на `onload`. Не-2xx
+  статус важнее лимита: какие бы колбэки ни позвал менеджер, ошибка — `HTTP <код>`, тело сверх лимита не
+  дочитывается, в тексте — то, что успело прийти. Тексты ошибок политики, лимита и HTTP у всех окружений общие — из
+  `core/net.ts`;
 - `file_path` Telegram — без `..`, иначе URL схлопнется и запрос с токеном уйдёт в другой метод Bot API;
 - `.tgs` распаковывается не больше 8 МБ и проходит `isLottieJson`; GIF из поиска перед вставкой — `inspectGif`.
 
@@ -261,6 +290,9 @@ eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + s
 - `no-console` разрешает `warn` и `info` наравне с `error`: код исполняется в чужой странице amo, консоль —
   единственный канал диагностики.
 - `local/**` в eslint игнорируется: каталог в `.gitignore`, в нём локальные заготовки вне tsconfig.
+
+Граница ядра: `no-restricted-imports` на `src/core/**` запрещает импорт из `src/userscript/` и `src/extension/` —
+ядро знает только контракты `core/host.types.ts`, а окружения подключают к ним свои адаптеры.
 
 `.claude/hooks/lint.sh` — PostToolUse-хук: после каждой правки гоняет по файлу eslint (+`tsc --noEmit` для `.ts`/
 `.tsx`). Ошибки в правленом файле блокируют правку.
