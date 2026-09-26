@@ -250,10 +250,9 @@ export const createWorkerSink = ({
 
       default: {
         const unknownResponse: never = data;
+        const { type }: Pick<GifWorkerResponse, 'type'> = unknownResponse;
 
-        fail(
-          new Error(`GIF worker: unknown response ${JSON.stringify(unknownResponse)}`)
-        );
+        fail(new Error(`GIF worker: unknown response type ${type}`));
       }
     }
   };
