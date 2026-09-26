@@ -46,38 +46,38 @@
 
 ## 4. Адаптеры настроек
 
-- [ ] 4.1 `src/userscript/settings.ts`: `gmSettings(gmStore, storage): HostSettings` — хранилище менеджера, перенос
+- [x] 4.1 `src/userscript/settings.ts`: `gmSettings(gmStore, storage): HostSettings` — хранилище менеджера, перенос
   из `storage` при пустом хранилище менеджера с удалением ключа, удаление битого JSON без переноса, запись только в
   менеджер; `localStorageSettings(storage): HostSettings` — нынешнее поведение; `storage` — срез `Storage`
   (`getItem`, `setItem`, `removeItem`); проверка: eslint и `pnpm typecheck` чистые
-- [ ] 4.2 `tests/userscriptSettings.test.ts` с фейковыми хранилищами: перенос из `storage` (значения на месте, ключ
+- [x] 4.2 `tests/userscriptSettings.test.ts` с фейковыми хранилищами: перенос из `storage` (значения на месте, ключ
   удалён), значение менеджера важнее `storage`, запись идёт только в менеджер, битый JSON удалён и даёт
   `DEFAULT_SETTINGS`, `localStorageSettings` читает и пишет `storage` и дополняет пропуски `DEFAULT_SETTINGS`;
   проверка: `pnpm test` зелёный
 
 ## 5. Точка входа userscript и сборка
 
-- [ ] 5.1 `src/userscript/index.ts` — единственное место выбора режима: `declare const` для `GM_xmlhttpRequest`,
+- [x] 5.1 `src/userscript/index.ts` — единственное место выбора режима: `declare const` для `GM_xmlhttpRequest`,
   `GM_getValue`, `GM_setValue` в модуле; `typeof GM_xmlhttpRequest === 'function'` — `gmNetwork`, иначе
   `fetchNetwork`; `typeof GM_getValue === 'function'` — `gmSettings`, иначе `localStorageSettings`; `Host` с
   `name: 'userscript'` собирается из адаптеров и уходит в `start`; jsdoc модуля описывает оба режима; проверка:
   `pnpm typecheck` чистый, `rg -n "GM_" src/core` пусто
-- [ ] 5.2 Заголовок в `build.mjs`: `@grant none` заменить на `GM_xmlhttpRequest`, `GM_getValue`, `GM_setValue`,
+- [x] 5.2 Заголовок в `build.mjs`: `@grant none` заменить на `GM_xmlhttpRequest`, `GM_getValue`, `GM_setValue`,
   добавить `@connect api.telegram.org`, `@connect giphy.com`, `@connect klipy.com`, `@sandbox DOM`,
   `@inject-into content`; проверка: `pnpm build`, в заголовке `dist/amo-stickers.user.js` эти строки есть,
   `@grant none` нет, `localhost` нет
 
 ## 6. Документация
 
-- [ ] 6.1 `CLAUDE.md`: разделы «Стек и сборка» (сеть и настройки userscript), «Внешние данные» (`fetchBlob` в
+- [x] 6.1 `CLAUDE.md`: разделы «Стек и сборка» (сеть и настройки userscript), «Внешние данные» (`fetchBlob` в
   userscript), «Структура» (адаптеры в `src/userscript/`), «Как работает» (контракты `HostNetwork` /
   `HostSettings` и адаптеры); README, раздел Tampermonkey: менеджер попросит гранты и доступ к хостам `@connect`,
   ключи из прошлой версии переносятся сами; проверка: `pnpm lint` зелёный (prettier по md)
 
 ## 7. Проверка
 
-- [ ] 7.1 `pnpm lint` и `pnpm test` — зелёные, 0 warnings в новом коде
-- [ ] 7.2 Стенд `dev/harness.html` (скрипт подключён без менеджера): кнопка появляется, вкладка GIF и сохранение
+- [x] 7.1 `pnpm lint` и `pnpm test` — зелёные, 0 warnings в новом коде
+- [x] 7.2 Стенд `dev/harness.html` (скрипт подключён без менеджера): кнопка появляется, вкладка GIF и сохранение
   настроек работают через `fetch` и `localStorage`, ошибок в консоли нет
 - [ ] 7.3 Живой amo, Tampermonkey в Chrome, сборка 0.7.0 поверх 0.6.0 с сохранёнными ключами: ключи на вкладке
   «Настройки» без повторного ввода, ключа `amo-stickers:settings` в `localStorage` amo нет; импорт пака

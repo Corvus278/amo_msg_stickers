@@ -35,3 +35,11 @@ gmNetwork: readyState в GmResponse (HEADERS_RECEIVED); isArrayBuffer по фо�
 Аудит: ok с первого круга.
 Вопрос пользователю: не-2xx с телом больше лимита — «Файл больше» (Content-Length/onprogress) или HTTP <код> (только onload): текст зависит от колбэков менеджера; спека молчит.
 Долг: gmNetwork.ts:201 — тело не ArrayBuffer → молча пустой Blob вместо ошибки; gm.types.ts:139 — рантайм-гард в *.types.ts.
+
+### G3 · Настройки, точка входа, заголовок, документация
+
+Настройки: pickSettings пропускает только известные строковые поля; битый/не-объект JSON в storage удаляется без переноса; SETTINGS_KEY экспортируется из settings.ts. Отступление: settings.types.ts вне плана (правило typescript.md).
+Точка входа: GM-настройки при наличии и GM_getValue, и GM_setValue (задача называла только GM_getValue — без записи setSettings упал бы); GM_* объявлены `T | undefined`.
+Зубы 4.x: 8 мутаций settings.ts — красные. 7.2: стенд в headless Chrome, фиктивные ключи — localStorage, fetch, HTTP 401 в статусе; выдача GIPHY с настоящим ключом не проверена (ключ в браузер не пропустил классификатор) — за 7.3.
+Аудит: ok с первого круга.
+Долг: index.ts:37 pickSettings — тёзка фильтра в settings.ts:26 (лучше pickHostSettings); CLAUDE.md «Структура» не упоминает settings.types.ts; settings.ts:73 — null из GM_getValue не считается пустым (перенос молча не сработает).
