@@ -67,7 +67,16 @@ export const useRecent = (isOpen: boolean): Recent => {
   const reload = useCallback(async () => {
     requestRef.current += 1;
     const request = requestRef.current;
-    const records = await listRecent();
+    /**
+     * Вкладка «Недавние» показывает оба вида одним списком, от новых к старым.
+     */
+    const [stickers, gifs] = await Promise.all([
+      listRecent('sticker'),
+      listRecent('gif'),
+    ]);
+    const records = [...stickers, ...gifs].sort((a, b) => {
+      return b.ts - a.ts;
+    });
 
     const resolved = await Promise.all(
       records.map(async ({ key, item }: RecentRec) => {

@@ -37,9 +37,12 @@ export const useOpenLoad = (isOpen: boolean) => {
         await refreshSettings();
         await ensureCustomPack();
         await refreshPacks();
-        const recent = await listRecent();
+        const [stickers, gifs] = await Promise.all([
+          listRecent('sticker'),
+          listRecent('gif'),
+        ]);
 
-        if (viewRef.current.kind === 'recent' && !recent.length) {
+        if (viewRef.current.kind === 'recent' && !stickers.length && !gifs.length) {
           switchTo({ kind: 'gifs' });
         }
       } catch (error) {

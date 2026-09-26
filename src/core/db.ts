@@ -1,4 +1,11 @@
-import type { Pack, RecentRec, SendItem, StickerRec } from './db.types';
+import type {
+  Pack,
+  RecentKind,
+  RecentRec,
+  SendItem,
+  StickerRec,
+  StickersByPack,
+} from './db.types';
 
 export const CUSTOM_PACK_ID = 'custom';
 const RECENT_LIMIT = 40;
@@ -123,6 +130,40 @@ export const listStickers = async (packId: string): Promise<StickerRec[]> => {
   });
 };
 
+/**
+ * Сортировка до группировки: порядок внутри пака задаётся одним проходом по всей библиотеке.
+ *
+ * @param stickers — стикеры в любом порядке
+ * @returns стикеры по пакам; пака без стикеров в группировке нет
+ */
+export const groupStickers = (stickers: StickerRec[]): StickersByPack => {
+  const sorted = [...stickers].sort((a, b) => {
+    return a.createdAt - b.createdAt;
+  });
+
+  return sorted.reduce<StickersByPack>((groups, sticker) => {
+    const group = groups.get(sticker.packId);
+
+    if (group) group.push(sticker);
+    else groups.set(sticker.packId, [sticker]);
+
+    return groups;
+  }, new Map());
+};
+
+/**
+ * Одно чтение хранилища на всю ленту: записи держат ссылки на блобы, а не их содержимое.
+ */
+export const listAllStickers = async (): Promise<StickersByPack> => {
+  return groupStickers(
+    await promisify<StickerRec[]>((await store(STORE.stickers)).getAll())
+  );
+};
+
+export const countStickers = async (): Promise<number> => {
+  return promisify<number>((await store(STORE.stickers)).count());
+};
+
 export const deletePack = async (packId: string) => {
   const stickers = await listStickers(packId);
   const db = await openDb();
@@ -171,6 +212,73 @@ const recentKey = (item: SendItem): string => {
   }
 };
 
+/**
+ * Вид выводится из самого элемента, а не хранится отдельным полем: записи, сохранённые до
+ * разделения недавних, попадают каждая в свой вид без миграции базы.
+ *
+ * @param item — отправленный элемент
+ * @returns вид недавних
+ */
+export const recentKindOf = (item: SendItem): RecentKind => {
+  switch (item.kind) {
+    case 'local': {
+      return 'sticker';
+    }
+
+    case 'remote': {
+      return 'gif';
+    }
+
+    default: {
+      const unknownItem: never = item;
+
+      throw new Error(`Unknown send item: ${JSON.stringify(unknownItem)}`);
+    }
+  }
+};
+
+/**
+ * @param records — записи недавних в любом порядке
+ * @param kind — вид недавних
+ * @returns записи этого вида от новых к старым
+ */
+export const recentOfKind = (records: RecentRec[], kind: RecentKind): RecentRec[] => {
+  const ofKind = records.reduce<RecentRec[]>((acc, rec) => {
+    if (recentKindOf(rec.item) === kind) acc.push(rec);
+
+    return acc;
+  }, []);
+
+  return ofKind.sort((a, b) => {
+    return b.ts - a.ts;
+  });
+};
+
+/**
+ * Лимит считается по виду: поток отправленных GIF не вытесняет стикеры, и наоборот.
+ *
+ * @param records — все записи недавних
+ * @param kind — вид, в который только что добавлена запись
+ * @returns ключи самых старых записей этого вида сверх лимита
+ */
+export const recentOverflow = (records: RecentRec[], kind: RecentKind): string[] => {
+  return recentOfKind(records, kind).reduce<string[]>((acc, { key }, index) => {
+    if (index >= RECENT_LIMIT) acc.push(key);
+
+    return acc;
+  }, []);
+};
+
+/**
+ * @param keys — ключи записей недавних
+ */
+const deleteRecentKeys = async (keys: string[]) => {
+  if (!keys.length) return;
+  const recent = await store(STORE.recent, 'readwrite');
+
+  for (const key of keys) recent.delete(key);
+};
+
 export const pushRecent = async (item: SendItem) => {
   const recent = await store(STORE.recent, 'readwrite');
   const rec: RecentRec = { key: recentKey(item), ts: Date.now(), item };
@@ -178,24 +286,23 @@ export const pushRecent = async (item: SendItem) => {
   await promisify(recent.put(rec));
   const all = await promisify<RecentRec[]>(recent.getAll());
 
-  if (all.length > RECENT_LIMIT) {
-    const extra = all
-      .sort((a, b) => {
-        return b.ts - a.ts;
-      })
-      .slice(RECENT_LIMIT);
-    const cleanup = await store(STORE.recent, 'readwrite');
-
-    for (const { key } of extra) cleanup.delete(key);
-  }
+  await deleteRecentKeys(recentOverflow(all, recentKindOf(item)));
 };
 
-export const listRecent = async (): Promise<RecentRec[]> => {
+export const listRecent = async (kind: RecentKind): Promise<RecentRec[]> => {
   const all = await promisify<RecentRec[]>((await store(STORE.recent)).getAll());
 
-  return all.sort((a, b) => {
-    return b.ts - a.ts;
-  });
+  return recentOfKind(all, kind);
+};
+
+export const clearRecent = async (kind: RecentKind) => {
+  const all = await promisify<RecentRec[]>((await store(STORE.recent)).getAll());
+
+  await deleteRecentKeys(
+    recentOfKind(all, kind).map(({ key }) => {
+      return key;
+    })
+  );
 };
 
 export const deleteRecent = async (item: SendItem) => {
