@@ -42,4 +42,18 @@ describe('createMainThreadSink', () => {
     expect(sink.byteLength).toBe(encoder.byteLength);
     expect(await sink.finish()).toEqual(encoder.finish());
   });
+
+  it('после flush вес учитывает все записанные кадры', async () => {
+    const sink = createMainThreadSink(OPTIONS);
+    const encoder = createGifEncoder(OPTIONS);
+
+    for (const value of [10, 200, 90]) {
+      await sink.write(solidFrame(SIZE, value), 40);
+      encoder.write(solidFrame(SIZE, value), 40);
+    }
+
+    await sink.flush();
+
+    expect(sink.byteLength).toBe(encoder.byteLength);
+  });
 });

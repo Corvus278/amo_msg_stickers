@@ -97,17 +97,19 @@ const fakeWorker = () => {
 };
 
 /**
- * Фейковый приёмник фолбэка: пишет принятые кадры.
+ * Фейковый приёмник фолбэка: пишет принятые кадры и фиксирует `flush`.
  *
  * @returns приёмник и его журнал
  */
 const fakeFallback = () => {
   const written: number[] = [];
   const close = vi.fn();
+  const flush = vi.fn(async () => {});
   const sink: FrameSink = {
     write: async (rgba) => {
       written.push(rgba[0] || 0);
     },
+    flush,
     get byteLength() {
       return written.length;
     },
@@ -117,7 +119,7 @@ const fakeFallback = () => {
     close,
   };
 
-  return { sink, written, close };
+  return { sink, written, close, flush };
 };
 
 /**
@@ -218,17 +220,79 @@ describe('createWorkerSink', () => {
     expect(worker.frames()).toHaveLength(6);
   });
 
-  it('при окне 1 вес после write учитывает этот кадр — проба читает полный вес', async () => {
-    const { sink, worker } = setup(1);
+  it('при окне 2 flush ждёт ack последнего кадра — проба читает полный вес', async () => {
+    const { sink, worker } = setup(2);
+    const first = sink.write(frame(1), DELAY_MS);
 
-    for (let i = 1; i <= 3; i += 1) {
-      const written = sink.write(frame(i), DELAY_MS);
+    worker.reply({ type: 'ack', byteLength: 100 });
+    await first;
+    await sink.write(frame(2), DELAY_MS);
 
-      expect(await isSettled(written)).toBe(false);
-      worker.reply({ type: 'ack', byteLength: i * 100 });
-      await written;
-      expect(sink.byteLength).toBe(i * 100);
-    }
+    const third = sink.write(frame(3), DELAY_MS);
+    const flushed = sink.flush();
+
+    expect(await isSettled(flushed)).toBe(false);
+
+    worker.reply({ type: 'ack', byteLength: 200 });
+    await third;
+    expect(await isSettled(flushed)).toBe(false);
+
+    worker.reply({ type: 'ack', byteLength: 300 });
+    await flushed;
+    expect(sink.byteLength).toBe(300);
+  });
+
+  it('flush без кадров в полёте разрешается сразу', async () => {
+    const { sink, worker } = setup();
+
+    expect(await isSettled(sink.flush())).toBe(true);
+
+    const written = sink.write(frame(1), DELAY_MS);
+
+    worker.reply({ type: 'ack', byteLength: 10 });
+    await written;
+    expect(await isSettled(sink.flush())).toBe(true);
+  });
+
+  it('flush отклоняется при сбое Worker-а после первого ack', async () => {
+    const { sink, worker } = setup();
+    const first = sink.write(frame(1), DELAY_MS);
+
+    worker.reply({ type: 'ack', byteLength: 1 });
+    await first;
+    await sink.write(frame(2), DELAY_MS);
+
+    const flushed = sink.flush();
+
+    worker.crash();
+
+    await expect(flushed).rejects.toThrow('boom');
+    await expect(sink.flush()).rejects.toThrow('boom');
+  });
+
+  it('flush после close отклоняется', async () => {
+    const { sink } = setup();
+
+    sink.close();
+
+    await expect(sink.flush()).rejects.toThrow('closed');
+  });
+
+  it('flush, заставший сбой Worker-а до первого ack, ждёт повтора кадра и flush фолбэка', async () => {
+    const { sink, worker, fallback } = setup();
+    const written = sink.write(frame(5), DELAY_MS);
+    const flushed = sink.flush().then(() => {
+      return [...fallback.written];
+    });
+
+    expect(await isSettled(flushed)).toBe(false);
+
+    worker.crash();
+    await written;
+
+    expect(await flushed).toEqual([5]);
+    expect(fallback.flush).toHaveBeenCalledOnce();
+    expect(sink.byteLength).toBe(1);
   });
 
   it('finish отдаёт байты из done, close останавливает Worker', async () => {
