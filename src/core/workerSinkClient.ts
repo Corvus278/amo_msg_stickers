@@ -12,6 +12,17 @@ import type {
 const CLOSED_MESSAGE = 'GIF worker: sink is closed';
 
 /**
+ * Причина отказа как `Error`: `Deferred.reject` принимает только его, а упасть может
+ * что угодно.
+ *
+ * @param error — пойманное значение
+ * @returns само значение, если это `Error`, иначе `Error` с его строкой
+ */
+const toError = (error: unknown) => {
+  return error instanceof Error ? error : new Error(String(error));
+};
+
+/**
  * Создаёт промис с внешним разрешением.
  *
  * @returns промис и функции его разрешения
@@ -129,7 +140,7 @@ export const createWorkerSink = ({
 
       for (const waiter of waiters) waiter.resolve();
     } catch (error) {
-      const reason = error instanceof Error ? error : new Error(String(error));
+      const reason = toError(error);
 
       for (const waiter of waiters) waiter.reject(reason);
     }
@@ -177,7 +188,7 @@ export const createWorkerSink = ({
     try {
       waiter.resolve(await finishFallback(sink));
     } catch (error) {
-      waiter.reject(error instanceof Error ? error : new Error(String(error)));
+      waiter.reject(toError(error));
     }
   };
 
