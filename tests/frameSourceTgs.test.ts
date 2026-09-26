@@ -44,6 +44,10 @@ describe('tgsPlan', () => {
     expect(tgsPlan(600, 60).at(-1)?.position).toBeCloseTo(237.6);
   });
 
+  it('при fps ниже целевых длину плана задаёт предел 4 с, а не 100 кадров', () => {
+    expect(tgsPlan(1000, 10)).toHaveLength(40);
+  });
+
   it('fps ниже целевых: шаг в один кадр, задержка от реального шага', () => {
     const plan = tgsPlan(40, 20);
 
