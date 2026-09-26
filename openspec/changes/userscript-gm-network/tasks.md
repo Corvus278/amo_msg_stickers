@@ -79,10 +79,10 @@
 - [x] 7.1 `pnpm lint` и `pnpm test` — зелёные, 0 warnings в новом коде
 - [x] 7.2 Стенд `dev/harness.html` (скрипт подключён без менеджера): кнопка появляется, вкладка GIF и сохранение
   настроек работают через `fetch` и `localStorage`, ошибок в консоли нет
-- [ ] 7.3 Живой amo, Tampermonkey в Chrome, сборка 0.7.0 поверх 0.6.0 с сохранёнными ключами: ключи на вкладке
+- [x] 7.3 Живой amo, Tampermonkey в Chrome, сборка 0.7.0 поверх 0.6.0 с сохранёнными ключами: ключи на вкладке
   «Настройки» без повторного ввода, ключа `amo-stickers:settings` в `localStorage` amo нет; импорт пака
   `video_gachi` доходит до конца без ошибок CORS, импортированный стикер и GIF из поиска GIPHY отправляются
-- [ ] 7.4 Там же, в консоли страницы: `typeof GM_xmlhttpRequest` и `typeof GM_getValue` — `undefined`; в консоли
+- [x] 7.4 Там же, в консоли страницы: `typeof GM_xmlhttpRequest` и `typeof GM_getValue` — `undefined`; в консоли
   отмечено, запустился ли Worker кодирования GIF или сработал фолбэк (`console.warn`); результат записан в
   design.md, раздел Risks
 - [ ] 7.5 Violentmonkey в Chrome: кнопка появляется, импорт одного пака Telegram проходит; при расхождении с
