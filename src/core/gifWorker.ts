@@ -65,8 +65,9 @@ export const createGifWorkerHandler = (post: GifWorkerPost) => {
 
       default: {
         const unknownRequest: never = request;
+        const { type }: Pick<GifWorkerRequest, 'type'> = unknownRequest;
 
-        throw new Error(`GIF worker: unknown message ${JSON.stringify(unknownRequest)}`);
+        throw new Error(`GIF worker: unknown message type ${type}`);
       }
     }
   };
