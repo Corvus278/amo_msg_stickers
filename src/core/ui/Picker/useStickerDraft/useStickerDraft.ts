@@ -62,7 +62,7 @@ export const useStickerDraft = (): StickerDraftState => {
         if (isStale) return;
         const { blob, width, height } = gif;
 
-        setDraft({ gif, url: URL.createObjectURL(blob) });
+        setDraft({ gif, caption: captionText, url: URL.createObjectURL(blob) });
         showStatus(`${width}×${height}, ${Math.round(blob.size / BYTES_IN_KB)} КБ`);
       } catch (error) {
         if (isStale) return;
@@ -99,7 +99,10 @@ export const useStickerDraft = (): StickerDraftState => {
 
   const save = useCallback(async () => {
     if (!draft || isConverting || isSaving) return;
-    const { blob, width, height } = draft.gif;
+    const {
+      gif: { blob, width, height },
+      caption: drawnCaption,
+    } = draft;
 
     setIsSaving(true);
 
@@ -110,6 +113,7 @@ export const useStickerDraft = (): StickerDraftState => {
         blob,
         width,
         height,
+        caption: drawnCaption || undefined,
         createdAt: Date.now(),
       });
       await refreshPacks();

@@ -34,14 +34,14 @@
 Группа коммитится одним коммитом: после 3.1 `app.ts` не компилируется до 3.4, и pre-commit (`tsc`) не пропустит
 промежуточный коммит.
 
-- [ ] 3.1 `sender.ts`: `toGifFile(blob, fileName)` и `toCheckedGifFile(blob, fileName)` принимают полное имя, без
+- [x] 3.1 `sender.ts`: `toGifFile(blob, fileName)` и `toCheckedGifFile(blob, fileName)` принимают полное имя, без
   значения по умолчанию; `tests/sender.test.ts` — ожидания под новое имя; проверка: `tests/sender.test.ts` зелёный
 - [x] 3.2 `StickerRec.caption?: string | undefined` в `db.types.ts` с jsdoc; `DB_VERSION` не меняется; проверка:
   `pnpm typecheck` находит только места из 3.3–3.4
-- [ ] 3.3 `useStickerDraft`: конвертация кладёт в черновик `captionText`, с которым нарисован GIF; `save` пишет её в
+- [x] 3.3 `useStickerDraft`: конвертация кладёт в черновик `captionText`, с которым нарисован GIF; `save` пишет её в
   `caption` (не сырое `caption` из поля); проверка: на стенде стикер с подписью, сохранённый сразу после правки поля
   (до debounce), в DevTools → IndexedDB `amo-stickers` / `stickers` содержит ту подпись, что на картинке
-- [ ] 3.4 `app.ts` `toFile`: имя из `sendFileName` для `local` и `remote`; проверка: `pnpm typecheck` и `pnpm test`
+- [x] 3.4 `app.ts` `toFile`: имя из `sendFileName` для `local` и `remote`; проверка: `pnpm typecheck` и `pnpm test`
   зелёные; на стенде (`pnpm build`, `dev/harness.html`) в консоли `[harness] attached` показывает имена по формату
   для своего стикера с подписью, стикера без подписи, GIF из поиска и той же GIF из «Недавних»
 

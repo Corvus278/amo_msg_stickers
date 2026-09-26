@@ -68,8 +68,16 @@ export const sendFile = async (composer: Composer, file: File) => {
   sendButton?.click();
 };
 
-export const toGifFile = (blob: Blob, name = 'sticker') => {
-  return new File([blob], `${name}.gif`, { type: 'image/gif' });
+/**
+ * Имя обязательно и уходит в файл как есть: по нему amo подписывает картинку в ленте, и
+ * имя без метки не должно уйти молча, а расширение уже входит в собранное имя.
+ *
+ * @param blob — готовый GIF
+ * @param fileName — полное имя файла с расширением
+ * @returns файл для вставки в поле ввода
+ */
+export const toGifFile = (blob: Blob, fileName: string) => {
+  return new File([blob], fileName, { type: 'image/gif' });
 };
 
 /**
@@ -77,13 +85,13 @@ export const toGifFile = (blob: Blob, name = 'sticker') => {
  * `SendError` — в поле ввода не попадёт HTML-страница ошибки или обрезанный файл.
  *
  * @param blob — скачанный файл
- * @param name — имя файла без расширения
+ * @param fileName — полное имя файла с расширением
  * @returns файл для вставки в поле ввода
  */
-export const toCheckedGifFile = async (blob: Blob, name?: string) => {
+export const toCheckedGifFile = async (blob: Blob, fileName: string) => {
   if (!inspectGif(new Uint8Array(await blob.arrayBuffer()))) {
     throw new SendError('Файл не похож на GIF');
   }
 
-  return toGifFile(blob, name);
+  return toGifFile(blob, fileName);
 };
