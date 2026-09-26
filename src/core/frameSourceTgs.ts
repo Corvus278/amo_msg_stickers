@@ -44,7 +44,10 @@ export const tgsPlan = (totalFrames: number, sourceFps: number, fps = ANIMATION_
  */
 const lottieLoaded = (anim: AnimationItem) => {
   return new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, EVENT_TIMEOUT_MS);
+    const timer = setTimeout(() => {
+      removeListener();
+      resolve();
+    }, EVENT_TIMEOUT_MS);
     const removeListener = anim.addEventListener('DOMLoaded', () => {
       clearTimeout(timer);
       removeListener();
