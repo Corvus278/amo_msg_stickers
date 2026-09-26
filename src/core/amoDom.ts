@@ -115,7 +115,7 @@ const MEDIA_SELECTOR =
 
 const MEDIA_CONTAINER_SELECTOR = '[class*="photo_media_container-"]';
 const OUR_IMG_SELECTOR = 'img[alt*="amostk."]';
-const STICKER_IMG_SELECTOR = 'img[alt*=".k-sticker."]';
+const STICKER_IMG_SELECTOR = `${OUR_IMG_SELECTOR}[alt*=".k-sticker."]`;
 
 /**
  * Путь от корня сообщения до обёртки медиа: ряд → пузырь → обёртка содержимого → медиа.

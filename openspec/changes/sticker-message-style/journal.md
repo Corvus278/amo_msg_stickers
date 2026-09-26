@@ -90,3 +90,8 @@ CLAUDE.md: раздел «Имя файла и стиль в ленте», «С�
 F1: git merge origin/master (7f99acf, без конфликтов, дифф — только файлы master), версия 0.9.0 (минор по новой таблице CLAUDE.md), в spec chat-message-style — сценарии «Стикер под заголовком автора в группе» и «Пересланное в «Избранное»» + фраза в «Сообщение без пузыря»; export STICKER_MAX_SIDE_PX снят.
 Круг 2: ok. 30 сценариев, без проверки 0; lint, 362 теста, validate --strict зелёные.
 Остаётся долг: parseStickerFileName без продуктовых потребителей (спека требует разбор); caption из одного «мусора» не уступает emoji (fileName.ts:222).
+
+### F2
+
+Ревью PR #29, круг 1 — 2 находки: (1) STICKER_IMG_SELECTOR без маркера amostk. — чужая картинка с .k-sticker. получала лимит 208; теперь `${OUR_IMG_SELECTOR}[alt*=".k-sticker."]`, стенд: foo.k-sticker.gif 420×420 в пузыре; (2) LABEL_JUNK пропускал U+200E/200F/061C — теперь \p{Bidi_Control}, 3 теста с зубами, design.md поправлен.
+Аудит правок — повторное ревью PR (шаг 6).
