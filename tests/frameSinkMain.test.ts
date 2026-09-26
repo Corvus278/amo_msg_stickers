@@ -3,19 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMainThreadSink } from '../src/core/frameSinkMain';
 import { createGifEncoder } from '../src/core/gifEncoder';
 
-const SIZE = 4;
+import { solidFrame } from './helpers/solidFrame';
 
-/**
- * Кадр из пикселей одного цвета.
- *
- * @param value — значение каналов r, g, b
- * @returns rgba-буфер кадра `SIZE` × `SIZE`
- */
-const solidFrame = (value: number) => {
-  return new Uint8ClampedArray(SIZE * SIZE * 4).map((_, i) => {
-    return i % 4 === 3 ? 255 : value;
-  });
-};
+const SIZE = 4;
 
 const OPTIONS = { width: SIZE, height: SIZE, isAnimated: true };
 
@@ -29,7 +19,7 @@ describe('createMainThreadSink', () => {
     const sink = createMainThreadSink(OPTIONS);
     const onWritten = vi.fn();
 
-    const written = sink.write(solidFrame(10), 40).then(onWritten);
+    const written = sink.write(solidFrame(SIZE, 10), 40).then(onWritten);
 
     await Promise.resolve();
     expect(vi.getTimerCount()).toBe(1);
@@ -45,8 +35,8 @@ describe('createMainThreadSink', () => {
     const encoder = createGifEncoder(OPTIONS);
 
     for (const [index, value] of [10, 200].entries()) {
-      await sink.write(solidFrame(value), 40 + index);
-      encoder.write(solidFrame(value), 40 + index);
+      await sink.write(solidFrame(SIZE, value), 40 + index);
+      encoder.write(solidFrame(SIZE, value), 40 + index);
     }
 
     expect(sink.byteLength).toBe(encoder.byteLength);

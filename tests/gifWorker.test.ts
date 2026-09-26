@@ -3,21 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { createGifWorkerHandler } from '../src/core/gifWorker';
 import type { GifWorkerResponse } from '../src/core/gifWorker.types';
 
+import { solidFrame } from './helpers/solidFrame';
+
 const SIZE = 4;
 const DELAY_MS = 40;
 const GIF_SIGNATURE = 'GIF89a';
-
-/**
- * Кадр из пикселей одного цвета.
- *
- * @param value — значение каналов r, g, b
- * @returns rgba-буфер кадра `SIZE` × `SIZE`
- */
-const solidFrame = (value: number) => {
-  return new Uint8ClampedArray(SIZE * SIZE * 4).map((_, i) => {
-    return i % 4 === 3 ? 255 : value;
-  });
-};
 
 /**
  * Ответ обработчика вместе со списком передаваемых буферов.
@@ -55,8 +45,8 @@ describe('createGifWorkerHandler', () => {
     const { handle, posted } = setup();
 
     handle(START);
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
-    handle({ type: 'frame', rgba: solidFrame(200), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 200), delayMs: DELAY_MS });
 
     const [first, second] = posted.map(({ message }) => {
       return message;
@@ -88,10 +78,10 @@ describe('createGifWorkerHandler', () => {
     const { handle, posted } = setup();
 
     handle(START);
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
-    handle({ type: 'frame', rgba: solidFrame(200), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 200), delayMs: DELAY_MS });
     handle(START);
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
 
     const acks = posted.map(({ message }) => {
       return message.type === 'ack' ? message.byteLength : -1;
@@ -104,7 +94,7 @@ describe('createGifWorkerHandler', () => {
   it('кадр до start — error, без ack', () => {
     const { handle, posted } = setup();
 
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
 
     expect(posted).toHaveLength(1);
     expect(posted[0]?.message).toMatchObject({ type: 'error' });
@@ -114,9 +104,9 @@ describe('createGifWorkerHandler', () => {
     const { handle, posted } = setup();
 
     handle(START);
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
     handle({ type: 'finish' });
-    handle({ type: 'frame', rgba: solidFrame(10), delayMs: DELAY_MS });
+    handle({ type: 'frame', rgba: solidFrame(SIZE, 10), delayMs: DELAY_MS });
 
     expect(
       posted.map(({ message }) => {
