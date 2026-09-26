@@ -106,9 +106,9 @@
 
 ## 7. PR, аудит, архив
 
-- [ ] 7.1 Push и PR в `master` с `Closes #21` в теле; проверка: `gh pr view` показывает связь с issue, статусы CI
+- [x] 7.1 Push и PR в `master` с `Closes #21` в теле; проверка: `gh pr view` показывает связь с issue, статусы CI
   `lint`, `typecheck`, `test`, `build`, `version` зелёные
-- [ ] 7.2 Аудит `review-staged` в режиме «ветка против master», находки — inline-комментами в PR (шаги 4–6
+- [x] 7.2 Аудит `review-staged` в режиме «ветка против master», находки — inline-комментами в PR (шаги 4–6
   «Воркфлоу задачи» в `CLAUDE.md`); проверка: нерезолвнутых тредов нет (GraphQL-запрос из шага 6)
 - [ ] 7.3 `/opsx:archive sticker-message-style` в той же ветке до мержа, коммит пушится в PR; проверка:
   `openspec/specs/chat-message-style/spec.md` появился, change лежит в `openspec/changes/archive/`

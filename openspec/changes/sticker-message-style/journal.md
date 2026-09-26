@@ -95,3 +95,8 @@ F1: git merge origin/master (7f99acf, без конфликтов, дифф — 
 
 Ревью PR #29, круг 1 — 2 находки: (1) STICKER_IMG_SELECTOR без маркера amostk. — чужая картинка с .k-sticker. получала лимит 208; теперь `${OUR_IMG_SELECTOR}[alt*=".k-sticker."]`, стенд: foo.k-sticker.gif 420×420 в пузыре; (2) LABEL_JUNK пропускал U+200E/200F/061C — теперь \p{Bidi_Control}, 3 теста с зубами, design.md поправлен.
 Аудит правок — повторное ревью PR (шаг 6).
+
+### G7 · PR, аудит, архив, мерж
+
+7.1: PR #29 (Closes #21). Во время ревью в master влит #28 (0.8.1) — мерж origin/master (fe1f71f), конфликт только в версии, оставлена 0.9.0. CI: lint, typecheck, test, build, version — зелёные, PR MERGEABLE/CLEAN.
+7.2: review-staged субагенту недоступен — аудит вручную по .claude/rules. 2 находки inline (amoDom.ts:118 селектор стикера без маркера; fileName.ts:55 LRM/RLM/ALM в метке), исправлены в f9dc6e9, ответы в тредах, повторный аудит подтвердил, оба треда резолвнуты, нерезолвнутых 0.
