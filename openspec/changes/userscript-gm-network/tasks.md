@@ -24,23 +24,23 @@
 
 ## 3. Адаптер сети через GM API
 
-- [ ] 3.1 Типы используемой части GM API в `src/userscript/gm.types.ts`: детали запроса с `responseType`,
+- [x] 3.1 Типы используемой части GM API в `src/userscript/gm.types.ts`: детали запроса с `responseType`,
   `anonymous`, колбэками `onload` / `onerror` / `ontimeout` / `onabort` / `onprogress` / `onreadystatechange`;
   ответ с `status`, `finalUrl`, `responseHeaders`, `response`, `responseText`, `loaded`; handle с `abort`;
   `GM_getValue` / `GM_setValue`. Глобальных объявлений `GM_*` нет ни здесь, ни в `src/types.d.ts`; проверка:
   `pnpm typecheck` чистый
-- [ ] 3.2 `src/userscript/gmNetwork.ts`: `gmNetwork(request): HostNetwork` по design.md — проверка адреса до
+- [x] 3.2 `src/userscript/gmNetwork.ts`: `gmNetwork(request): HostNetwork` по design.md — проверка адреса до
   запроса, `anonymous: true`, `finalUrl` через `isAllowedUrl`, не-2xx → `httpError`, лимит по `Content-Length` на
   `HEADERS_RECEIVED`, по `loaded` в `onprogress` и по `byteLength` на `onload` с `abort()`, `content-type` из
   `responseHeaders` в тип Blob, ошибки сети без адреса в тексте; проверка: eslint и `pnpm typecheck` по файлу
   чистые
-- [ ] 3.3 `tests/gmNetwork.test.ts` с мок-функцией запроса: адрес вне политики — ошибка без вызова запроса;
+- [x] 3.3 `tests/gmNetwork.test.ts` с мок-функцией запроса: адрес вне политики — ошибка без вызова запроса;
   `finalUrl` вне политики — ошибка `Адрес вне списка разрешённых`; 404 — ошибка с `HTTP 404` и началом тела (для
   JSON и Blob); `Content-Length` больше лимита — `abort()` и ошибка `Файл больше`; `loaded` больше лимита в
   `onprogress` — `abort()` и та же ошибка; ответ больше лимита без `progress` — ошибка на `onload`; успешный JSON
   разобран; Blob с типом из `content-type`; `onerror` / `ontimeout` — ошибка без токена в тексте; в деталях запроса
   `anonymous: true`; проверка: `pnpm test` зелёный
-- [ ] 3.4 `src/userscript/fetchNetwork.ts`: `fetchNetwork(): HostNetwork` — нынешняя сеть userscript на
+- [x] 3.4 `src/userscript/fetchNetwork.ts`: `fetchNetwork(): HostNetwork` — нынешняя сеть userscript на
   `fetchChecked` и `readResponseLimited`, перенесённая без изменения поведения; проверка: eslint и `pnpm typecheck`
   по файлу чистые
 
