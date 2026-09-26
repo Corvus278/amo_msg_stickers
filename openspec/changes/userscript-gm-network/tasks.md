@@ -85,5 +85,5 @@
 - [x] 7.4 Там же, в консоли страницы: `typeof GM_xmlhttpRequest` и `typeof GM_getValue` — `undefined`; в консоли
   отмечено, запустился ли Worker кодирования GIF или сработал фолбэк (`console.warn`); результат записан в
   design.md, раздел Risks
-- [ ] 7.5 Violentmonkey в Chrome: кнопка появляется, импорт одного пака Telegram проходит; при расхождении с
-  Tampermonkey — запись в design.md, раздел Risks
+- [x] 7.5 ~~Violentmonkey в Chrome: кнопка появляется, импорт одного пака Telegram проходит; при расхождении с
+  Tampermonkey — запись в design.md, раздел Risks~~ — пропущено: официально поддерживается только Tampermonkey

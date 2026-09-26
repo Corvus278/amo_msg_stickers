@@ -71,3 +71,7 @@ F1-a: не-2xx → httpError во всех колбэках (статус из �
 7.3 (пользователь): Tampermonkey в Chrome, 0.7.0 поверх 0.6.0 — ключи на месте, импорт video_gachi без ошибок CORS, стикер и GIF GIPHY отправлены.
 7.4 (пользователь): typeof GM_xmlhttpRequest / GM_getValue на странице — undefined; Worker стартует, фолбэка нет — записано в design.md, Risks.
 7.5 (Violentmonkey) — не проверена, остаётся [ ].
+
+### 7.5-skip
+
+7.5 пропущена по решению пользователя: официально поддерживается только Tampermonkey. Violentmonkey — без гарантий, на живом amo не проверялся; design.md, Risks уточнён. Код (@inject-into, комментарии о совместимости) не менялся.
