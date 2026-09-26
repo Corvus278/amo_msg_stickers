@@ -8,13 +8,14 @@ export const BYTES_IN_MB = 1024 * 1024;
 const ALLOWED_PROTOCOL = 'https:';
 
 /**
- * Сверены с `host_permissions` в manifest. Bot API живёт на одном хосте — он сравнивается
- * точно; медиа GIPHY и KLIPY раздают CDN на поддоменах — там разрешён домен со всеми
- * поддоменами. Ссылки из ответов API на другие хосты не скачиваем — иначе IP и Referer
+ * Сверены с `host_permissions` в manifest и с `@connect` в заголовке userscript
+ * (`build.mjs`, совпадение с `@connect` держит тест). Bot API живёт на одном хосте — он
+ * сравнивается точно; медиа GIPHY и KLIPY раздают CDN на поддоменах — там разрешён домен со
+ * всеми поддоменами. Ссылки из ответов API на другие хосты не скачиваем — иначе IP и Referer
  * пользователя amo утекают туда, куда укажет ответ.
  */
-const ALLOWED_HOSTS = ['api.telegram.org'];
-const ALLOWED_DOMAINS = ['giphy.com', 'klipy.com'];
+export const ALLOWED_HOSTS = ['api.telegram.org'];
+export const ALLOWED_DOMAINS = ['giphy.com', 'klipy.com'];
 
 /**
  * Сколько символов тела ответа попадает в текст ошибки — достаточно, чтобы понять причину,
