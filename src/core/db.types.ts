@@ -62,6 +62,12 @@ export type StickerRec = {
   emoji?: string | undefined;
 
   /**
+   * Подпись своего стикера — та, с которой нарисован GIF; из неё строится метка в имени отправляемого файла.
+   * undefined — подписи нет: стикер из Telegram или сохранён без подписи.
+   */
+  caption?: string | undefined;
+
+  /**
    * Время добавления (мс), задаёт порядок стикеров в наборе.
    */
   createdAt: number;

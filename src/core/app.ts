@@ -1,9 +1,10 @@
 import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
-import { composerOf, findComposers, isDarkTheme } from './amoDom';
+import { composerOf, findComposers, injectMessageStyle, isDarkTheme } from './amoDom';
 import type { Composer } from './amoDom.types';
 import { getSticker, pushRecent } from './db';
 import type { SendItem } from './db.types';
+import { sendFileName } from './fileName';
 import type { Host } from './host.types';
 import { BYTES_IN_MB } from './net';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
@@ -42,6 +43,7 @@ const setIconOpen = (button: HTMLElement | null, isOpen: boolean) => {
 export const start = (host: Host) => {
   if (window.__amoStickers) return;
   window.__amoStickers = true;
+  injectMessageStyle();
 
   let activeButton: HTMLElement | null = null;
 
@@ -52,13 +54,13 @@ export const start = (host: Host) => {
 
         if (!sticker) throw new SendError('Стикер удалён');
 
-        return toGifFile(sticker.blob);
+        return toGifFile(sticker.blob, sendFileName(item, sticker));
       }
 
       case 'remote': {
         const blob = await host.fetchBlob(item.gif.url, MAX_REMOTE_GIF_BYTES);
 
-        return toCheckedGifFile(blob, 'gif');
+        return toCheckedGifFile(blob, sendFileName(item));
       }
 
       default: {
