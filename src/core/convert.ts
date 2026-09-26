@@ -77,6 +77,35 @@ const writeFrames = async (
 };
 
 /**
+ * Каркас прохода: приёмник в размере прохода, кадры плана через него и `sink.close()` при
+ * любом исходе — и когда упала запись кадров, и когда упал `collect`.
+ *
+ * @param source — открытый источник кадров
+ * @param size — ширина и высота прохода
+ * @param indices — номера кадров плана по порядку
+ * @param decorate — дорисовка поверх кадра; undefined — без неё
+ * @param collect — что забрать у приёмника после записи всех кадров
+ * @returns результат `collect`
+ */
+const runPass = async <T>(
+  source: FrameSource,
+  [width, height]: [number, number],
+  indices: Iterable<number>,
+  decorate: Decorate | undefined,
+  collect: (sink: FrameSink) => T | Promise<T>
+): Promise<T> => {
+  const sink = createFrameSink({ width, height, isAnimated: source.plan.length > 1 });
+
+  try {
+    await writeFrames(source, sink, makeCanvas(width, height), indices, decorate);
+
+    return await collect(sink);
+  } finally {
+    sink.close();
+  }
+};
+
+/**
  * Пробный проход в размере источника: GIF не закрывается, нужен только вес потока.
  *
  * @param source — открытый источник кадров
@@ -84,21 +113,10 @@ const writeFrames = async (
  * @param decorate — дорисовка поверх кадра; undefined — без неё
  * @returns вес пробы в байтах
  */
-const samplePass = async (
-  source: FrameSource,
-  indices: number[],
-  decorate?: Decorate
-) => {
-  const { width, height } = source;
-  const sink = createFrameSink({ width, height, isAnimated: source.plan.length > 1 });
-
-  try {
-    await writeFrames(source, sink, makeCanvas(width, height), indices, decorate);
-
+const samplePass = (source: FrameSource, indices: number[], decorate?: Decorate) => {
+  return runPass(source, [source.width, source.height], indices, decorate, (sink) => {
     return sink.byteLength;
-  } finally {
-    sink.close();
-  }
+  });
 };
 
 /**
@@ -109,27 +127,16 @@ const samplePass = async (
  * @param decorate — дорисовка поверх кадра; undefined — без неё
  * @returns готовый GIF прохода
  */
-const fullPass = async (
+const fullPass = (
   source: FrameSource,
   side: number,
   decorate?: Decorate
 ): Promise<EncodedPass> => {
   const [width, height] = fit(source.width, source.height, side);
-  const sink = createFrameSink({ width, height, isAnimated: source.plan.length > 1 });
 
-  try {
-    await writeFrames(
-      source,
-      sink,
-      makeCanvas(width, height),
-      source.plan.keys(),
-      decorate
-    );
-
+  return runPass(source, [width, height], source.plan.keys(), decorate, async (sink) => {
     return { bytes: await sink.finish(), width, height };
-  } finally {
-    sink.close();
-  }
+  });
 };
 
 export const detectKind = (blob: Blob, fileName = ''): SourceKind => {
