@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { EVENT_TIMEOUT_MS } from '../src/core/frameSourceCommon';
 import { openTgsSource, tgsPlan } from '../src/core/frameSourceTgs';
 
 import { fakeCanvasContext } from './helpers/fakeCanvasContext';
@@ -85,6 +86,30 @@ describe('openTgsSource', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
+    anim.isLoaded = true;
+    anim.addEventListener.mockReset();
+  });
+
+  it('анимация не загрузилась за таймаут: источник открывается, слушатель снят', async () => {
+    const removeListener = vi.fn();
+
+    anim.isLoaded = false;
+    anim.addEventListener.mockReturnValue(removeListener);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+    const opening = openTgsSource(await gzip(JSON.stringify(LOTTIE)), 512);
+
+    await vi.waitFor(() => {
+      expect(anim.addEventListener).toHaveBeenCalledWith(
+        'DOMLoaded',
+        expect.any(Function)
+      );
+    });
+    await vi.advanceTimersByTimeAsync(EVENT_TIMEOUT_MS);
+
+    await expect(opening).resolves.toMatchObject({ width: 512, height: 256 });
+    expect(removeListener).toHaveBeenCalledOnce();
   });
 
   it('рендерит на своём холсте в размере источника, план от fps файла', async () => {
