@@ -100,3 +100,7 @@ F1: git merge origin/master (7f99acf, без конфликтов, дифф — 
 
 7.1: PR #29 (Closes #21). Во время ревью в master влит #28 (0.8.1) — мерж origin/master (fe1f71f), конфликт только в версии, оставлена 0.9.0. CI: lint, typecheck, test, build, version — зелёные, PR MERGEABLE/CLEAN.
 7.2: review-staged субагенту недоступен — аудит вручную по .claude/rules. 2 находки inline (amoDom.ts:118 селектор стикера без маркера; fileName.ts:55 LRM/RLM/ALM в метке), исправлены в f9dc6e9, ответы в тредах, повторный аудит подтвердил, оба треда резолвнуты, нерезолвнутых 0.
+
+### G7 · 7.3 архив
+
+`openspec archive sticker-message-style --yes`: chat-message-style — новая основная спека (4 требования), custom-stickers — 1 MODIFIED, sticker-sending — 1 ADDED; `openspec validate --specs --strict` — 10/10. Change перенесён в archive/2026-09-27-sticker-message-style. 7.3 отмечена вручную: RUN close работает только по активному change. 7.4 (squash-мерж) — после push, в ветку уже не попадает.

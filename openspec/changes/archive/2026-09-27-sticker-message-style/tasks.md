@@ -110,6 +110,6 @@
   `lint`, `typecheck`, `test`, `build`, `version` зелёные
 - [x] 7.2 Аудит `review-staged` в режиме «ветка против master», находки — inline-комментами в PR (шаги 4–6
   «Воркфлоу задачи» в `CLAUDE.md`); проверка: нерезолвнутых тредов нет (GraphQL-запрос из шага 6)
-- [ ] 7.3 `/opsx:archive sticker-message-style` в той же ветке до мержа, коммит пушится в PR; проверка:
+- [x] 7.3 `/opsx:archive sticker-message-style` в той же ветке до мержа, коммит пушится в PR; проверка:
   `openspec/specs/chat-message-style/spec.md` появился, change лежит в `openspec/changes/archive/`
 - [ ] 7.4 Мерж: `gh pr merge <N> --squash --delete-branch`; проверка: issue #21 закрыта, релиз `v0.8.0` создан
