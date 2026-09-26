@@ -28,6 +28,13 @@ describe('videoPlan', () => {
     expect(plan.at(-1)?.position).toBeCloseTo(3.96);
   });
 
+  it('при низком fps длину плана задаёт предел 4 с, а не 100 кадров', () => {
+    const plan = videoPlan(100, 5);
+
+    expect(plan).toHaveLength(20);
+    expect(plan.at(-1)?.position).toBeCloseTo(3.8);
+  });
+
   it('граница длительности не добавляет лишнего кадра', () => {
     expect(videoPlan(0.4)).toHaveLength(10);
     expect(videoPlan(2.96)).toHaveLength(74);
