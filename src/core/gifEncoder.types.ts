@@ -1,3 +1,5 @@
+import type { Palette } from 'gifenc';
+
 export type GifEncoderOptions = {
   /**
    * Ширина каждого кадра в пикселях.
@@ -44,7 +46,7 @@ export type IndexedFrame = {
   /**
    * Палитра кадра в rgb; при прозрачности последний цвет — зарезервированный прозрачный.
    */
-  palette: number[][];
+  palette: Palette;
 
   /**
    * Есть ли в кадре прозрачные пиксели.
