@@ -1,0 +1,26 @@
+# Журнал прогона
+
+Решения без заказчика, отступления от спеки, итоги аудитов и долг прогона change `sticker-message-style`.
+
+## 2026-09-26
+
+### Старт прогона
+
+База прогона: 58ca4afcb1e9afa51cd603bf4a667c811d50178c (master = origin/master). Масштаб средний (27 задач).
+Живые образцы: живой amo web.dev.amo.tm через chrome-devtools MCP (Chrome с --remote-debugging-port=9222, профиль
+вне git); на старте прогона Chrome не запущен — перед 4.1 координатор запускает его с постоянным профилем, логин в
+amo делает пользователь. Для 5.1 у пользователя есть второй аккаунт — как войти, спросить при подходе к 5.1.
+Группа 7 целиком (push, PR, аудит inline, архив, squash-мерж) — делает прогон, разрешение пользователя получено.
+
+### Живой amo
+
+Chrome с --remote-debugging-port=9222, профиль local/chrome-profile (в .gitignore), окно видимое (не headless).
+Пользователь вошёл в web.dev.amo.tm. Агенты подключаются через chrome-devtools MCP; окно не закрывать.
+
+### G1 · Ветка, версия, модуль имени
+
+Ветка feature/21-sticker-message-style от 58ca4af. Версия 0.8.0; package.json правлен sed: pnpm version падал на неотслеживаемом каталоге change.
+3.2 перенесена в G1 (sendFileName читает caption). Поле необязательное — typecheck не указывает места 3.3–3.4, G2 закрывает их сама.
+sendFileName(item, sticker?: Pick<StickerRec,'caption'|'emoji'>); local без записи → метки нет. Разбор симметричен сборке, повтор ключа — Object.hasOwn.
+Аудит: ok с первого круга, 86 тестов.
+Долг: (1) нет теста «тяжёлая графема на 128 байтах, за ней лёгкая» — мутация break→continue в fileName.ts:83 выживает; (2) JSDoc модуля висит на MARKER (fileName.ts:9-12); (3) caption из одного «мусора» (`...`) не уступает emoji — выбор до вычистки (fileName.ts:223).

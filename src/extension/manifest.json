@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "amo stickers",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры",
   "permissions": ["storage"],
   "host_permissions": [
