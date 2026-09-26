@@ -1,8 +1,8 @@
-import { getEventListeners } from 'node:events';
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EVENT_TIMEOUT_MS, fit, waitForEvent } from '../src/core/frameSourceCommon';
+
+import { CountingEventTarget } from './helpers/countingEventTarget';
 
 /**
  * Сколько слушателей ожидания осталось на цели: и самого события, и `error`.
@@ -11,10 +11,8 @@ import { EVENT_TIMEOUT_MS, fit, waitForEvent } from '../src/core/frameSourceComm
  * @param event — имя ожидаемого события
  * @returns общее число слушателей
  */
-const listenerCount = (target: EventTarget, event: string) => {
-  return (
-    getEventListeners(target, event).length + getEventListeners(target, 'error').length
-  );
+const listenerCount = (target: CountingEventTarget, event: string) => {
+  return target.listenerCount(event) + target.listenerCount('error');
 };
 
 describe('waitForEvent', () => {
@@ -24,7 +22,7 @@ describe('waitForEvent', () => {
 
   it('разрешается по событию и снимает слушатели и таймер', async () => {
     vi.useFakeTimers();
-    const target = new EventTarget();
+    const target = new CountingEventTarget();
     const waiting = waitForEvent(target, 'loadeddata');
 
     target.dispatchEvent(new Event('loadeddata'));
@@ -35,7 +33,7 @@ describe('waitForEvent', () => {
 
   it('отклоняется по error сразу, не дожидаясь таймаута', async () => {
     vi.useFakeTimers();
-    const target = new EventTarget();
+    const target = new CountingEventTarget();
     const waiting = waitForEvent(target, 'loadeddata');
 
     target.dispatchEvent(new Event('error'));
@@ -46,7 +44,7 @@ describe('waitForEvent', () => {
 
   it('отклоняется по таймауту и снимает слушатели', async () => {
     vi.useFakeTimers();
-    const target = new EventTarget();
+    const target = new CountingEventTarget();
     const waiting = waitForEvent(target, 'seeked');
     const assertion = expect(waiting).rejects.toThrow('timeout: seeked');
 

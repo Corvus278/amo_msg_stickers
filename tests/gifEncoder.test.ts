@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 import { describe, expect, it } from 'vitest';
 
 import { inspectGif } from '../src/core/gif';
@@ -29,8 +27,18 @@ const BASELINE_SINGLE = [
 
 const DISPOSE_RESTORE_BACKGROUND = 2;
 
-const sha = (bytes: Uint8Array) => {
-  return createHash('sha256').update(bytes).digest('hex');
+/**
+ * SHA-256 байтов hex-строкой — Web Crypto, как в браузере: тесты не тянут node-модули.
+ *
+ * @param bytes — байты GIF
+ * @returns хэш в нижнем регистре
+ */
+const sha = async (bytes: Uint8Array<ArrayBuffer>) => {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+
+  return Array.from(digest, (byte) => {
+    return byte.toString(16).padStart(2, '0');
+  }).join('');
 };
 
 /**
@@ -61,12 +69,14 @@ const ALL_FRAMES = syntheticFrames().map((_, i) => {
 });
 
 describe('createGifEncoder', () => {
-  it('повторяет encodeGif базы байт-в-байт', () => {
-    expect(sha(encode(ALL_FRAMES))).toBe(BASELINE_ANIMATED);
+  it('повторяет encodeGif базы байт-в-байт', async () => {
+    expect(await sha(encode(ALL_FRAMES))).toBe(BASELINE_ANIMATED);
     expect(
-      ALL_FRAMES.map((i) => {
-        return sha(encode([i]));
-      })
+      await Promise.all(
+        ALL_FRAMES.map((i) => {
+          return sha(encode([i]));
+        })
+      )
     ).toEqual(BASELINE_SINGLE);
   });
 
