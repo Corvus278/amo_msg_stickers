@@ -13,7 +13,7 @@ import type { MasonryCellProps } from './MasonryCell.types';
  */
 const cellVariants = cva(
   [
-    'mb-1 block w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg p-0',
+    'block w-full cursor-pointer overflow-hidden rounded-lg p-0',
     'bg-cadetGray-30/[.12] dark:bg-white-0/[.06]',
   ],
   {

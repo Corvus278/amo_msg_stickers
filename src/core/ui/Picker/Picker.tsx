@@ -18,6 +18,10 @@ import type { PickerProps } from './Picker.types';
  * Геометрия, тень и радиус повторяют попап эмодзи amo: панель встаёт на его место над
  * правым краем поля ввода.
  *
+ * `bottom-12`, а не `bottom-9.5` контейнера эмодзи: тот на 10px выше своей панели (410px
+ * против 400px), панель прижата к его верху, и между ней и полем ввода остаётся зазор.
+ * На `bottom-9.5` наша панель заходила бы на поле ввода.
+ *
  * `left-auto m-0 p-0` снимают стили `<dialog>` браузера: без них панель встала бы по
  * центру между `left: 0` и `right`.
  *
@@ -26,7 +30,7 @@ import type { PickerProps } from './Picker.types';
  * от страницы.
  */
 const PANEL_CLASS = [
-  'fixed bottom-9.5 right-7.5 z-[2] h-[400px] w-[352px] flex-col overflow-hidden rounded-lgx',
+  'fixed bottom-12 right-7.5 z-[2] h-[400px] w-[352px] flex-col overflow-hidden rounded-lgx',
   'left-auto m-0 p-0',
   'font-primary text-xsm leading-[1.3]',
   'bg-white-0 text-gray-30 dark:bg-gray-10 dark:text-gray-40',
