@@ -1,7 +1,7 @@
 /**
  * Проверка версии для CI: три места записи версии совпадают, а с `--base <ref>` —
- * версия выше, чем в `package.json` базы. Ошибки печатаются аннотациями GitHub
- * (`::error::`), код выхода 1.
+ * версия выше, чем в `package.json` базы, если ветка меняет файлы продукта. Ошибки
+ * печатаются аннотациями GitHub (`::error::`), код выхода 1.
  *
  * Запуск: `node scripts/check-version.mjs [--base origin/master]`.
  */
@@ -12,12 +12,20 @@ import { parseArgs } from 'node:util';
 import {
   checkVersionConsistency,
   checkVersionGrowth,
+  hasProductChanges,
   readBannerVersion,
   toErrorAnnotation,
 } from './version.ts';
 
 const readJsonVersion = (path) => {
   return JSON.parse(readFileSync(path, 'utf8')).version;
+};
+
+const git = (args) => {
+  return execFileSync('git', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 };
 
 const reportError = (message) => {
@@ -48,16 +56,23 @@ if (consistencyError) {
 
 if (base) {
   try {
-    const baseVersion = JSON.parse(
-      execFileSync('git', ['show', `${base}:package.json`], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-    ).version;
-    const growthError = checkVersionGrowth(version, baseVersion);
+    /**
+     * `--no-renames`: у переноса нужны оба пути — файл, вынесенный из продукта, тоже
+     * его меняет.
+     */
+    const changedPaths = git(['diff', '--name-only', '--no-renames', `${base}...HEAD`])
+      .split('\n')
+      .filter(Boolean);
 
-    if (growthError) {
-      reportError(growthError);
+    if (hasProductChanges(changedPaths)) {
+      const baseVersion = JSON.parse(git(['show', `${base}:package.json`])).version;
+      const growthError = checkVersionGrowth(version, baseVersion);
+
+      if (growthError) {
+        reportError(growthError);
+      }
+    } else {
+      console.info('Файлы продукта не менялись — подъём версии не нужен');
     }
   } catch (error) {
     reportError(error.message);
