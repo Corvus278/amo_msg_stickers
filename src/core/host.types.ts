@@ -16,17 +16,9 @@ export type Settings = {
 };
 
 /**
- * Окружение, в котором работает ядро.
- *
- * Расширение: сеть через service worker (обход CORS), настройки в chrome.storage.
- * Userscript: прямой fetch со страницы, настройки в localStorage.
+ * Сеть окружения: запросы в рамках сетевой политики (`core/net.ts`).
  */
-export type Host = {
-  /**
-   * Вид окружения — для диагностики в консоли.
-   */
-  name: 'extension' | 'userscript';
-
+export type HostNetwork = {
   /**
    * Загружает JSON по адресу. Форму ответа не проверяет: `unknown` заставляет вызывающую
    * сторону сузить его своим type-гардом. Адрес вне сетевой политики (`core/net.ts`) и
@@ -39,7 +31,12 @@ export type Host = {
    * прерывается исключением. Адрес вне сетевой политики и не-2xx ответ — тоже исключение.
    */
   fetchBlob(url: string, maxBytes: number): Promise<Blob>;
+};
 
+/**
+ * Хранилище настроек пользователя.
+ */
+export type HostSettings = {
   /**
    * Настройки пользователя; отсутствующие поля заполнены значениями по умолчанию.
    */
@@ -50,3 +47,19 @@ export type Host = {
    */
   setSettings(patch: Partial<Settings>): Promise<void>;
 };
+
+/**
+ * Окружение, в котором работает ядро: сеть и настройки подключает само окружение, ядро
+ * знает только контракты `HostNetwork` и `HostSettings`.
+ *
+ * Расширение: сеть через service worker (обход CORS), настройки в chrome.storage.
+ * Userscript: сеть и настройки — адаптеры `src/userscript/`, выбранные по возможностям
+ * менеджера userscript-ов.
+ */
+export type Host = {
+  /**
+   * Вид окружения — для диагностики в консоли.
+   */
+  name: 'extension' | 'userscript';
+} & HostNetwork &
+  HostSettings;

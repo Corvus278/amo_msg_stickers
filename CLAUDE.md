@@ -262,6 +262,9 @@ eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + s
   единственный канал диагностики.
 - `local/**` в eslint игнорируется: каталог в `.gitignore`, в нём локальные заготовки вне tsconfig.
 
+Граница ядра: `no-restricted-imports` на `src/core/**` запрещает импорт из `src/userscript/` и `src/extension/` —
+ядро знает только контракты `core/host.types.ts`, а окружения подключают к ним свои адаптеры.
+
 `.claude/hooks/lint.sh` — PostToolUse-хук: после каждой правки гоняет по файлу eslint (+`tsc --noEmit` для `.ts`/
 `.tsx`). Ошибки в правленом файле блокируют правку.
 

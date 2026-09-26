@@ -22,7 +22,7 @@ const ALLOWED_DOMAINS = ['giphy.com', 'klipy.com'];
  */
 const ERROR_BODY_PREVIEW = 200;
 
-const NOT_ALLOWED = 'Адрес вне списка разрешённых';
+export const NOT_ALLOWED = 'Адрес вне списка разрешённых';
 
 /**
  * Хост сравнивается после разбора URL, а не регуляркой по строке: так
@@ -51,12 +51,30 @@ export const isAllowedUrl = (url: string) => {
  *
  * @param url — проверяемый адрес
  */
-const assertAllowedUrl = (url: string) => {
+export const assertAllowedUrl = (url: string) => {
   if (!isAllowedUrl(url)) throw new Error(NOT_ALLOWED);
 };
 
-const tooBigError = (maxBytes: number) => {
+/**
+ * Ошибка превышения лимита размера — общий текст для всех путей чтения тела.
+ *
+ * @param maxBytes — предел размера, который превышен
+ * @returns ошибка с пределом в мегабайтах
+ */
+export const tooBigError = (maxBytes: number) => {
   return new Error(`Файл больше ${Math.round((maxBytes / BYTES_IN_MB) * 10) / 10} МБ`);
+};
+
+/**
+ * Ошибка не-2xx ответа — общий текст для всех сетевых путей: HTTP-статус и начало тела,
+ * по которому видна причина.
+ *
+ * @param status — HTTP-статус ответа
+ * @param body — тело ответа как текст
+ * @returns ошибка с HTTP-статусом и не больше 200 символов тела
+ */
+export const httpError = (status: number, body: string) => {
+  return new Error(`HTTP ${status} ${body.slice(0, ERROR_BODY_PREVIEW)}`);
 };
 
 /**
@@ -142,7 +160,7 @@ export const fetchChecked = async (url: string) => {
       return '';
     });
 
-    throw new Error(`HTTP ${res.status} ${body.slice(0, ERROR_BODY_PREVIEW)}`);
+    throw httpError(res.status, body);
   }
 
   return res;
