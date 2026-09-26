@@ -2,18 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { frameDelayMs, openImageSource } from '../src/core/frameSourceImage';
 
+import { fakeCanvasContext } from './helpers/fakeCanvasContext';
 import { FakeImageDecoder, FakeVideoFrame } from './helpers/fakeImageDecoder';
 
 const WEBP = new Blob([], { type: 'image/webp' });
-
-/**
- * Подставной контекст холста.
- *
- * @returns контекст со шпионами
- */
-const makeCtx = () => {
-  return { clearRect: vi.fn(), drawImage: vi.fn() };
-};
 
 describe('frameDelayMs', () => {
   it('переводит микросекунды в мс', () => {
@@ -133,7 +125,7 @@ describe('openImageSource: ImageDecoder', () => {
   it('draw декодирует кадр плана, рисует и закрывает его', async () => {
     const source = await openImageSource(WEBP, 512);
     const [decoder] = FakeImageDecoder.instances;
-    const ctx = makeCtx();
+    const ctx = fakeCanvasContext();
 
     decoder!.decoded = [];
     await source.draw(2, ctx, 256, 128);
@@ -196,7 +188,7 @@ describe('openImageSource: createImageBitmap', () => {
 
   it('битмап живёт до dispose и рисуется в заданный размер', async () => {
     const source = await openImageSource(new Blob([]), 512);
-    const ctx = makeCtx();
+    const ctx = fakeCanvasContext();
 
     await source.draw(0, ctx, 256, 128);
     await source.draw(0, ctx, 256, 128);

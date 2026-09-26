@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EVENT_TIMEOUT_MS } from '../src/core/frameSourceCommon';
 import { openVideoSource, videoPlan } from '../src/core/frameSourceVideo';
 
+import { fakeCanvasContext } from './helpers/fakeCanvasContext';
 import { FakeVideo } from './helpers/fakeVideo';
 
 const BLOB_URL = 'blob:video';
@@ -126,7 +127,7 @@ describe('openVideoSource', () => {
     Object.assign(video, { duration: 1, videoWidth: 512, videoHeight: 512 });
     video.dispatchEvent(new Event('loadeddata'));
     const source = await opening;
-    const ctx = { clearRect: vi.fn(), drawImage: vi.fn() };
+    const ctx = fakeCanvasContext();
 
     await source.draw(5, ctx, 256, 256);
     expect(video.seeks).toEqual([0.2]);
@@ -140,7 +141,7 @@ describe('openVideoSource', () => {
     Object.assign(video, { duration: 1, videoWidth: 512, videoHeight: 512 });
     video.dispatchEvent(new Event('loadeddata'));
     const source = await opening;
-    const ctx = { clearRect: vi.fn(), drawImage: vi.fn() };
+    const ctx = fakeCanvasContext();
 
     await expect(source.draw(25, ctx, 256, 256)).rejects.toThrow(RangeError);
   });

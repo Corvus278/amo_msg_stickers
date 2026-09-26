@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { openTgsSource, tgsPlan } from '../src/core/frameSourceTgs';
 
+import { fakeCanvasContext } from './helpers/fakeCanvasContext';
 import { gzip } from './helpers/gzip';
 
 const anim = vi.hoisted(() => {
@@ -101,7 +102,7 @@ describe('openTgsSource', () => {
 
   it('draw = goToAndStop + drawImage своего холста в целевой', async () => {
     const source = await openTgsSource(await gzip(JSON.stringify(LOTTIE)), 512);
-    const ctx = { clearRect: vi.fn(), drawImage: vi.fn() };
+    const ctx = fakeCanvasContext();
 
     await source.draw(1, ctx, 256, 128);
     expect(anim.goToAndStop).toHaveBeenCalledWith(2.4, true);
