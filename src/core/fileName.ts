@@ -7,10 +7,9 @@ import type {
 } from './fileName.types';
 
 /**
- * Имя отправляемого файла amo stickers: `[метка.]amostk.k-<вид>[.<ключ>-<значение>]*.gif`. По маркеру и виду в имени
- * (оно же `alt` картинки в ленте) CSS узнаёт сообщение, отправленное amo stickers.
+ * Маркер имени файла amo stickers. По нему и по виду в имени (оно же `alt` картинки в ленте) CSS узнаёт сообщение,
+ * отправленное amo stickers.
  */
-
 const MARKER = 'amostk';
 
 const KIND_KEY = 'k';
