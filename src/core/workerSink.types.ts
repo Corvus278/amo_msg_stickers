@@ -70,7 +70,8 @@ export type WorkerSinkDeps = {
 export type WorkerSinkFactoryDeps = Omit<WorkerSinkDeps, 'options'>;
 
 /**
- * Промис с внешним разрешением: ожидание окна или ответа `done`.
+ * Промис с внешним разрешением: ожидание окна, опустошения очереди кадров или ответа
+ * `done`.
  */
 export type Deferred<T> = {
   /**

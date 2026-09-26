@@ -49,7 +49,9 @@ const makeCanvas = (w: number, h: number): CanvasBox => {
 /**
  * Прогоняет кадры плана через приёмник: кадр источника, поверх него подпись — уже в
  * размере холста, чтобы текст не мылился от даунскейла. Пиксели кадра уходят в приёмник
- * сразу, и в памяти не копится больше одного несжатого кадра.
+ * сразу, а следующий кадр захватывается, только когда `write` приёмника его пустил:
+ * несжатых кадров в памяти не больше, чем приёмник держит в очереди кодирования (его
+ * окно).
  *
  * @param source — открытый источник кадров
  * @param sink — приёмник прохода
@@ -108,15 +110,27 @@ const runPass = async <T>(
 /**
  * Пробный проход в размере источника: GIF не закрывается, нужен только вес потока.
  *
+ * Вес читается после `flush`: `write` приёмника разрешается, пока последние кадры ещё
+ * стоят в очереди кодирования, и `byteLength` без `flush` их не учёл бы — проба
+ * занизила бы вес, и выбор стороны взял бы сторону крупнее допустимой.
+ *
  * @param source — открытый источник кадров
  * @param indices — номера пробных кадров плана
  * @param decorate — дорисовка поверх кадра; undefined — без неё
  * @returns вес пробы в байтах
  */
 const samplePass = (source: FrameSource, indices: number[], decorate?: Decorate) => {
-  return runPass(source, [source.width, source.height], indices, decorate, (sink) => {
-    return sink.byteLength;
-  });
+  return runPass(
+    source,
+    [source.width, source.height],
+    indices,
+    decorate,
+    async (sink) => {
+      await sink.flush();
+
+      return sink.byteLength;
+    }
+  );
 };
 
 /**

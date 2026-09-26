@@ -30,6 +30,11 @@ export const createMainThreadSink = (options: GifEncoderOptions): FrameSink => {
       encoder.write(rgba, delayMs);
       await yieldToPage();
     },
+
+    /**
+     * Кадр кодируется внутри `write`, поэтому очереди нет и ждать нечего.
+     */
+    flush: async () => {},
     get byteLength() {
       return encoder.byteLength;
     },

@@ -56,9 +56,11 @@ const transferOf = (rgba: Uint8ClampedArray): Transferable[] => {
  *
  * Кадры уходят Worker-у без копии, `write` разрешается, когда без `ack` в полёте
  * меньше `maxInFlight` кадров: захват не обгоняет кодирование, и кадры не копятся в
- * очереди сообщений Worker-а.
+ * очереди сообщений Worker-а. При окне больше одного кадра `byteLength` сразу после
+ * `write` отстаёт на кадры в полёте; `flush` разрешается, когда `ack` пришёл на каждый
+ * отданный кадр, и после него вес полный.
  *
- * До первого `ack` Worker ещё не доказал, что работает: в полёте один кадр, и уходит
+ * До первого `ack` Worker ещё не доказал, что работает: окно — один кадр, и уходит
  * он копией. Сбой Worker-а в это время (CSP не дала загрузить скрипт, исключение
  * конструктора) переводит проход на `createFallback` с повтором этого кадра и зовёт
  * `onFallback`. Сбой после первого `ack` и сообщение `error` — ошибка конвертации: при
@@ -83,6 +85,7 @@ export const createWorkerSink = ({
   let retained: RetainedFrame | undefined;
   let replay: Promise<void> = Promise.resolve();
   const slotWaiters: Deferred<void>[] = [];
+  const flushWaiters: Deferred<void>[] = [];
   let finishWaiter: Deferred<Uint8Array<ArrayBuffer>> | undefined;
 
   /**
@@ -115,7 +118,17 @@ export const createWorkerSink = ({
   };
 
   /**
-   * Проход провален: ждущие `write` и `finish` отклоняются, дальнейшие вызовы — тоже.
+   * Будит `flush`, когда без `ack` не осталось ни одного кадра.
+   */
+  const releaseFlushes = () => {
+    if (inFlight > 0) return;
+
+    for (const waiter of flushWaiters.splice(0)) waiter.resolve();
+  };
+
+  /**
+   * Проход провален: ждущие `write`, `flush` и `finish` отклоняются, дальнейшие вызовы —
+   * тоже.
    *
    * @param error — причина
    */
@@ -125,12 +138,16 @@ export const createWorkerSink = ({
 
     for (const waiter of slotWaiters.splice(0)) waiter.reject(error);
 
+    for (const waiter of flushWaiters.splice(0)) waiter.reject(error);
+
     finishWaiter?.reject(error);
     finishWaiter = undefined;
   };
 
   /**
    * Будит `write`, ждавшие Worker, когда фолбэк повторил отправленный Worker-у кадр.
+   * Ожидания `flush` сюда не входят: повтора кадра им мало, они ждут опустошения самого
+   * фолбэка (`flushInFallback`).
    *
    * @param waiters — ожидания окна, заведённые до перехода на фолбэк
    */
@@ -160,6 +177,37 @@ export const createWorkerSink = ({
   ) => {
     await replay;
     await sink.write(rgba, delayMs);
+  };
+
+  /**
+   * Опустошение фолбэка — после повтора кадра, отправленного Worker-у. Ждём `flush`
+   * фолбэка, а не только повтор: контракт не держится на том, что фолбэк кодирует кадр
+   * внутри `write`.
+   *
+   * @param sink — приёмник фолбэка
+   */
+  const flushFallback = async (sink: FrameSink) => {
+    await replay;
+    await sink.flush();
+  };
+
+  /**
+   * Будит `flush`, ждавшие Worker, когда опустел фолбэк: иначе они ждали бы `ack` от
+   * остановленного Worker-а вечно.
+   *
+   * @param waiters — ожидания `flush`, заведённые до перехода на фолбэк
+   * @param sink — приёмник фолбэка
+   */
+  const flushInFallback = async (waiters: Deferred<void>[], sink: FrameSink) => {
+    try {
+      await flushFallback(sink);
+
+      for (const waiter of waiters) waiter.resolve();
+    } catch (error) {
+      const reason = toError(error);
+
+      for (const waiter of waiters) waiter.reject(reason);
+    }
   };
 
   /**
@@ -210,6 +258,7 @@ export const createWorkerSink = ({
     replay = frame ? sink.write(frame.rgba, frame.delayMs) : Promise.resolve();
 
     void releaseAfterReplay(slotWaiters.splice(0));
+    void flushInFallback(flushWaiters.splice(0), sink);
 
     const waiter = finishWaiter;
 
@@ -231,6 +280,7 @@ export const createWorkerSink = ({
         inFlight -= 1;
         byteLength = data.byteLength;
         releaseSlots();
+        releaseFlushes();
 
         return;
       }
@@ -309,6 +359,21 @@ export const createWorkerSink = ({
 
       slotWaiters.push(waiter);
       releaseSlots();
+
+      return waiter.promise;
+    },
+    flush: () => {
+      if (fallback) return flushFallback(fallback);
+
+      if (failure) return Promise.reject(failure);
+
+      if (!worker) return Promise.reject(new Error(CLOSED_MESSAGE));
+
+      if (inFlight === 0) return Promise.resolve();
+
+      const waiter = defer<void>();
+
+      flushWaiters.push(waiter);
 
       return waiter.promise;
     },
