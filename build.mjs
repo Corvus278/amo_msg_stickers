@@ -18,7 +18,7 @@ const devMatches = isWatch ? DEV_MATCHES : [];
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.7.0',
+  '// @version      0.7.1',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
