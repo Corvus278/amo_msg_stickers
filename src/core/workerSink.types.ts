@@ -68,3 +68,39 @@ export type WorkerSinkDeps = {
  * свой.
  */
 export type WorkerSinkFactoryDeps = Omit<WorkerSinkDeps, 'options'>;
+
+/**
+ * Промис с внешним разрешением: ожидание окна или ответа `done`.
+ */
+export type Deferred<T> = {
+  /**
+   * Промис, который ждёт вызывающий.
+   */
+  promise: Promise<T>;
+
+  /**
+   * Разрешает промис.
+   */
+  resolve: (value: T) => void;
+
+  /**
+   * Отклоняет промис.
+   */
+  reject: (reason: Error) => void;
+};
+
+/**
+ * Кадр, отправленный Worker-у до первого `ack`: его копия остаётся у клиента, чтобы
+ * повторить кадр в фолбэке, если Worker так и не заработал.
+ */
+export type RetainedFrame = {
+  /**
+   * Пиксели кадра.
+   */
+  rgba: Uint8ClampedArray;
+
+  /**
+   * Длительность показа кадра в мс.
+   */
+  delayMs: number;
+};

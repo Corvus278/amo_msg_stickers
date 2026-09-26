@@ -2,48 +2,14 @@ import type { FrameSink } from './frameSink.types';
 import type { GifEncoderOptions } from './gifEncoder.types';
 import type { GifWorkerResponse } from './gifWorker.types';
 import type {
+  Deferred,
+  RetainedFrame,
   WorkerPort,
   WorkerSinkDeps,
   WorkerSinkFactoryDeps,
 } from './workerSink.types';
 
 const CLOSED_MESSAGE = 'GIF worker: sink is closed';
-
-/**
- * Промис с внешним разрешением: ожидание окна или ответа `done`.
- */
-type Deferred<T> = {
-  /**
-   * Промис, который ждёт вызывающий.
-   */
-  promise: Promise<T>;
-
-  /**
-   * Разрешает промис.
-   */
-  resolve: (value: T) => void;
-
-  /**
-   * Отклоняет промис.
-   */
-  reject: (reason: Error) => void;
-};
-
-/**
- * Кадр, отправленный Worker-у до первого `ack`: его копия остаётся у клиента, чтобы
- * повторить кадр в фолбэке, если Worker так и не заработал.
- */
-type RetainedFrame = {
-  /**
-   * Пиксели кадра.
-   */
-  rgba: Uint8ClampedArray;
-
-  /**
-   * Длительность показа кадра в мс.
-   */
-  delayMs: number;
-};
 
 /**
  * Создаёт промис с внешним разрешением.
