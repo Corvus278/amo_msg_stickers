@@ -45,6 +45,20 @@ describe('encodeLadder', () => {
     expect(result.bytes.byteLength).toBeLessThanOrEqual(MAX_GIF_BYTES);
   });
 
+  it('GIF ровно в лимит — без повторного прохода', async () => {
+    const encode = fakeEncode({ 512: MAX_GIF_BYTES });
+
+    const result = await encodeLadder({
+      frameCount: 1,
+      side: 512,
+      sample: fakeSample(MB, 1),
+      encode,
+    });
+
+    expect(encode.mock.calls).toEqual([[512]]);
+    expect(result.width).toBe(512);
+  });
+
   it('лимит недостижим: результат в 256 px сохраняется, несмотря на вес', async () => {
     const encode = fakeEncode({ 256: 2.2 * MB });
 
