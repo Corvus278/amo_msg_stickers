@@ -20,16 +20,16 @@ const SEMI_ALPHA = 100;
  * Кадр-градиент: сотни цветов включают дизеринг, угол `TRANSPARENT_CORNER` — прозрачность.
  *
  * @param shift — сдвиг градиента, чтобы кадры различались
- * @param withCorner — оставить ли прозрачный угол
+ * @param hasCorner — оставить ли прозрачный угол
  * @returns RGBA-буфер кадра
  */
-const gradient = (shift: number, withCorner: boolean) => {
+const gradient = (shift: number, hasCorner: boolean) => {
   const rgba = new Uint8ClampedArray(SYNTHETIC_WIDTH * SYNTHETIC_HEIGHT * CHANNELS);
 
   for (let y = 0; y < SYNTHETIC_HEIGHT; y++) {
     for (let x = 0; x < SYNTHETIC_WIDTH; x++) {
       const i = (y * SYNTHETIC_WIDTH + x) * CHANNELS;
-      const isCorner = withCorner && x < TRANSPARENT_CORNER && y < TRANSPARENT_CORNER;
+      const isCorner = hasCorner && x < TRANSPARENT_CORNER && y < TRANSPARENT_CORNER;
 
       rgba[i] = (x * 6 + shift) & OPAQUE;
       rgba[i + 1] = (y * 8 + shift * 2) & OPAQUE;
