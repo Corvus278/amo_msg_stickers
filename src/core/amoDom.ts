@@ -88,7 +88,7 @@ export const isDarkTheme = () => {
 /**
  * Лимит стороны стикера в ленте — как у стикеров Telegram.
  */
-export const STICKER_MAX_SIDE_PX = 208;
+const STICKER_MAX_SIDE_PX = 208;
 
 const MESSAGE_STYLE_ID = 'amo-stickers-message';
 
