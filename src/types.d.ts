@@ -63,6 +63,11 @@ declare module 'gifenc' {
      * Байты GIF, записанные на текущий момент.
      */
     bytes(): Uint8Array<ArrayBuffer>;
+
+    /**
+     * Вид на записанные байты без копирования; действителен до следующей записи.
+     */
+    bytesView(): Uint8Array<ArrayBuffer>;
   };
   export function GIFEncoder(): Encoder;
   export function quantize(
@@ -85,6 +90,16 @@ declare module 'gifenc' {
 declare module '*.css' {
   const css: string;
   export default css;
+}
+
+/**
+ * Код Worker-а кодирования GIF (`src/core/gifWorkerEntry.ts`) одним IIFE-бандлом:
+ * модуль собирает плагин в `build.mjs`, ядро запускает Worker из blob URL с этим
+ * кодом. Vitest плагина не знает — модуль, который его импортирует, юнит-тесты не
+ * грузят.
+ */
+declare module 'gif-worker:code' {
+  export const GIF_WORKER_CODE: string;
 }
 
 /**

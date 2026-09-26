@@ -18,7 +18,7 @@ const devMatches = isWatch ? DEV_MATCHES : [];
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.5.0',
+  '// @version      0.6.0',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -108,6 +108,49 @@ const tailwindPlugin = {
   },
 };
 
+const GIF_WORKER_MODULE = 'gif-worker:code';
+const GIF_WORKER_NAMESPACE = 'gif-worker';
+const GIF_WORKER_ENTRY = 'src/core/gifWorkerEntry.ts';
+
+/**
+ * Код Worker-а кодирования GIF приходит в ядро строкой из виртуального модуля
+ * `gif-worker:code` (`GIF_WORKER_CODE`): ядро запускает Worker из blob URL, отдельный
+ * файл Worker-а userscript подключить не может. Бандл Worker-а собирается отдельным
+ * вызовом esbuild на каждую сборку, его входы идут в `watchFiles` — правка кодировщика
+ * в `pnpm watch` пересобирает и код Worker-а внутри ядра.
+ */
+const gifWorkerPlugin = {
+  name: 'gif-worker',
+  setup(build) {
+    build.onResolve({ filter: /^gif-worker:code$/ }, () => {
+      return { path: GIF_WORKER_MODULE, namespace: GIF_WORKER_NAMESPACE };
+    });
+
+    build.onLoad({ filter: /.*/, namespace: GIF_WORKER_NAMESPACE }, async () => {
+      const { outputFiles, metafile } = await esbuild.build({
+        entryPoints: [GIF_WORKER_ENTRY],
+        bundle: true,
+        write: false,
+        metafile: true,
+        format: 'iife',
+        target: 'chrome120',
+        minify: !isWatch,
+        sourcemap: isWatch ? 'inline' : false,
+        legalComments: 'none',
+      });
+      const [output] = outputFiles;
+
+      return {
+        contents: `export const GIF_WORKER_CODE = ${JSON.stringify(output.text)};`,
+        loader: 'js',
+        watchFiles: Object.keys(metafile.inputs).map((file) => {
+          return resolve(file);
+        }),
+      };
+    });
+  },
+};
+
 const common = {
   bundle: true,
   format: 'iife',
@@ -118,7 +161,7 @@ const common = {
   sourcemap: isWatch ? 'inline' : false,
   legalComments: 'none',
   logLevel: 'info',
-  plugins: [tailwindPlugin],
+  plugins: [tailwindPlugin, gifWorkerPlugin],
 };
 
 const configs = [
