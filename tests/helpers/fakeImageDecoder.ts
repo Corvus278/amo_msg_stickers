@@ -66,6 +66,10 @@ export class FakeImageDecoder {
 
     this.decoded.push(frameIndex);
 
+    /**
+     * `??`, а не `||`: длительность 0 фейк отдаёт как есть, как её вернул бы декодер, —
+     * разбор 0 остаётся за `frameDelayMs`, а `null` значит только «элемента нет».
+     */
     return { image: new FakeVideoFrame(width, height, durations[frameIndex] ?? null) };
   };
 
