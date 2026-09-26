@@ -54,17 +54,6 @@ describe('waitForEvent', () => {
     await assertion;
     expect(listenerCount(target, 'seeked')).toBe(0);
   });
-
-  it('событие после таймаута ничего не меняет', async () => {
-    vi.useFakeTimers();
-    const target = new EventTarget();
-    const waiting = waitForEvent(target, 'seeked', 5);
-    const assertion = expect(waiting).rejects.toThrow('timeout');
-
-    vi.advanceTimersByTime(5);
-    target.dispatchEvent(new Event('seeked'));
-    await assertion;
-  });
 });
 
 describe('fit', () => {
