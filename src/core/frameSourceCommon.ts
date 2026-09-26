@@ -39,6 +39,33 @@ export const planItem = (plan: FramePlanItem[], index: number) => {
 };
 
 /**
+ * Равномерный план кадров: позиции `positionAt(index)` подряд, не дальше длины источника и
+ * 4 с его времени и не больше 100 кадров. Позицию считает вызывающий: у каждого источника
+ * своя единица и своя формула, которая не копит ошибку дробного шага.
+ *
+ * @param length — длина источника в единицах позиции
+ * @param unitsPerSec — единиц позиции в секунде источника
+ * @param delayMs — задержка каждого кадра в мс
+ * @param positionAt — позиция кадра плана по его номеру
+ * @returns план кадров
+ */
+export const evenPlan = (
+  length: number,
+  unitsPerSec: number,
+  delayMs: number,
+  positionAt: (index: number) => number
+) => {
+  const end = Math.min(length, unitsPerSec * MAX_DURATION_SEC);
+  const plan: FramePlanItem[] = [];
+
+  for (let index = 0; index < MAX_FRAMES && positionAt(index) < end; index++) {
+    plan.push({ position: positionAt(index), delayMs });
+  }
+
+  return plan;
+};
+
+/**
  * Ждёт событие элемента. Отклоняется сразу по его событию `error` (битый файл не ждёт
  * таймаута) и по таймауту; в любом исходе снимает оба слушателя и таймер, чтобы элемент
  * не держался замыканием после конвертации.

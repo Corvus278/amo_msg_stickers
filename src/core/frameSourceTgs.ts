@@ -1,13 +1,12 @@
 import type { AnimationItem } from 'lottie-web';
 import lottie from 'lottie-web/build/player/lottie_light_canvas';
 
-import type { FramePlanItem, FrameSource } from './frameSource.types';
+import type { FrameSource } from './frameSource.types';
 import {
   ANIMATION_FPS,
+  evenPlan,
   EVENT_TIMEOUT_MS,
   fit,
-  MAX_DURATION_SEC,
-  MAX_FRAMES,
   planItem,
 } from './frameSourceCommon';
 import { readTgs } from './tgs';
@@ -29,16 +28,11 @@ const DEFAULT_LOTTIE_FPS = 60;
  * @returns план кадров с номерами исходных кадров
  */
 export const tgsPlan = (totalFrames: number, sourceFps: number, fps = ANIMATION_FPS) => {
-  const total = Math.min(totalFrames, sourceFps * MAX_DURATION_SEC);
   const step = Math.max(1, sourceFps / fps);
-  const delayMs = (step / sourceFps) * 1000;
-  const plan: FramePlanItem[] = [];
 
-  for (let index = 0; index < MAX_FRAMES && index * step < total; index++) {
-    plan.push({ position: index * step, delayMs });
-  }
-
-  return plan;
+  return evenPlan(totalFrames, sourceFps, (step / sourceFps) * 1000, (index) => {
+    return index * step;
+  });
 };
 
 /**

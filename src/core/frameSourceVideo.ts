@@ -1,9 +1,8 @@
-import type { FramePlanItem, FrameSource } from './frameSource.types';
+import type { FrameSource } from './frameSource.types';
 import {
   ANIMATION_FPS,
+  evenPlan,
   fit,
-  MAX_DURATION_SEC,
-  MAX_FRAMES,
   planItem,
   waitForEvent,
 } from './frameSourceCommon';
@@ -30,14 +29,9 @@ const UNKNOWN_DURATION_SEC = 1;
  * @returns план кадров с позициями в секундах
  */
 export const videoPlan = (duration: number, fps = ANIMATION_FPS) => {
-  const length = Math.min(duration || UNKNOWN_DURATION_SEC, MAX_DURATION_SEC);
-  const plan: FramePlanItem[] = [];
-
-  for (let index = 0; index < MAX_FRAMES && index / fps < length; index++) {
-    plan.push({ position: index / fps, delayMs: 1000 / fps });
-  }
-
-  return plan;
+  return evenPlan(duration || UNKNOWN_DURATION_SEC, 1, 1000 / fps, (index) => {
+    return index / fps;
+  });
 };
 
 /**
