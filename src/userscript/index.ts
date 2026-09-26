@@ -33,7 +33,7 @@ const pickNetwork = (): HostNetwork => {
   return fetchNetwork();
 };
 
-const pickSettings = (): HostSettings => {
+const pickHostSettings = (): HostSettings => {
   if (typeof GM_getValue === 'function' && typeof GM_setValue === 'function') {
     return gmSettings({ getValue: GM_getValue, setValue: GM_setValue }, localStorage);
   }
@@ -44,7 +44,7 @@ const pickSettings = (): HostSettings => {
 const host: Host = {
   name: 'userscript',
   ...pickNetwork(),
-  ...pickSettings(),
+  ...pickHostSettings(),
 };
 
 const boot = () => {

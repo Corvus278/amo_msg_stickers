@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { BYTES_IN_MB, httpError, NOT_ALLOWED, tooBigError } from '../src/core/net';
-import { gmNetwork } from '../src/userscript/gmNetwork';
+import { BODY_NOT_BYTES, gmNetwork } from '../src/userscript/gmNetwork';
 
 import { gmResponse, mockGmRequest } from './helpers/mockGmRequest';
 
@@ -90,6 +90,66 @@ describe('gmNetwork: ошибки HTTP', () => {
 
     await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
       httpError(404, 'Not Found').message
+    );
+  });
+
+  it('не-2xx с Content-Length больше лимита — HTTP-ошибка и обрыв на заголовках', async () => {
+    const { request, abort } = mockGmRequest(({ onreadystatechange }) => {
+      onreadystatechange(
+        gmResponse({
+          status: 404,
+          readyState: HEADERS_RECEIVED,
+          responseHeaders: `Content-Length: ${LIMIT + 1}`,
+        })
+      );
+    });
+
+    await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
+      httpError(404, '').message
+    );
+    expect(abort).toHaveBeenCalledTimes(1);
+  });
+
+  it('не-2xx больше лимита в onprogress — HTTP-ошибка с тем, что успело прийти', async () => {
+    const { request, abort } = mockGmRequest(({ onprogress }) => {
+      onprogress(
+        gmResponse({
+          status: 503,
+          readyState: 3,
+          loaded: LIMIT + 1,
+          responseText: LONG_BODY,
+        })
+      );
+    });
+    const error = await gmNetwork(request)
+      .fetchBlob(FILE_URL, LIMIT)
+      .catch((error_: unknown) => {
+        return error_;
+      });
+
+    expect(error).toHaveProperty('message', httpError(503, LONG_BODY).message);
+    expect(abort).toHaveBeenCalledTimes(1);
+  });
+
+  it('статус с заголовков, лимит в onprogress без статуса — HTTP-ошибка', async () => {
+    const { request, abort } = mockGmRequest(({ onreadystatechange, onprogress }) => {
+      onreadystatechange(gmResponse({ status: 404, readyState: HEADERS_RECEIVED }));
+      onprogress(gmResponse({ status: 0, readyState: 3, loaded: LIMIT + 1 }));
+    });
+
+    await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
+      httpError(404, '').message
+    );
+    expect(abort).toHaveBeenCalledTimes(1);
+  });
+
+  it('не-2xx больше лимита только на onload — HTTP-ошибка, не «Файл больше»', async () => {
+    const { request } = mockGmRequest(({ onload }) => {
+      onload(gmResponse({ status: 500, response: bytes(LIMIT + 1) }));
+    });
+
+    await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
+      'HTTP 500'
     );
   });
 });
@@ -191,6 +251,16 @@ describe('gmNetwork: успешные ответы', () => {
 
     expect(blob.type).toBe('image/gif');
     expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual([1, 2, 3]);
+  });
+
+  it('тело Blob не байтами — ошибка, а не пустой Blob', async () => {
+    const { request } = mockGmRequest(({ onload }) => {
+      onload(gmResponse({ response: 'GIF89a' }));
+    });
+
+    await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
+      BODY_NOT_BYTES
+    );
   });
 
   it('запрос уходит без cookie, в нужном формате тела и по адресу запроса', async () => {

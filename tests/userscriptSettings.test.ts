@@ -66,6 +66,19 @@ describe('gmSettings: перенос из localStorage', () => {
     expect(items.has(SETTINGS_KEY)).toBe(false);
   });
 
+  it('null из менеджера — хранилище пусто, настройки переносятся', async () => {
+    const { storage, items } = fakeStorage({
+      [SETTINGS_KEY]: JSON.stringify({ klipyKey: 'k' }),
+    });
+    const { gmStore, values } = fakeGmStore({ [SETTINGS_KEY]: null });
+
+    const settings = await gmSettings(gmStore, storage).getSettings();
+
+    expect(settings.klipyKey).toBe('k');
+    expect(values.get(SETTINGS_KEY)).toEqual({ klipyKey: 'k' });
+    expect(items.has(SETTINGS_KEY)).toBe(false);
+  });
+
   it('после переноса storage больше не читается', async () => {
     const { storage } = fakeStorage({
       [SETTINGS_KEY]: JSON.stringify({ klipyKey: 'k' }),

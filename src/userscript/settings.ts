@@ -56,7 +56,8 @@ const parseStored = (raw: string): Partial<Settings> | null => {
 /**
  * Настройки в хранилище менеджера userscript-ов: скрипты страницы до них не доберутся.
  *
- * Хранилище менеджера пусто (ключа нет), а в `storage` лежат настройки, сохранённые без
+ * Хранилище менеджера пусто (ключа нет или под ним null: настроек в null нет, и перенос не
+ * должен из-за него молча пропасть), а в `storage` лежат настройки, сохранённые без
  * менеджера, — на первом чтении они переносятся в менеджер, а ключ из `storage` удаляется.
  * Битый JSON в `storage` удаляется без переноса. Запись идёт только в менеджер — объектом,
  * сериализует его сам менеджер.
@@ -69,7 +70,7 @@ export const gmSettings = (gmStore: GmStore, storage: SettingsStorage): HostSett
   const readStored = (): Partial<Settings> => {
     const stored: unknown = gmStore.getValue(SETTINGS_KEY);
 
-    if (stored !== undefined) return pickSettings(stored);
+    if (stored !== undefined && stored !== null) return pickSettings(stored);
 
     const raw = storage.getItem(SETTINGS_KEY);
 

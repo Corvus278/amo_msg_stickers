@@ -43,3 +43,18 @@ gmNetwork: readyState в GmResponse (HEADERS_RECEIVED); isArrayBuffer по фо�
 Зубы 4.x: 8 мутаций settings.ts — красные. 7.2: стенд в headless Chrome, фиктивные ключи — localStorage, fetch, HTTP 401 в статусе; выдача GIPHY с настоящим ключом не проверена (ключ в браузер не пропустил классификатор) — за 7.3.
 Аудит: ok с первого круга.
 Долг: index.ts:37 pickSettings — тёзка фильтра в settings.ts:26 (лучше pickHostSettings); CLAUDE.md «Структура» не упоминает settings.types.ts; settings.ts:73 — null из GM_getValue не считается пустым (перенос молча не сработает).
+
+### Ответы пользователя, группа F1
+
+Итоговый аудит: ok, покрытие 12 сценариев (8 автоматически/стенд, 4 ждут 7.3–7.5). openspec validate --strict ok.
+Вопрос G2 решён пользователем: для не-2xx приоритетна HTTP-ошибка. Критерий F1-a: gmNetwork при любом не-2xx отдаёт httpError(status, …) независимо от набора колбэков менеджера (HEADERS_RECEIVED/onprogress/onload); большое тело не дочитывается (abort), текст — что доступно, ≤200 символов.
+Долг в F1 по выбору пользователя: (b) settings.ts:73 — null из GM_getValue считается пустым; (c) gmNetwork.ts:201 — тело не ArrayBuffer → ошибка вместо пустого Blob; (d) index.ts pickSettings → pickHostSettings + settings.types.ts в CLAUDE.md «Структура»; (e) юнит-тест выбора режима по typeof GM_* (index.ts:30-42).
+Ограничение (итог, не правится): с @sandbox DOM флаг window.__amoStickers в изолированном мире — менеджер + прямое подключение дадут два экземпляра.
+
+### F1
+
+F1-a: не-2xx → httpError во всех колбэках (статус из ответа, при 0 — с HEADERS_RECEIVED), тело не дочитывается. F1-b null = пусто; F1-c BODY_NOT_BYTES; F1-d pickHostSettings + settings.types.ts в CLAUDE.md; F1-e tests/userscriptEntry.test.ts на настоящей точке входа (vi.stubGlobal, ядро под vi.mock).
+Зубы: 5 новых тестов красные до правок, 10 мутаций исполнителя и 3 аудитора — красные.
+Аудит: ok с первого круга. LSP «BODY_NOT_BYTES не найден» — устаревший кэш, pnpm typecheck ok.
+Граница F1-a: статус не сообщён ни на заголовках, ни в onprogress, тело сверх лимита → «Файл больше» (иначе лимит не держится).
+Долг: gmNetwork.ts:76 bodyText декодирует тело целиком ради 200 символов; текст «HTTP 404 » с хвостовым пробелом при обрыве на заголовках.

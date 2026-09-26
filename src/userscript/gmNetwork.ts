@@ -41,6 +41,12 @@ const TIMEOUT_ERROR = 'Сервер не ответил вовремя';
 const ABORT_ERROR = 'Запрос прерван';
 
 /**
+ * Менеджер отдал тело `arraybuffer`-запроса не байтами: пустой Blob ушёл бы дальше как
+ * стикер, поэтому это ошибка.
+ */
+export const BODY_NOT_BYTES = 'Ответ пришёл не байтами';
+
+/**
  * Значение заголовка из строки `responseHeaders`. Имя сравнивается без учёта регистра:
  * менеджеры отдают заголовки так, как их прислал сервер.
  *
@@ -74,6 +80,16 @@ const bodyText = ({ response, responseText }: GmResponse) => {
 
 const isOkStatus = (status: number) => {
   return status >= OK_STATUS_MIN && status <= OK_STATUS_MAX;
+};
+
+/**
+ * 0 — статус ещё не известен (или ответа нет), это не HTTP-ошибка.
+ *
+ * @param status — HTTP-статус из ответа менеджера
+ * @returns true, если сервер ответил не-2xx
+ */
+const isErrorStatus = (status: number) => {
+  return status > 0 && !isOkStatus(status);
 };
 
 /**
@@ -127,6 +143,27 @@ const send = (
       return isAllowedUrl(finalUrl || url);
     };
 
+    /**
+     * Статус с заголовков: не каждый менеджер кладёт его в `onprogress`.
+     */
+    let headersStatus = 0;
+
+    /**
+     * Причина обрыва по лимиту. Не-2xx статус важнее размера: вызывающей стороне нужна
+     * HTTP-ошибка, какие бы колбэки ни позвал менеджер, а тело сверх лимита не дочитывается —
+     * в тексте то, что успело прийти.
+     *
+     * @param response — ответ менеджера на момент превышения лимита
+     * @returns ошибка для `stop`
+     */
+    const overLimitError = (response: GmResponse) => {
+      const status = response.status || headersStatus;
+
+      return isErrorStatus(status)
+        ? httpError(status, bodyText(response))
+        : tooBigError(maxBytes);
+    };
+
     const handle = request({
       method: 'GET',
       url,
@@ -135,16 +172,18 @@ const send = (
       onreadystatechange: (response) => {
         if (response.readyState !== HEADERS_RECEIVED) return;
 
+        headersStatus = response.status;
+
         if (!isAllowedFinalUrl(response)) {
           stop(new Error(NOT_ALLOWED));
         } else if (
           Number(headerValue(response.responseHeaders, 'content-length')) > maxBytes
         ) {
-          stop(tooBigError(maxBytes));
+          stop(overLimitError(response));
         }
       },
-      onprogress: ({ loaded }) => {
-        if ((loaded || 0) > maxBytes) stop(tooBigError(maxBytes));
+      onprogress: (response) => {
+        if ((response.loaded || 0) > maxBytes) stop(overLimitError(response));
       },
       onload: (response) => {
         const { status, response: body } = response;
@@ -199,9 +238,9 @@ export const gmNetwork = (request: GmXmlhttpRequest): HostNetwork => {
       const response = await send(request, url, 'arraybuffer', maxBytes);
       const { response: body, responseHeaders } = response;
 
-      return new Blob(isArrayBuffer(body) ? [body] : [], {
-        type: headerValue(responseHeaders, 'content-type'),
-      });
+      if (!isArrayBuffer(body)) throw new Error(BODY_NOT_BYTES);
+
+      return new Blob([body], { type: headerValue(responseHeaders, 'content-type') });
     },
   };
 };

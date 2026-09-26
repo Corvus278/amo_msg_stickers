@@ -95,7 +95,8 @@ src/
                   messages.types.ts (протокол content ↔ background), manifest.json
   userscript/     index.ts — выбор режима по GM API и сборка Host; адаптеры: gmNetwork.ts (сеть через
                   `GM_xmlhttpRequest`), fetchNetwork.ts (прямой `fetch`), settings.ts (хранилище менеджера с переносом
-                  из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API
+                  из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API,
+                  settings.types.ts — типы хранилищ адаптеров настроек
   types.d.ts      описания модулей без типов: gifenc, `*.css` и `gif-worker:code` строкой; флаг `window.__amoStickers`
 dev/harness.html  стенд: разметка инпута amo на CSS его страницы (`dev/amo.css`, в git не лежит), вставка
                   и «Отправить» замоканы
@@ -253,8 +254,10 @@ GIF-блобы) и недавние (до 40, повторная отправк�
   непригодными полями или ссылкой вне политики отбрасывается, битый ответ целиком — ошибка источника;
 - `Host.fetchBlob(url, maxBytes)` читает тело потоком и обрывает его на лимите (в расширении — внутри SW):
   GIF из поиска — 8 МБ, файл стикера Telegram — 5 МБ. В userscript с менеджером потока нет: запрос обрывается
-  `abort()` по `Content-Length` на заголовках или по `loaded` в `onprogress`, а ответ без них — на `onload`. Тексты
-  ошибок политики, лимита и HTTP у всех окружений общие — из `core/net.ts`;
+  `abort()` по `Content-Length` на заголовках или по `loaded` в `onprogress`, а ответ без них — на `onload`. Не-2xx
+  статус важнее лимита: какие бы колбэки ни позвал менеджер, ошибка — `HTTP <код>`, тело сверх лимита не
+  дочитывается, в тексте — то, что успело прийти. Тексты ошибок политики, лимита и HTTP у всех окружений общие — из
+  `core/net.ts`;
 - `file_path` Telegram — без `..`, иначе URL схлопнется и запрос с токеном уйдёт в другой метод Bot API;
 - `.tgs` распаковывается не больше 8 МБ и проходит `isLottieJson`; GIF из поиска перед вставкой — `inspectGif`.
 
