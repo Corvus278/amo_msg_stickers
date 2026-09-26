@@ -1,6 +1,6 @@
 import { start } from '../core/app';
-import { DEFAULT_SETTINGS } from '../core/host';
-import type { Host, Settings } from '../core/host.types';
+import { DEFAULT_SETTINGS, pickSettings } from '../core/host';
+import type { Host } from '../core/host.types';
 
 import type { FetchRequest, FetchResponse } from './messages.types';
 
@@ -35,11 +35,7 @@ const host: Host = {
   async getSettings() {
     const { settings } = await chrome.storage.local.get('settings');
 
-    /**
-     * Ключ `settings` пишет только `setSettings` ниже, поэтому там либо пусто, либо
-     * (частичные) `Settings`.
-     */
-    return { ...DEFAULT_SETTINGS, ...(settings as Partial<Settings> | undefined) };
+    return { ...DEFAULT_SETTINGS, ...pickSettings(settings) };
   },
   async setSettings(patch) {
     const current = await this.getSettings();

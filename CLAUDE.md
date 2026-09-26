@@ -74,7 +74,8 @@ src/
     gifWorker*.ts    Worker кодирования: протокол сообщений (`gifWorker.ts`) и точка входа бандла (`gifWorkerEntry.ts`)
     db.ts            IndexedDB: паки, стикеры, недавние
     host*.ts         контракты окружения (`host.types.ts`: `Host`, `HostNetwork`, `HostSettings`) и настройки по
-                     умолчанию (`host.ts`: ключи GIPHY/KLIPY, токен Telegram-бота)
+                     умолчанию (`host.ts`: ключи GIPHY/KLIPY, токен Telegram-бота; `pickSettings` — поля
+                     сохранённых настроек для адаптеров обоих окружений)
     net.ts           сетевая политика: разрешённые хосты, fetch с проверкой, чтение потока с лимитом
     gif.ts           проверка GIF по блочной структуре (`inspectGif`)
     tgs.ts           распаковка `.tgs` с лимитом и проверкой Lottie
