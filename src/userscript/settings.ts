@@ -27,6 +27,23 @@ const parseStored = (raw: string): Partial<Settings> | null => {
 };
 
 /**
+ * Запись настроек — всегда полный объект: патч сливается с текущими настройками, чтобы
+ * сохранение одного ключа не стёрло остальные.
+ *
+ * @param getSettings — чтение текущих настроек адаптера
+ * @param patch — изменённые поля
+ * @returns настройки для записи
+ */
+const mergeSettings = async (
+  getSettings: HostSettings['getSettings'],
+  patch: Partial<Settings>
+): Promise<Settings> => {
+  const current = await getSettings();
+
+  return { ...current, ...patch };
+};
+
+/**
  * Настройки в хранилище менеджера userscript-ов: скрипты страницы до них не доберутся.
  *
  * Хранилище менеджера пусто (ключа нет или под ним null: настроек в null нет, и перенос не
@@ -67,9 +84,7 @@ export const gmSettings = (gmStore: GmStore, storage: SettingsStorage): HostSett
   return {
     getSettings,
     async setSettings(patch) {
-      const current = await getSettings();
-
-      gmStore.setValue(SETTINGS_KEY, { ...current, ...patch });
+      gmStore.setValue(SETTINGS_KEY, await mergeSettings(getSettings, patch));
     },
   };
 };
@@ -91,9 +106,10 @@ export const localStorageSettings = (storage: SettingsStorage): HostSettings => 
   return {
     getSettings,
     async setSettings(patch) {
-      const current = await getSettings();
-
-      storage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...patch }));
+      storage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify(await mergeSettings(getSettings, patch))
+      );
     },
   };
 };
