@@ -19,11 +19,105 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        align-items: flex-end;
       }
-      #chat img {
-        max-width: 200px;
-        border-radius: 12px;
+      /* Мок ленты amo. Классы CSS-модулей amo — `<имя>-<хэш>`, на стенде хэш — `x`: селекторы
+       amo stickers держатся за основу `[class*="<имя>-"]` и срабатывают на обоих. Размеры и
+       правила ниже повторяют вёрстку ленты (design.md, «Разметка ленты»). */
+      .container-x {
+        --bubble: #fff;
+        --bubble-image: linear-gradient(#fff, #f7f8fa);
+        display: flex;
+        flex-direction: column;
+      }
+      .container-x.is_outgoing-x {
+        --bubble: #dbe7ff;
+        --bubble-image: linear-gradient(#e6eeff, #d3e2ff);
+      }
+      .dark .container-x {
+        --bubble: #2b2b2e;
+        --bubble-image: none;
+      }
+      .dark .container-x.is_outgoing-x {
+        --bubble: #3a3d52;
+      }
+      .inner-x {
+        display: flex;
+        align-items: flex-end;
+        max-width: 100%;
+      }
+      .is_outgoing-x > .inner-x {
+        flex-direction: row-reverse;
+      }
+      .message_tail-x {
+        fill: var(--bubble);
+      }
+      .is_outgoing-x .message_tail-x {
+        transform: scaleX(-1);
+      }
+      .message-x {
+        position: relative;
+        min-width: 0;
+        max-width: calc(100% - 64px);
+        background-color: var(--bubble);
+        background-image: var(--bubble-image);
+      }
+      .dark .message-x {
+        color: #eee;
+      }
+      .photo_media_container-x {
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        min-width: 100px;
+        max-width: 100%;
+        min-height: 100px;
+        display: flex;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .message_photo_media-x {
+        border-radius: 7px;
+      }
+      .photo_media_image-x {
+        object-fit: contain;
+        max-width: 100%;
+        height: auto;
+      }
+      .message_with_user-x:not(.message_with_reply-x) .media_wrapper_photo-x {
+        margin-top: 0.25rem;
+      }
+      .blur-x {
+        width: 100%;
+        height: 100%;
+        filter: blur(12px);
+      }
+      .time-x {
+        padding: 0 5px;
+        border-radius: 9px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-size: 11px;
+        line-height: 18px;
+      }
+      .avatar-x {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #7b8cde;
+      }
+      .quote-x {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding-left: 6px;
+        border-left: 2px solid #4a6cf7;
+        font-size: 12px;
+      }
+      .quote-x img {
+        width: 46px;
+        height: 46px;
+        object-fit: cover;
+        border-radius: 4px;
       }
       #tools {
         position: fixed;
@@ -51,6 +145,10 @@
     <div id="tools">
       <button id="theme">тема</button>
       <label><input type="checkbox" id="slow" /> медленная загрузка</label>
+      <label><input type="checkbox" id="incoming" /> входящее</label>
+      <label><input type="checkbox" id="author" /> с именем автора</label>
+      <button id="plain">картинка без метки</button>
+      <button id="reply">ответ с цитатой</button>
     </div>
     <div class="relative h-screen">
       <div id="chat"></div>
@@ -153,27 +251,177 @@
           f.map((x) => `${x.name} ${x.type} ${x.size}b`)
         );
       });
-      sendBtn.addEventListener('click', () => {
-        for (const f of files)
-          chat.append(
-            Object.assign(document.createElement('img'), {
-              src: URL.createObjectURL(f),
-              title: f.name,
-            })
+      // --- мок ленты: разметка сообщения amo (design.md, «Разметка ленты») ---
+      const MAX_MEDIA_SIDE = 420;
+      let messageSeq = 0;
+      let lastFile = null;
+
+      const el = (tag, className, ...children) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        node.append(...children);
+        return node;
+      };
+
+      const tail = () => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'message_tail-x');
+        svg.setAttribute('width', '8');
+        svg.setAttribute('height', '10');
+        svg.setAttribute('viewBox', '0 0 8 10');
+        svg.innerHTML = '<path d="M8 0v10H0C4 9 8 6 8 0Z" />';
+        return el('div', '-mx-1 w-2 h-2.5 overflow-hidden shrink-0', svg);
+      };
+
+      /**
+       * Корень сообщения: `is_outgoing` — исходящее; входящее в личном чате — корень без `is_*`.
+       * «С именем автора» — заголовок группового чата: `message_with_user`, аватар, имя-кнопка.
+       */
+      const message = (content, { isReply = false, quote = null } = {}) => {
+        const isIncoming = document.getElementById('incoming').checked;
+        const hasAuthor = document.getElementById('author').checked;
+        const root = el(
+          'div',
+          [
+            'container-x',
+            !isIncoming && 'is_outgoing-x',
+            isReply && 'message_with_reply-x',
+            hasAuthor && 'message_with_user-x',
+          ]
+            .filter(Boolean)
+            .join(' ')
+        );
+        root.id = `message+harness-${++messageSeq}`;
+        const bubble = el(
+          'div',
+          `message-x rounded-lgx p-2 shadow-md${hasAuthor ? ' has-title' : ''}`
+        );
+        if (hasAuthor)
+          bubble.append(
+            el(
+              'div',
+              '',
+              el('button', 'text-sm font-semibold', el('div', 'truncate', 'Собеседник'))
+            )
           );
-        if (editable.textContent.trim())
-          chat.append(
-            Object.assign(document.createElement('div'), {
-              textContent: editable.textContent,
-            })
-          );
-        console.log('[harness] sent', files.length, 'files');
+        if (quote) bubble.append(quote);
+        bubble.append(el('div', 'relative whitespace-pre-wrap', ...content));
+        const row = el('div', 'inner-x', el('div', 'checkbox-x'));
+        if (hasAuthor && isIncoming)
+          row.append(el('div', 'flex w-11.5 shrink-0 self-end', el('div', 'avatar-x')));
+        row.append(tail(), bubble);
+        root.append(row);
+        chat.append(root);
+        chat.scrollTop = chat.scrollHeight;
+        return root;
+      };
+
+      const loadImage = async (file) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        await img.decode();
+        return img;
+      };
+
+      /**
+       * Место под картинку — как в amo: источник вписан в 420×420 без увеличения, размер —
+       * inline-стилем `div` над картинкой и атрибутами `width` / `height` у `img`.
+       */
+      const sendMedia = async (file, name = file.name) => {
+        const source = await loadImage(file);
+        const scale = Math.min(
+          1,
+          MAX_MEDIA_SIDE / source.naturalWidth,
+          MAX_MEDIA_SIDE / source.naturalHeight
+        );
+        const width = Math.round(source.naturalWidth * scale);
+        const height = Math.round(source.naturalHeight * scale);
+        const img = el('img', 'photo_media_image-x size-full');
+        Object.assign(img, { src: source.src, alt: name, width, height });
+        const place = el('div', '', img);
+        place.style.width = `${width}px`;
+        place.style.height = `${height}px`;
+        const canvas = el('canvas', 'blur-x');
+        Object.assign(canvas, { width: 32, height: 32 });
+        canvas.getContext('2d').drawImage(source, 0, 0, 32, 32);
+        const time = new Date().toTimeString().slice(0, 5);
+        message([
+          el(
+            'div',
+            'media_wrapper-x media_wrapper_photo-x -m-1',
+            el(
+              'button',
+              'photo_media_container-x message_photo_media-x relative',
+              place,
+              el('div', 'absolute -inset-1 -z-20', canvas)
+            ),
+            el('span', 'absolute right-1 bottom-1 h-4.5 time-x', `${time} ✓`)
+          ),
+        ]);
+      };
+
+      const sendText = (text) => {
+        message([el('span', '', el('div', 'message-paragraph', text))]);
+      };
+
+      sendBtn.addEventListener('click', async () => {
+        const sent = files;
+        const text = editable.textContent.trim();
+        console.log('[harness] sent', sent.length, 'files');
         files = [];
         attachments.replaceChildren();
         editable.textContent = '';
         syncSend();
-        chat.scrollTop = chat.scrollHeight;
+        for (const f of sent) {
+          await sendMedia(f);
+          lastFile = { file: f, name: f.name };
+        }
+        if (text) sendText(text);
       });
+
+      /**
+       * Последняя отправленная «Отправить» картинка без метки в имени — сравнить размер GIF
+       * со стикерами amo stickers. До первой отправки — сгенерированная картинка 480×270.
+       */
+      document.getElementById('plain').onclick = async () => {
+        if (lastFile) {
+          await sendMedia(lastFile.file, 'photo.gif');
+          return;
+        }
+        const canvas = Object.assign(document.createElement('canvas'), {
+          width: 480,
+          height: 270,
+        });
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#7b8cde';
+        ctx.fillRect(0, 0, 480, 270);
+        ctx.fillStyle = '#fff';
+        ctx.font = '48px sans-serif';
+        ctx.fillText('480×270', 150, 150);
+        const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+        await sendMedia(new File([blob], 'photo.png', { type: 'image/png' }));
+      };
+
+      /**
+       * Текстовый ответ с цитатой последней картинки: цитата — `img` с тем же `alt` в пузыре
+       * ответа, вне обёртки медиа, — пузырь должен остаться.
+       */
+      document.getElementById('reply').onclick = () => {
+        if (!lastFile) return;
+        const img = Object.assign(document.createElement('img'), {
+          src: URL.createObjectURL(lastFile.file),
+          alt: lastFile.name,
+        });
+        const quote = el(
+          'div',
+          '-mx-1 -mt-2 mb-2',
+          el('div', 'quote-x', img, el('div', '', lastFile.name))
+        );
+        message([el('span', '', el('div', 'message-paragraph', 'Ответ на картинку'))], {
+          isReply: true,
+          quote,
+        });
+      };
       document.getElementById('theme').onclick = () =>
         document.documentElement.classList.toggle('dark');
     </script>

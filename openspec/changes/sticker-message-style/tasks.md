@@ -57,14 +57,14 @@
 
   Проверка: селекторы, способ задания размера и выбранный вариант из раздела «CSS» записаны в `design.md`, вопросы
   из «Open Questions» закрыты
-- [ ] 4.2 `amoDom.ts`: селекторы ленты из 4.1, `STICKER_MAX_SIDE_PX = 208`, текст CSS и `injectMessageStyle()` —
+- [x] 4.2 `amoDom.ts`: селекторы ленты из 4.1, `STICKER_MAX_SIDE_PX = 208`, текст CSS и `injectMessageStyle()` —
   один `<style id="amo-stickers-message">` в `document.head`, повторный вызов не дублирует. Картинка — по пути медиа
   ленты, пузырь — `:has(> <медиа> img[alt*="amostk."])` с дочерним комбинатором и `:not(:has(<цитата>, <пересылка>,
   <подпись>))`; сброс размеров контейнера — по варианту из 4.1; проверка: `pnpm lint` чистый, в DevTools на стенде
   ровно один такой `<style>`
-- [ ] 4.3 `start()` в `app.ts` зовёт `injectMessageStyle()` один раз, до первого `scan()`; проверка: после
+- [x] 4.3 `start()` в `app.ts` зовёт `injectMessageStyle()` один раз, до первого `scan()`; проверка: после
   `pnpm build` стиль есть сразу после загрузки на стенде и в живом amo (CSP страницы его не блокирует)
-- [ ] 4.4 Стенд `dev/harness.html`:
+- [x] 4.4 Стенд `dev/harness.html`:
   - удалить `#chat img { max-width: 200px; border-radius: 12px; }`;
   - мок «Отправить» строит разметку сообщения amo: контейнер `is_outgoing` / `is_external` по переключателю
     «входящее», пузырь с фоном, тенью, скруглением и `svg`-хвостом, `.media_wrapper` →
