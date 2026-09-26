@@ -26,8 +26,10 @@ export const frameDelayMs = (durationUs: number | null) => {
  * Источник через `ImageDecoder`. Длительности кадров декодер сообщает только в самих
  * кадрах, поэтому план строится декодированием каждого кадра с немедленным `close`: в
  * памяти остаётся не больше одного кадра. В план идут не больше 100 кадров, начавшихся
- * раньше 4 с по сумме задержек; дальше кадры не декодируются. Единственный кадр —
- * статичная картинка, его задержка 0.
+ * раньше 4 с по сумме задержек; дальше кадры не декодируются. Задержка кадра, который
+ * выходит за 4 с, урезается до конца 4 с, но не ниже 20 мс: длинный последний кадр
+ * иначе растянул бы GIF далеко за предел. Единственный кадр — статичная картинка, его
+ * задержка 0.
  *
  * @param blob — файл картинки с поддерживаемым `ImageDecoder` типом
  * @param maxSide — предел большей стороны
@@ -50,7 +52,13 @@ const openDecodedImage = async (blob: Blob, maxSide: number): Promise<FrameSourc
 
     for (let index = 0; index < count && startMs < MAX_DURATION_MS; index++) {
       const { image } = await decoder.decode({ frameIndex: index });
-      const delayMs = count > 1 ? frameDelayMs(image.duration) : 0;
+      const delayMs =
+        count > 1
+          ? Math.min(
+              frameDelayMs(image.duration),
+              Math.max(MIN_FRAME_DELAY_MS, MAX_DURATION_MS - startMs)
+            )
+          : 0;
 
       if (!index) size = fit(image.displayWidth, image.displayHeight, maxSide);
       plan.push({ position: index, delayMs });

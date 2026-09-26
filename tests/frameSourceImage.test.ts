@@ -94,6 +94,35 @@ describe('openImageSource: ImageDecoder', () => {
     expect(source.plan).toHaveLength(40);
   });
 
+  it('задержка последнего кадра урезается до 4 с по сумме', async () => {
+    FakeImageDecoder.init.frameCount = 36;
+    FakeImageDecoder.init.durations = [
+      ...Array.from({ length: 35 }, () => {
+        return 100_000;
+      }),
+      2_000_000,
+    ];
+    const { plan } = await openImageSource(WEBP, 512);
+    const totalMs = plan.reduce((sum, { delayMs }) => {
+      return sum + delayMs;
+    }, 0);
+
+    expect(plan).toHaveLength(36);
+    expect(plan.at(-1)!.delayMs).toBe(500);
+    expect(totalMs).toBeLessThanOrEqual(4020);
+  });
+
+  it('урезанная задержка не меньше 20 мс', async () => {
+    FakeImageDecoder.init.frameCount = 2;
+    FakeImageDecoder.init.durations = [3_990_000, 100_000];
+    const { plan } = await openImageSource(WEBP, 512);
+
+    expect(plan).toEqual([
+      { position: 0, delayMs: 3990 },
+      { position: 1, delayMs: 20 },
+    ]);
+  });
+
   it('один кадр — статичная картинка с задержкой 0', async () => {
     FakeImageDecoder.init.frameCount = 1;
     const source = await openImageSource(new Blob([], { type: 'image/png' }), 512);
