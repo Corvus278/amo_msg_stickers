@@ -11,7 +11,13 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   {
-    ignores: ['dist/**', 'node_modules/**', 'local/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'local/**',
+      'docs/.vitepress/cache/**',
+      'docs/.vitepress/dist/**',
+    ],
   },
   {
     files: ['**/*.{js,cjs,mjs,cts,mts,jsx,ts,tsx}'],

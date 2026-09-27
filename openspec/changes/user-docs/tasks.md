@@ -1,18 +1,18 @@
 ## 1. Каркас сайта доки
 
-- [ ] 1.1 Завести `docs/` отдельным пакетом по design.md: `docs/package.json` с `vitepress` и `vitepress-plugin-tabs`
+- [x] 1.1 Завести `docs/` отдельным пакетом по design.md: `docs/package.json` с `vitepress` и `vitepress-plugin-tabs`
   (сверить совместимость версий плагина и VitePress), `docs/pnpm-workspace.yaml` (`allowBuilds` для esbuild),
   `docs/pnpm-lock.yaml`; в корневом `package.json` — скрипты `docs:dev`, `docs:build`, `docs:preview` через
   `pnpm -C docs`; `.github/actions/setup` ставит и зависимости доки, ключ кэша — по обоим lockfile; проверка —
   `pnpm -C docs i` ставит зависимости, после корневого `pnpm i` в корневом `pnpm-lock.yaml` нет `vitepress`
   (`git diff pnpm-lock.yaml` пуст); иначе — запасной вариант из design.md «Risks»
-- [ ] 1.2 Создать `docs/.vitepress/config.mts` по design.md (`base`, `lang`, `cleanUrls`, локальный поиск, `locales`
+- [x] 1.2 Создать `docs/.vitepress/config.mts` по design.md (`base`, `lang`, `cleanUrls`, локальный поиск, `locales`
   с `root`, `srcExclude` для `_parts/**`, навигация и сайдбар по структуре страниц, `tabsMarkdownPlugin`) и
   `docs/.vitepress/theme/index.ts` (тема по умолчанию + `enhanceAppWithTabs`); `docs/tsconfig.json` на оба файла,
   `typecheck` проверяет корневой и `docs/tsconfig.json`; кэш и сборку VitePress — в `.gitignore`, `.prettierignore`,
   `ignores` eslint; проверка — `pnpm lint` чистый и видит файлы `docs/.vitepress/`, `pnpm docs:build` собирает сайт из
   заглушки `docs/index.md`, вкладки `:::tabs` на заглушке рендерятся
-- [ ] 1.3 Завести все страницы структуры из design.md заголовками и заглушками, сайдбар ведёт на каждую; фрагмент
+- [x] 1.3 Завести все страницы структуры из design.md заголовками и заглушками, сайдбар ведёт на каждую; фрагмент
   `_parts/userscript.md` подключён `@include`; проверка — `pnpm docs:build` без битых ссылок, в сборке нет страницы
   `_parts/userscript`, `pnpm docs:dev` показывает навигацию, поиск и переключение темы
 

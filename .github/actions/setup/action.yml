@@ -1,5 +1,5 @@
 name: Окружение
-description: Node и pnpm из .mise.toml — те же версии, что локально; зависимости по pnpm-lock.yaml
+description: Node и pnpm из .mise.toml — те же версии, что локально; зависимости корня и доки по их lockfile
 
 runs:
   using: composite
@@ -13,7 +13,7 @@ runs:
     - uses: actions/cache@v6
       with:
         path: ${{ steps.pnpm-store.outputs.path }}
-        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'docs/pnpm-lock.yaml') }}
         restore-keys: pnpm-store-${{ runner.os }}-
 
     # Хуки husky в CI не нужны: проверки идут отдельными job-ами.
@@ -21,3 +21,8 @@ runs:
       run: pnpm install --frozen-lockfile
       env:
         HUSKY: '0'
+
+    # Дока — отдельный проект pnpm со своим lockfile. Ставится во всех заданиях: eslint и
+    # typecheck проверяют её конфиг и без зависимостей упали бы на импорте vitepress.
+    - shell: bash
+      run: pnpm -C docs install --frozen-lockfile

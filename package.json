@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
-    "typecheck": "node node_modules/typescript-native/bin/tsc --noEmit",
+    "typecheck": "node node_modules/typescript-native/bin/tsc --noEmit && node node_modules/typescript-native/bin/tsc --noEmit -p docs/tsconfig.json",
     "test": "vitest run --project=unit --passWithNoTests",
     "test:watch": "vitest --project=unit",
     "lint": "concurrently --kill-others-on-fail \"pnpm lint:es\" \"pnpm typecheck\" \"pnpm lint:format\"",
@@ -16,6 +16,9 @@
     "lint:format": "prettier --check .",
     "format": "prettier --write .",
     "skills:update": "openspec update",
+    "docs:dev": "pnpm -C docs dev",
+    "docs:build": "pnpm -C docs build",
+    "docs:preview": "pnpm -C docs preview",
     "prepare": "husky"
   },
   "devDependencies": {
