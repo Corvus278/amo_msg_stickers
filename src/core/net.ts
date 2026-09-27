@@ -1,3 +1,5 @@
+import { LocalizedError } from './i18n/translate';
+
 /**
  * Сетевая политика ядра: куда разрешено ходить и сколько байт читать. Её применяют оба
  * окружения — service worker расширения и userscript, — чтобы вести себя одинаково.
@@ -23,7 +25,15 @@ export const ALLOWED_DOMAINS = ['giphy.com', 'klipy.com'];
  */
 const ERROR_BODY_PREVIEW = 200;
 
-export const NOT_ALLOWED = 'Адрес вне списка разрешённых';
+/**
+ * Ошибка политики — `LocalizedError`: её создаёт и service worker, и мир страницы, а показать её нужно на
+ * языке amo, которого SW не знает.
+ *
+ * @returns ошибка адреса вне политики
+ */
+export const notAllowedError = () => {
+  return new LocalizedError('error.net.notAllowed');
+};
 
 /**
  * Хост сравнивается после разбора URL, а не регуляркой по строке: так
@@ -53,17 +63,20 @@ export const isAllowedUrl = (url: string) => {
  * @param url — проверяемый адрес
  */
 export const assertAllowedUrl = (url: string) => {
-  if (!isAllowedUrl(url)) throw new Error(NOT_ALLOWED);
+  if (!isAllowedUrl(url)) throw notAllowedError();
 };
 
 /**
- * Ошибка превышения лимита размера — общий текст для всех путей чтения тела.
+ * Ошибка превышения лимита размера — общий текст для всех путей чтения тела. `LocalizedError`, как
+ * и ошибка политики: лимит доходит через границу service worker параметром, а не готовым текстом.
  *
  * @param maxBytes — предел размера, который превышен
  * @returns ошибка с пределом в мегабайтах
  */
 export const tooBigError = (maxBytes: number) => {
-  return new Error(`Файл больше ${Math.round((maxBytes / BYTES_IN_MB) * 10) / 10} МБ`);
+  return new LocalizedError('error.net.tooBig', {
+    size: Math.round((maxBytes / BYTES_IN_MB) * 10) / 10,
+  });
 };
 
 /**
@@ -153,7 +166,7 @@ export const fetchChecked = async (url: string) => {
 
   if (!isAllowedUrl(res.url || url)) {
     await res.body?.cancel();
-    throw new Error(NOT_ALLOWED);
+    throw notAllowedError();
   }
 
   if (!res.ok) {

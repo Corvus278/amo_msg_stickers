@@ -77,4 +77,10 @@ export const RU = {
   'error.telegram.noToken': 'Укажите токен бота в настройках',
   'error.telegram.badFilePath': 'Telegram: недопустимый путь файла',
   'error.telegram.noStickers': 'Telegram: в паке нет пригодных стикеров',
+  'error.net.notAllowed': 'Адрес вне списка разрешённых',
+  'error.net.tooBig': 'Файл больше {size} МБ',
+  'error.net.network': 'Сетевая ошибка',
+  'error.net.timeout': 'Сервер не ответил вовремя',
+  'error.net.aborted': 'Запрос прерван',
+  'error.net.bodyNotBytes': 'Ответ пришёл не байтами',
 } as const satisfies Record<string, string>;

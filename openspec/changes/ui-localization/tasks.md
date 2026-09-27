@@ -20,9 +20,9 @@
 ## 4. Ошибки на языке amo
 
 - [x] 4.1 Ошибки ядра в мире страницы — через `t()`: `sender.ts`, `app.ts` («Стикер удалён», «Поле ввода не найдено»), `convert.ts`, `tgs.ts`, `sources/telegram.ts`, `sources/gifs.ts`; проверка — `tests/sender.test.ts`, `tests/telegram.test.ts`, `tests/tgs.test.ts`, `tests/gifs.test.ts` проходят на `ru`, в каждом по кейсу `en` на одну ошибку
-- [ ] 4.2 `net.ts`: `NOT_ALLOWED` и `tooBigError` — `LocalizedError` с ключом и параметром лимита в МБ; `httpError` не меняется; проверка — `tests/net.test.ts`: текст на `ru` прежний, на `en` — английский с тем же числом
-- [ ] 4.3 Граница SW: `FetchResponse` при отказе несёт `key` и `params` для `LocalizedError`, `background.ts` их заполняет, `content.ts` пересоздаёт `LocalizedError` на своём языке, без `key` — `Error(error)` как сейчас; проверка — `tests/background.test.ts`: отказ по политике и по лимиту отдаёт `key`/`params`, сетевой сбой и HTTP — только `error`; юнит-тест клиента `content.ts` (или выделенной функции разбора ответа): ответ с `key` при языке `en` даёт английский текст
-- [ ] 4.4 `gmNetwork.ts`: `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORT_ERROR`, `BODY_NOT_BYTES` — из словаря; проверка — `tests/gmNetwork.test.ts` проходит, кейс `en` на сетевую ошибку
+- [x] 4.2 `net.ts`: `NOT_ALLOWED` и `tooBigError` — `LocalizedError` с ключом и параметром лимита в МБ; `httpError` не меняется; проверка — `tests/net.test.ts`: текст на `ru` прежний, на `en` — английский с тем же числом
+- [x] 4.3 Граница SW: `FetchResponse` при отказе несёт `key` и `params` для `LocalizedError`, `background.ts` их заполняет, `content.ts` пересоздаёт `LocalizedError` на своём языке, без `key` — `Error(error)` как сейчас; проверка — `tests/background.test.ts`: отказ по политике и по лимиту отдаёт `key`/`params`, сетевой сбой и HTTP — только `error`; юнит-тест клиента `content.ts` (или выделенной функции разбора ответа): ответ с `key` при языке `en` даёт английский текст
+- [x] 4.4 `gmNetwork.ts`: `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORT_ERROR`, `BODY_NOT_BYTES` — из словаря; проверка — `tests/gmNetwork.test.ts` проходит, кейс `en` на сетевую ошибку
 - [ ] 4.5 Остатков не осталось: `rg -n '[А-Яа-яЁё]' src -g '*.ts' -g '*.tsx' | rg -v ':\s*(\*|//|/\*\*)'` находит только `messages.ru.ts` и ошибки-инварианты из non-goals design (`usePicker`, `usePickerView`, `useMenuClose`, `fileName.ts`, `background.ts` «Неизвестный формат ответа»)
 
 ## 5. Язык поиска GIF

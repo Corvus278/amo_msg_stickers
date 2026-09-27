@@ -2,14 +2,13 @@ import { start } from '../core/app';
 import { DEFAULT_SETTINGS, pickSettings } from '../core/host';
 import type { Host } from '../core/host.types';
 
+import { unwrapFetchResponse } from './fetchResponse';
 import type { FetchRequest, FetchResponse } from './messages.types';
 
 const bgFetch = async (request: FetchRequest) => {
-  const res: FetchResponse = await chrome.runtime.sendMessage(request);
+  const res: FetchResponse | undefined = await chrome.runtime.sendMessage(request);
 
-  if (!res?.ok) throw new Error(res?.error || 'fetch failed');
-
-  return res;
+  return unwrapFetchResponse(res);
 };
 
 const host: Host = {

@@ -61,3 +61,12 @@ FEED_LABELS → Record<GifFeed, MessageKey>, t в FeedChip (модуль гру�
 Не переведены осознанно: `Telegram: ${method} failed` (ok:false без description, технический текст, как HTTP <код>), недостижимые `Unknown …` exhaustive-ветки, fileName.ts:112 (ошибка программиста) — для 4.5 (G8) это исключения.
 Отступление: ошибки app.ts и convert.ts юнит-тестом не покрыты (DOM amo / gif-worker:code); «занятое поле ввода» на en — только стенд (G8/G9).
 Аудит: ok с первого круга. TS2322 в translate.ts:67 в IDE — устаревшая диагностика (исправлено в 55a633f), TS 6.0.3 и TS 7 чисты.
+
+### G6 · Сетевые ошибки и граница SW
+
+net.ts: notAllowedError()/tooBigError() → LocalizedError (error.net.notAllowed, error.net.tooBig с {size} МБ); NOT_ALLOWED и BODY_NOT_BYTES больше не экспортируются.
+Граница SW — src/extension/fetchResponse.ts: toFailureResponse (background) / unwrapFetchResponse (content), тест через JSON; FetchResponse = FetchSuccess | FetchFailure.
+Отступление (усиление K4): unwrapFetchResponse сужает key/params гардом isMessageArgs по RU, иначе Error(error) с текстом SW как есть.
+gmNetwork.ts: NETWORK/TIMEOUT/ABORT/BODY_NOT_BYTES — ключи, new Error(t(KEY)) при броске; правка gmNetwork в 4.2 — вынужденная (удалён NOT_ALLOWED).
+«Неизвестный формат ответа» в background.ts и 'fetch failed' не переводятся — инварианты (design Non-Goals).
+Аудит: ok с первого круга. Долг: PLACEHOLDER в fetchResponse.ts дублирует регулярку translate.ts (кандидат на экспорт, G8); tests/net.test.ts:211 — unstubAllGlobals после expect, лучше afterEach.

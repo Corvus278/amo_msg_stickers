@@ -79,4 +79,10 @@ export const EN: Messages = {
   'error.telegram.noToken': 'Enter the bot token in settings',
   'error.telegram.badFilePath': 'Telegram: invalid file path',
   'error.telegram.noStickers': 'Telegram: the pack has no usable stickers',
+  'error.net.notAllowed': 'URL is not on the allowed list',
+  'error.net.tooBig': 'File is larger than {size} MB',
+  'error.net.network': 'Network error',
+  'error.net.timeout': 'The server did not respond in time',
+  'error.net.aborted': 'Request aborted',
+  'error.net.bodyNotBytes': 'The response body is not bytes',
 };

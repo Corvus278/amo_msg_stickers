@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { LocalizedError, setLocale } from '../src/core/i18n/translate';
 import {
+  BYTES_IN_MB,
   fetchChecked,
   httpError,
   isAllowedUrl,
+  notAllowedError,
   readLimited,
   readResponseLimited,
+  tooBigError,
 } from '../src/core/net';
 
 import { chunkedStream } from './helpers/chunkedStream';
@@ -158,5 +162,58 @@ describe('fetchChecked', () => {
     await expect(
       fetchChecked('https://api.telegram.org/bot123:secret/getMe')
     ).rejects.not.toThrow('secret');
+  });
+});
+
+describe('ошибки политики и лимита на языке интерфейса', () => {
+  afterEach(() => {
+    setLocale('ru');
+  });
+
+  it('на ru текст прежний', () => {
+    expect(notAllowedError().message).toBe('Адрес вне списка разрешённых');
+    expect(tooBigError(5 * BYTES_IN_MB).message).toBe('Файл больше 5 МБ');
+    expect(tooBigError(BYTES_IN_MB / 2).message).toBe('Файл больше 0.5 МБ');
+  });
+
+  it('несут ключ и лимит в МБ для пересоздания за границей service worker', () => {
+    expect(notAllowedError()).toBeInstanceOf(LocalizedError);
+    expect(notAllowedError()).toMatchObject({ key: 'error.net.notAllowed' });
+    expect(tooBigError(5 * BYTES_IN_MB)).toMatchObject({
+      key: 'error.net.tooBig',
+      params: { size: 5 },
+    });
+  });
+
+  it('на en — английский текст с тем же числом', () => {
+    setLocale('en');
+
+    expect(notAllowedError().message).toBe('URL is not on the allowed list');
+    expect(tooBigError(8 * BYTES_IN_MB).message).toBe('File is larger than 8 MB');
+  });
+
+  it('на en число МБ в тексте равно лимиту вызова', async () => {
+    setLocale('en');
+    const limit = 3 * BYTES_IN_MB;
+
+    await expect(
+      readResponseLimited(
+        mockResponse(null, { headers: { 'content-length': String(limit + 1) } }),
+        limit
+      )
+    ).rejects.toThrow('File is larger than 3 MB');
+    await expect(
+      readLimited(chunkedStream([BYTES_IN_MB / 2 + 1]), BYTES_IN_MB / 2)
+    ).rejects.toThrow('File is larger than 0.5 MB');
+  });
+
+  it('на en fetchChecked отклоняет чужой хост английским текстом', async () => {
+    setLocale('en');
+    vi.stubGlobal('fetch', vi.fn());
+
+    await expect(fetchChecked('https://evil.example/x.gif')).rejects.toThrow(
+      'URL is not on the allowed list'
+    );
+    vi.unstubAllGlobals();
   });
 });
