@@ -70,3 +70,11 @@ net.ts: notAllowedError()/tooBigError() → LocalizedError (error.net.notAllowed
 gmNetwork.ts: NETWORK/TIMEOUT/ABORT/BODY_NOT_BYTES — ключи, new Error(t(KEY)) при броске; правка gmNetwork в 4.2 — вынужденная (удалён NOT_ALLOWED).
 «Неизвестный формат ответа» в background.ts и 'fetch failed' не переводятся — инварианты (design Non-Goals).
 Аудит: ok с первого круга. Долг: PLACEHOLDER в fetchResponse.ts дублирует регулярку translate.ts (кандидат на экспорт, G8); tests/net.test.ts:211 — unstubAllGlobals после expect, лучше afterEach.
+
+### G8 · Остатки, раскладка, документация
+
+4.5: rg по кириллице вне комментариев — только messages.ru.ts и инварианты design Non-Goals (background.ts:52, fileName.ts:112, usePickerView, usePicker, useMenuClose); в JSX — только placeholder t.me/addstickers/….
+7.2: стенд en/ru × светлая/тёмная, замер в shadow root — английские строки не длиннее русских, ничего не обрезано; статус «занятое поле» переносится в 2 строки на обоих языках. Скриншоты — local/g8-shots/ (вне git).
+7.4: в CLAUDE.md — «Структура» (i18n/, renderMessage/, packTitle/, fetchResponse.ts, _locales/), раздел «Язык интерфейса», правило «строки — только через словарь»; сверено аудитором с кодом.
+Вне языка: на «Add stickers» при полной прокрутке строка статуса закрывает низ кнопки «Сохранить» ~9 px (ru и en одинаково) — кандидат в отдельный issue.
+Аудит: ok с первого круга. Долг: рваный перенос CLAUDE.md:335; в тёмной теме нет снимков add/busy (раскладка от темы не зависит); долги renderMessage-таблицы и PLACEHOLDER в fetchResponse.ts остаются.
