@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../../i18n/translate';
 import { FEED_LABELS } from '../../../../../sources/gifs';
 
 import type { FeedChipProps } from './FeedChip.types';
@@ -40,7 +41,7 @@ export const FeedChip: FC<FeedChipProps> = (props) => {
       className={CHIP_CLASS}
       onClick={handleChipClick}
     >
-      {FEED_LABELS[feed]}
+      {t(FEED_LABELS[feed])}
     </button>
   );
 };

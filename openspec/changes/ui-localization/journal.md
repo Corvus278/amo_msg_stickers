@@ -46,3 +46,10 @@ status.packAdded (статус finishImport) заведён в G3 — для G4 
 Отступление: translate.ts вне файлов группы — тип LocalizedError.params → MessageArgs<K>[0] (иначе TS2322 при ключах с разными подстановками); аудитор подтвердил мутацией, K3 не изменён.
 Отступление: проверка стендом «пак без обложки — буквы My stickers» недостижима: свой пак без стикеров показывает смайл; буквы — только у паков Telegram (формулировку 3.3 поправить в /opsx:update).
 Аудит: ok с первого круга. Долг: «Really delete?»/«Really clear?» юнит-тестами не покрыты (стенд — G8, 7.2).
+
+### G4 · Режим «GIF», статусы, язык выдачи
+
+FEED_LABELS → Record<GifFeed, MessageKey>, t в FeedChip (модуль грузится до setLocale); недавние GIF — свой ключ gifs.recent; статусы status.*, status.packAdded не дублировался.
+«Powered by GIPHY/KLIPY» не переводится — атрибуция провайдеров, английская для обоих языков (осознанное исключение).
+5.1: locale последним позиционным аргументом fetchGifs/giphy/klipy; GIPHY lang только с q, KLIPY ru_RU/en_US в поиске и трендах; useGifFeed передаёт getLocale() на каждый запрос.
+Аудит: ok с первого круга. Долг: подпись чипа через t(FEED_LABELS[feed]) тестом не наблюдается (только стенд); «неожиданный ответ» в gifs.ts — G5.
