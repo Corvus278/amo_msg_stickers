@@ -1,0 +1,124 @@
+/**
+ * Цвета и шрифт доки — те же, что у пикера и amo: значения — токены `tailwind.config.ts`
+ * (имя токена — рядом). Светлая тема держится синего акцента amo, тёмная — бежевого,
+ * как кнопки и ссылки пикера в тёмной теме amo.
+ */
+:root {
+  --vp-font-family-base: 'Helvetica Neue', arial, sans-serif;
+
+  /**
+   * Акцент текста (ссылки) — blue-310, blue-200, blue-190: синий amo blue-50 на белом
+   * даёт контраст 4,17, ниже 4,5 для обычного текста. Фон кнопки-акцента — сам blue-50.
+   */
+  --vp-c-brand-1: #0c67e2;
+  --vp-c-brand-2: #2463c1;
+  --vp-c-brand-3: #1a4d9a;
+  --vp-c-brand-soft: rgb(60 114 254 / 14%);
+
+  /**
+   * white-0, white-60, gray-110
+   */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f5f5f5;
+  --vp-c-bg-soft: #f2f2f2;
+  --vp-c-bg-elv: #ffffff;
+
+  /**
+   * gray-30, gray-50, cadetGray-10. Второстепенный текст — gray-50, а не серо-голубой
+   * cadetGray-10 пикера: на фонах доки у него контраст 3,4–3,8, у gray-50 — не ниже 4,5.
+   */
+  --vp-c-text-1: #363b44;
+  --vp-c-text-2: #6e6e6e;
+  --vp-c-text-3: #768490;
+
+  /**
+   * cadetGray-30 с прозрачностью — как рамки и кольца пикера
+   */
+  --vp-c-divider: rgb(148 165 178 / 28%);
+  --vp-c-gutter: rgb(148 165 178 / 28%);
+  --vp-c-border: rgb(148 165 178 / 50%);
+
+  /**
+   * Нейтральные серые amo вместо голубоватых серых VitePress: фон второстепенной кнопки,
+   * кода, блоков info. white-110, white-130, white-100, gray-110
+   */
+  --vp-c-default-1: #cdcdcd;
+  --vp-c-default-2: #e0e0e0;
+  --vp-c-default-3: #eaeaea;
+  --vp-c-default-soft: #f2f2f2;
+
+  /**
+   * Кнопка-акцент — один цвет во всех состояниях, как основная кнопка пикера: VitePress
+   * берёт для фона соседние оттенки акцента, и синий amo читался бы другим синим.
+   * Наведение — фильтром ниже. Текст — белый на синем (white-0)
+   */
+  --vp-button-brand-bg: #3c72fe;
+  --vp-button-brand-hover-bg: #3c72fe;
+  --vp-button-brand-active-bg: #3c72fe;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-text: #ffffff;
+}
+
+.dark {
+  /**
+   * beige-70, beige-60, beige-160
+   */
+  --vp-c-brand-1: #ecc498;
+  --vp-c-brand-2: #efc594;
+  --vp-c-brand-3: #e2b37f;
+  --vp-c-brand-soft: rgb(236 196 152 / 16%);
+
+  /**
+   * gray-10 — фон панели пикера, black-80, black-100
+   */
+  --vp-c-bg: #303030;
+  --vp-c-bg-alt: #2b2b2b;
+  --vp-c-bg-soft: #393939;
+  --vp-c-bg-elv: #393939;
+
+  /**
+   * gray-40, gray-90, gray-70. Второстепенный текст — gray-90, а не gray-70 пикера: на
+   * карточках (black-100) у gray-70 контраст 3,6, у gray-90 — не ниже 4,8.
+   */
+  --vp-c-text-1: #e7e7e7;
+  --vp-c-text-2: #a8a8a8;
+  --vp-c-text-3: #909090;
+
+  /**
+   * white-0 с прозрачностью — как рамки пикера в тёмной теме
+   */
+  --vp-c-divider: rgb(255 255 255 / 10%);
+  --vp-c-gutter: rgb(255 255 255 / 10%);
+  --vp-c-border: rgb(255 255 255 / 20%);
+
+  /**
+   * gray-260, black-150, black-100, black-100
+   */
+  --vp-c-default-1: #5f5f5f;
+  --vp-c-default-2: #474747;
+  --vp-c-default-3: #393939;
+  --vp-c-default-soft: #393939;
+
+  /**
+   * Кнопка-акцент — бежевый beige-70, текст — тёмный на бежевом (gray-10)
+   */
+  --vp-button-brand-bg: #ecc498;
+  --vp-button-brand-hover-bg: #ecc498;
+  --vp-button-brand-active-bg: #ecc498;
+  --vp-button-brand-text: #303030;
+  --vp-button-brand-hover-text: #303030;
+  --vp-button-brand-active-text: #303030;
+}
+
+/**
+ * Наведение — как у основной кнопки пикера (`brightness`): фильтр одинаково темнит синий
+ * и осветляет бежевый, без соседнего цвета палитры.
+ */
+.VPButton.brand:hover {
+  filter: brightness(0.92);
+}
+
+.dark .VPButton.brand:hover {
+  filter: brightness(1.08);
+}

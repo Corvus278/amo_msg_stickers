@@ -5,6 +5,10 @@ hero:
   name: amo stickers
   text: Стикеры и GIF для мессенджера amo
   tagline: Кнопка стикеров в строке ввода amo в браузере — рядом с кнопкой эмодзи.
+  image:
+    light: /logo-hero-light.svg
+    dark: /logo-hero-dark.svg
+    alt: ''
   actions:
     - theme: brand
       text: Установить

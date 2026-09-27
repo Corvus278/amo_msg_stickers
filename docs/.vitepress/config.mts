@@ -4,6 +4,13 @@ import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
 const REPO_URL = 'https://github.com/Corvus278/amo_msg_stickers';
 
 /**
+ * Сайт живёт на GitHub Pages проекта: адрес страницы — база плюс путь файла без `.md`.
+ * База нужна и отдельно: ссылки в `head` VitePress не дополняет ею, в отличие от ссылок
+ * страниц и логотипа.
+ */
+const BASE = '/amo_msg_stickers/';
+
+/**
  * Конфиг сайта доки. VitePress читает только экспорт по умолчанию.
  *
  * Битые внутренние ссылки VitePress считает ошибкой сборки — это и есть проверка ссылок,
@@ -12,10 +19,23 @@ const REPO_URL = 'https://github.com/Corvus278/amo_msg_stickers';
 export default defineConfig({
   title: 'amo stickers',
   description: 'Стикеры и GIF для мессенджера amo',
+  base: BASE,
   /**
-   * Сайт живёт на GitHub Pages проекта: адрес страницы — база плюс путь файла без `.md`.
+   * Иконка вкладки — под тему системы: у браузера нет темы сайта, переключатель VitePress
+   * до вкладки не доходит.
    */
-  base: '/amo_msg_stickers/',
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${BASE}logo-light.svg` }],
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: `${BASE}logo-dark.svg`,
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  ],
   lang: 'ru-RU',
   cleanUrls: true,
   /**
@@ -39,6 +59,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
+    logo: { light: '/logo-light.svg', dark: '/logo-dark.svg', alt: '' },
     nav: [
       { text: 'Установка', link: '/install/' },
       { text: 'Настройка', link: '/setup/gif-keys' },
