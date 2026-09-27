@@ -243,3 +243,18 @@ export type WeightedVariant<T> = {
    */
   bytes: number;
 };
+
+/**
+ * Кандидаты выбора версии по весу, собранные за один проход по списку.
+ */
+export type SizePick<T> = {
+  /**
+   * Самая тяжёлая версия не больше `MAX_GIF_BYTES`; null — такой нет.
+   */
+  heaviestFit: WeightedVariant<T> | null;
+
+  /**
+   * Самая лёгкая версия с весом; null — веса нет ни у одной.
+   */
+  lightest: WeightedVariant<T> | null;
+};

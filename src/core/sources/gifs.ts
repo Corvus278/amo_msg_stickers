@@ -14,8 +14,8 @@ import {
   isTenorMedia,
   isTenorResponse,
   isTenorResult,
+  type SizePick,
   type TenorMedia,
-  type WeightedVariant,
 } from './gifs.types';
 
 export const FEED_LABELS: Record<GifFeed, string> = {
@@ -142,28 +142,28 @@ const pickBySize = <T extends GiphyImage | TenorMedia>(
   isVariant: (value: unknown) => value is T,
   bytesOf: (variant: T) => number | null
 ): T | null => {
-  const weighted = names.reduce<WeightedVariant<T>[]>((acc, name) => {
-    const variant = variants[name];
+  const { heaviestFit, lightest } = names.reduce<SizePick<T>>(
+    (acc, name) => {
+      const variant = variants[name];
 
-    if (!isVariant(variant) || !isAllowedUrl(variant.url)) return acc;
-    const bytes = bytesOf(variant);
+      if (!isVariant(variant) || !isAllowedUrl(variant.url)) return acc;
+      const bytes = bytesOf(variant);
 
-    if (bytes !== null) acc.push({ variant, bytes });
+      if (bytes === null) return acc;
 
-    return acc;
-  }, []);
-  const heaviestFit = weighted.reduce<WeightedVariant<T> | null>((best, candidate) => {
-    if (candidate.bytes > MAX_GIF_BYTES) return best;
+      if (bytes <= MAX_GIF_BYTES && (!acc.heaviestFit || acc.heaviestFit.bytes < bytes)) {
+        acc.heaviestFit = { variant, bytes };
+      }
 
-    return best && best.bytes >= candidate.bytes ? best : candidate;
-  }, null);
+      if (!acc.lightest || acc.lightest.bytes > bytes) acc.lightest = { variant, bytes };
 
-  if (heaviestFit) return heaviestFit.variant;
-  const lightest = weighted.reduce<WeightedVariant<T> | null>((best, candidate) => {
-    return best && best.bytes <= candidate.bytes ? best : candidate;
-  }, null);
+      return acc;
+    },
+    { heaviestFit: null, lightest: null }
+  );
+  const picked = heaviestFit || lightest;
 
-  return lightest ? lightest.variant : null;
+  return picked ? picked.variant : null;
 };
 
 const giphy = async (
