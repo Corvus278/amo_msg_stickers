@@ -2,6 +2,7 @@ import type { FunctionComponent as FC } from 'preact';
 
 import { SectionHeader } from '../SectionHeader/SectionHeader';
 import { FEED_PANEL_ID, sectionTabId } from '../SectionTabs/sectionTabIds';
+import type { RowRange, StickerRow } from '../stickerLayout/stickerLayout.types';
 import type {
   FeedSection,
   FeedSticker,
@@ -24,7 +25,7 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
   const {
     sections,
     layout,
-    range,
+    ranges,
     activeId,
     scrollRef,
     onScroll,
@@ -32,7 +33,6 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
     onPackDelete,
     onRecentClear,
   } = props;
-  const [from, to] = range;
   const byId = new Map<string, FeedSection>();
 
   for (const section of sections) byId.set(section.id, section);
@@ -41,10 +41,14 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
     onScroll();
   };
 
-  const renderRows = () => {
-    if (!layout) return null;
-
-    return layout.rows.slice(from, to).map((row, offset) => {
+  /**
+   * Ключ ряда — его номер в раскладке, а ряды всех диапазонов лежат одним списком детей: ряд,
+   * заранее смонтированный в окне точки перехода, после перехода остаётся тем же узлом со своими
+   * декодированными картинками. Вложенный массив на диапазон Preact обернул бы во фрагмент, и
+   * ключи сверялись бы только внутри фрагмента.
+   */
+  const renderRange = (rows: StickerRow<FeedSticker>[], [from, to]: RowRange) => {
+    return rows.slice(from, to).map((row, offset) => {
       const { kind, sectionId, top, height } = row;
       const { title = '', hint = '' } = byId.get(sectionId) || {};
 
@@ -97,7 +101,10 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
       onScroll={handleFeedScroll}
     >
       <div className="relative" style={{ height: layout?.total || 0 }}>
-        {renderRows()}
+        {layout &&
+          ranges.flatMap((range) => {
+            return renderRange(layout.rows, range);
+          })}
       </div>
     </div>
   );

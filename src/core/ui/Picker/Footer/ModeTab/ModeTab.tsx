@@ -15,6 +15,7 @@ const MODE_TAB_CLASS = [
   'text-cadetGray-30 hover:bg-cadetGray-30/[.14] dark:text-gray-70 dark:hover:bg-white-0/[.07]',
   'aria-selected:bg-cadetGray-30/[.14] aria-selected:text-blue-50',
   'dark:aria-selected:bg-white-0/[.07] dark:aria-selected:text-beige-70',
+  'motion-safe:transition-colors motion-safe:duration-base',
 ].join(' ');
 
 /**

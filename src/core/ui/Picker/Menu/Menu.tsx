@@ -15,6 +15,11 @@ const CLOSE_KEYS = new Set(['Escape', 'Tab']);
 
 /**
  * `z-10` — над абсолютно поставленными рядами ленты, которые идут в DOM после меню.
+ *
+ * Появление — переход прозрачности при переходе в `isPlaced`: до замера меню невидимо и не
+ * мигает в левом верхнем углу, поэтому `@starting-style` не нужен. Закрытие размонтирует меню,
+ * и оно уходит сразу. Переход и длительность — под `motion-safe:`: длительность по умолчанию
+ * из `motion-safe:transition-opacity` перебила бы простую `duration-base`.
  */
 const menuVariants = cva(
   [
@@ -24,7 +29,8 @@ const menuVariants = cva(
   {
     variants: {
       isPlaced: {
-        false: 'invisible',
+        true: 'opacity-100 motion-safe:transition-opacity motion-safe:duration-base',
+        false: 'invisible opacity-0',
       },
     },
   }

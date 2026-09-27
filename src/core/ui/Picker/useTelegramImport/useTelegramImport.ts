@@ -19,6 +19,7 @@ export const useTelegramImport = (): TelegramImportState => {
   const { packImport } = usePicker();
   const { isImporting, percent, importPack } = packImport;
   const [link, setLink] = useState('');
+  const hasLink = link.trim() !== '';
 
   const changeLink = useCallback((nextLink: string) => {
     setLink(nextLink);
@@ -28,5 +29,5 @@ export const useTelegramImport = (): TelegramImportState => {
     await importPack(link);
   }, [importPack, link]);
 
-  return { link, changeLink, isImporting, percent, startImport };
+  return { link, hasLink, changeLink, isImporting, percent, startImport };
 };

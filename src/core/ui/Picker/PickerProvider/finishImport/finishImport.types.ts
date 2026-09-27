@@ -1,5 +1,8 @@
 import type { Pack } from '../../../../db.types';
-import type { PickerScreen } from '../../usePickerView/usePickerView.types';
+import type {
+  PickerScreen,
+  SectionMotion,
+} from '../../usePickerView/usePickerView.types';
 
 export type FinishImportOptions = {
   /**
@@ -15,7 +18,7 @@ export type FinishImportOptions = {
   /**
    * Открывает режим «Стикеры» и прокручивает ленту к разделу.
    */
-  scrollToSection: (sectionId: string) => void;
+  scrollToSection: (sectionId: string, motion: SectionMotion) => void;
 
   /**
    * Показывает итог импорта в статусе.

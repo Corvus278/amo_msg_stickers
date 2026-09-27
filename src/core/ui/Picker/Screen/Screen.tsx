@@ -1,8 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import { usePickerView } from '../usePickerView/usePickerView';
-
 import { BackIcon } from './BackIcon/BackIcon';
+import { useScreenMotion } from './useScreenMotion/useScreenMotion';
 import type { ScreenProps } from './Screen.types';
 
 /**
@@ -20,17 +19,20 @@ const BACK_BUTTON_CLASS = [
 /**
  * Экран поверх режима. Режим под ним остаётся в раскладке, поэтому прокрутка ленты и
  * запрос поиска переживают «Назад» как есть, без восстановления.
+ *
+ * Экран появляется при монтировании, а «Назад» проигрывает появление в обратную сторону и
+ * закрывает экран по концу ухода (`useScreenMotion`).
  */
 export const Screen: FC<ScreenProps> = (props) => {
   const { children } = props;
-  const { closeScreen } = usePickerView();
+  const { screenRef, leave } = useScreenMotion();
 
   const handleBackClick = () => {
-    closeScreen();
+    leave();
   };
 
   return (
-    <div className={SCREEN_CLASS}>
+    <div ref={screenRef} className={SCREEN_CLASS}>
       <div className="flex shrink-0 px-1.5 pt-1.5">
         <button type="button" className={BACK_BUTTON_CLASS} onClick={handleBackClick}>
           <BackIcon />

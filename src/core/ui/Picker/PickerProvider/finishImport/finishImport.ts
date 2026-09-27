@@ -5,14 +5,16 @@ import type { FinishImportOptions } from './finishImport.types';
  * разделу пака в ленте. Ушедший с экрана за время импорта уже смотрит что-то своё — лента и режим
  * не двигаются, итог виден только в статусе.
  *
- * Статус — после перехода: `scrollToSection` сбрасывает статус прошлого действия.
+ * Переход мгновенный: лента была под экраном, и плавный проезд под исчезающим экраном только
+ * тормозил бы появление раздела. Статус — после перехода: `scrollToSection` сбрасывает статус
+ * прошлого действия.
  *
  * @param options — экран, пак и колбэки провайдера
  */
 export const finishImport = (options: FinishImportOptions): void => {
   const { screen, pack, scrollToSection, showStatus } = options;
 
-  if (screen === 'add') scrollToSection(pack.id);
+  if (screen === 'add') scrollToSection(pack.id, 'instant');
 
   showStatus(`Пак «${pack.title}» добавлен`);
 };

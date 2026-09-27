@@ -75,10 +75,13 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
         onContextMenu={handleSendContextMenu}
         onKeyDown={handleSendKeyDown}
       >
+        {/*
+         * Без `loading="lazy"`: лента стикеров декодирует картинки окна заранее, до прыжка к
+         * далёкому разделу, а ленивая картинка далеко за видимой областью не грузится.
+         */}
         <img
           src={url}
           alt=""
-          loading="lazy"
           className="pointer-events-none block max-h-full max-w-full object-contain group-disabled:opacity-40"
         />
 

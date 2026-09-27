@@ -7,8 +7,6 @@ import type { FeedSection, FeedSticker } from './feedSections.types';
 
 const RECENT_TITLE = 'Недавние';
 
-const CUSTOM_HINT = 'Создайте свой стикер во вкладке «+»';
-
 const PACK_HINT = 'Пак пуст';
 
 /**
@@ -55,7 +53,8 @@ const recentStickers = (recent: RecentRec[], byPack: StickersByPack): FeedSticke
 
 /**
  * Разделы ленты стикеров: «Недавние», если в них есть живые стикеры, затем паки в порядке списка —
- * «Мои стикеры» в нём первые. Пак без стикеров остаётся разделом с подсказкой.
+ * «Мои стикеры» в нём первые и заканчиваются плиткой «Создать стикер». Другой пак без стикеров остаётся
+ * разделом с подсказкой.
  *
  * @param packs — паки библиотеки в порядке вкладок
  * @param byPack — стикеры по пакам в порядке добавления; пака без стикеров в нём нет
@@ -76,6 +75,7 @@ export const feedSections = (
       title: RECENT_TITLE,
       pack: null,
       items: recentItems,
+      hasCreateTile: false,
       hint: '',
     });
   }
@@ -83,6 +83,7 @@ export const feedSections = (
   for (const pack of packs) {
     const { id, title } = pack;
     const stickers = byPack.get(id) || [];
+    const isCustom = id === CUSTOM_PACK_ID;
 
     sections.push({
       id,
@@ -91,7 +92,8 @@ export const feedSections = (
       items: stickers.map((sticker) => {
         return feedSticker(sticker.id, sticker);
       }),
-      hint: id === CUSTOM_PACK_ID ? CUSTOM_HINT : PACK_HINT,
+      hasCreateTile: isCustom,
+      hint: isCustom ? '' : PACK_HINT,
     });
   }
 

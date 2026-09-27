@@ -5,7 +5,12 @@ import { writeMode } from '../../../pickerMode';
 import type { ModeStorage, PickerMode } from '../../../pickerMode.types';
 
 import { startMode } from './startMode';
-import type { PickerScreen, PickerViewValue, SectionAnchor } from './usePickerView.types';
+import type {
+  PickerScreen,
+  PickerViewValue,
+  SectionAnchor,
+  SectionMotion,
+} from './usePickerView.types';
 
 /**
  * `localStorage` страницы, к которому обращаются только внутри методов: сам геттер
@@ -90,11 +95,11 @@ export const usePickerViewState = (
   }, [clearStatus]);
 
   const scrollToSection = useCallback(
-    (sectionId: string) => {
+    (sectionId: string, motion: SectionMotion) => {
       anchorSeqRef.current += 1;
       chooseMode('stickers');
       setScreen(null);
-      setAnchor({ sectionId, seq: anchorSeqRef.current });
+      setAnchor({ sectionId, seq: anchorSeqRef.current, motion });
       clearStatus();
     },
     [chooseMode, clearStatus]

@@ -17,6 +17,7 @@ const section = (id: string, count: number): StickerSection<number> => {
     items: Array.from({ length: count }, (_, index) => {
       return index;
     }),
+    hasCreateTile: false,
   };
 };
 

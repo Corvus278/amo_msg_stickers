@@ -11,7 +11,8 @@ import { ImportProgress } from './ImportProgress/ImportProgress';
  * ввода и прогресс — строки общей формы вкладки «Добавить стикеры» с её отступами.
  */
 export const TelegramImport: FC = () => {
-  const { link, changeLink, isImporting, percent, startImport } = useTelegramImport();
+  const { link, hasLink, changeLink, isImporting, percent, startImport } =
+    useTelegramImport();
 
   const handleLinkInput = (value: string) => {
     changeLink(value);
@@ -38,7 +39,11 @@ export const TelegramImport: FC = () => {
           onInput={handleLinkInput}
         />
 
-        <Button variant="primary" isDisabled={isImporting} onClick={handleImportClick}>
+        <Button
+          variant="primary"
+          isDisabled={isImporting || !hasLink}
+          onClick={handleImportClick}
+        >
           Импорт
         </Button>
       </div>

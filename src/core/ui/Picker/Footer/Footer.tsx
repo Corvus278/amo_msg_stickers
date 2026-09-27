@@ -18,6 +18,7 @@ const SETTINGS_BUTTON_CLASS = [
   'text-cadetGray-30 hover:bg-cadetGray-30/[.14] dark:text-gray-70 dark:hover:bg-white-0/[.07]',
   'aria-pressed:bg-cadetGray-30/[.14] aria-pressed:text-blue-50',
   'dark:aria-pressed:bg-white-0/[.07] dark:aria-pressed:text-beige-70',
+  'motion-safe:transition-colors motion-safe:duration-base',
 ].join(' ');
 
 /**

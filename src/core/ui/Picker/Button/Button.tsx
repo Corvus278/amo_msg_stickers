@@ -10,15 +10,29 @@ import type { ButtonProps } from './Button.types';
  *
  * Размер входит в вариант целиком: у опасной кнопки своя высота, отступы и шрифт, а
  * конфликтующих утилит на одном элементе быть не должно (`tailwind-merge` не берём).
+ *
+ * Наведение — под `enabled:`, а не `hover:` с перебивкой в `disabled:`: недоступная кнопка
+ * стиль наведения просто не получает, и порядок утилит в CSS не важен. Основная кнопка
+ * темнеет фильтром, а не соседним цветом палитры: соседний синий читался бы другим
+ * цветом, а `brightness` одинаково работает для синей и бежевой тёмной темы.
+ *
+ * Длительность — под `motion-safe:`, как и переход: длительность по умолчанию из
+ * `motion-safe:transition-*` перебила бы простую `duration-base`.
  */
 export const buttonVariants = cva(
-  'shrink-0 cursor-pointer rounded-lg font-primary leading-[normal] disabled:cursor-default disabled:opacity-50',
+  [
+    'shrink-0 cursor-pointer rounded-lg font-primary leading-[normal] disabled:cursor-default disabled:opacity-50',
+    'motion-safe:transition-[color,background-color,border-color,filter] motion-safe:duration-base',
+  ].join(' '),
   {
     variants: {
       variant: {
-        primary:
+        primary: [
           'h-8 px-3.5 text-xsm font-semibold bg-blue-50 text-white-0 dark:bg-beige-70 dark:text-gray-10',
-        danger: 'h-5.5 px-1.5 text-xs font-normal bg-transparent text-red-30',
+          'enabled:hover:brightness-[.92] dark:enabled:hover:brightness-[1.08]',
+        ].join(' '),
+        danger:
+          'h-5.5 px-1.5 text-xs font-normal bg-transparent text-red-30 enabled:hover:bg-red-30/10',
       },
     },
   }

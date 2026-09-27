@@ -3,7 +3,11 @@ import type { ComponentChildren } from 'preact';
 import type { Pack, SendItem } from '../../../db.types';
 import type { Host, Settings } from '../../../host.types';
 import type { HoldReason, OpenedBy, PopupHolds } from '../../../hoverPopup.types';
-import type { PickerScreen, PickerViewValue } from '../usePickerView/usePickerView.types';
+import type {
+  PickerScreen,
+  PickerViewValue,
+  SectionMotion,
+} from '../usePickerView/usePickerView.types';
 
 export type PickerStatus = {
   /**
@@ -151,7 +155,7 @@ export type PackImportOptions = {
   /**
    * Открывает раздел импортированного пака в ленте стикеров.
    */
-  scrollToSection: (sectionId: string) => void;
+  scrollToSection: (sectionId: string, motion: SectionMotion) => void;
 };
 
 export type PickerProviderProps = {

@@ -17,6 +17,7 @@ const section = (id: string, count: number): StickerSection<number> => {
     items: Array.from({ length: count }, (_, index) => {
       return index;
     }),
+    hasCreateTile: false,
   };
 };
 
@@ -56,7 +57,7 @@ const topOf = (layout: typeof FULL, sectionId: string): number | undefined => {
   })?.top;
 };
 
-const ANCHOR = { sectionId: 'tg:new', seq: 1 };
+const ANCHOR = { sectionId: 'tg:new', seq: 1, motion: 'instant' } as const;
 
 describe('anchorTop', () => {
   it('завершение импорта: по прежнему чтению библиотеки запрос не исполняется', () => {
@@ -86,7 +87,7 @@ describe('anchorTop', () => {
   it('повторный запрос того же раздела исполняется снова', () => {
     expect(
       anchorTop({
-        anchor: { sectionId: 'tg:new', seq: 2 },
+        anchor: { sectionId: 'tg:new', seq: 2, motion: 'smooth' },
         appliedSeq: 1,
         layout: FULL,
         isCurrent: true,
@@ -97,7 +98,7 @@ describe('anchorTop', () => {
   it('раздела ещё нет в раскладке — запрос ждёт', () => {
     expect(
       anchorTop({
-        anchor: { sectionId: 'tg:absent', seq: 1 },
+        anchor: { sectionId: 'tg:absent', seq: 1, motion: 'instant' },
         appliedSeq: 0,
         layout: FULL,
         isCurrent: true,
