@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'preact/hooks';
 
 import type { Settings } from '../../../../host.types';
+import { t } from '../../../../i18n/translate';
 import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
 
@@ -46,7 +47,7 @@ export const useSettingsDraft = (): SettingsDraft => {
       });
 
       await refreshSettings();
-      showStatus('Сохранено');
+      showStatus(t('status.saved'));
     } catch (error) {
       showError(errorMessage(error));
     }

@@ -1,5 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import type { MessageKey } from '../../../../../i18n/i18n.types';
+import { t } from '../../../../../i18n/translate';
 import { MenuItem } from '../../MenuItem/MenuItem';
 import type { MenuItemVariant } from '../../MenuItem/MenuItem.types';
 import { useMenuClose } from '../../useMenuClose/useMenuClose';
@@ -7,9 +9,12 @@ import type { CellRemoveKind } from '../CellMenu.types';
 
 import type { RemoveItemProps } from './RemoveItem.types';
 
-const REMOVE_LABEL: Record<CellRemoveKind, string> = {
-  sticker: 'Удалить стикер',
-  recent: 'Убрать из недавних',
+/**
+ * Ключи, а не тексты: язык выбирается в `start()`, после вычисления модуля.
+ */
+const REMOVE_LABEL: Record<CellRemoveKind, MessageKey> = {
+  sticker: 'menu.removeSticker',
+  recent: 'menu.removeRecent',
 };
 
 /**
@@ -34,7 +39,7 @@ export const RemoveItem: FC<RemoveItemProps> = (props) => {
 
   return (
     <MenuItem variant={REMOVE_VARIANT[kind]} onSelect={handleItemSelect}>
-      {REMOVE_LABEL[kind]}
+      {t(REMOVE_LABEL[kind])}
     </MenuItem>
   );
 };

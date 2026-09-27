@@ -2,6 +2,7 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC, TargetedFocusEvent } from 'preact';
 
 import type { PanelPhase } from '../../hoverPopup.types';
+import { t } from '../../i18n/translate';
 
 import { AddView } from './AddView/AddView';
 import { Footer } from './Footer/Footer';
@@ -146,7 +147,7 @@ export const Picker: FC<PickerProps> = (props) => {
   return (
     <dialog
       open={isOpen}
-      aria-label="Стикеры и GIF"
+      aria-label={t('picker.title')}
       className={panelVariants({ phase, isDark })}
       onKeyDown={handlePanelKeyDown}
       onFocusIn={handlePanelFocusIn}

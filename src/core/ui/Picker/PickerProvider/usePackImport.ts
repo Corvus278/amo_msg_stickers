@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'preact/hooks';
 
+import { t } from '../../../i18n/translate';
 import { importTelegramSet } from '../../../sources/telegram';
 import type { ImportProgress } from '../../../sources/telegram.types';
 
@@ -39,7 +40,7 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
 
       const trackProgress = ({ done, total, title }: ImportProgress) => {
         setPercent(total ? (done / total) * 100 : 0);
-        showStatus(`«${title}»: ${done}/${total}`);
+        showStatus(t('status.importProgress', { title, done, total }));
 
         /**
          * Первый готовый стикер — сразу показываем вкладку пака, не дожидаясь импорта

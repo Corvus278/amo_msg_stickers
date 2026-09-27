@@ -1,4 +1,5 @@
 import type { SendItem } from '../../../db.types';
+import type { CellNames } from '../cellName/cellName.types';
 import type { CellRemoveKind } from '../Menu/CellMenu/CellMenu.types';
 
 export type StickerCellProps = {
@@ -18,10 +19,9 @@ export type StickerCellProps = {
   url: string;
 
   /**
-   * Что в ячейке, в винительном падеже («стикер 😀», «GIF «cat»»): из него собираются
-   * доступные имена кнопки отправки и контекстного меню.
+   * Доступные имена кнопки отправки и контекстного меню на языке интерфейса.
    */
-  name: string;
+  name: CellNames;
 
   /**
    * Что убирает пункт контекстного меню: стикер из библиотеки или элемент из недавних.

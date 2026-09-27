@@ -65,7 +65,11 @@ describe('service worker', () => {
       maxBytes: 100,
     });
 
-    expect(res).toEqual({ ok: false, error: 'Адрес вне списка разрешённых' });
+    expect(res).toStrictEqual({
+      ok: false,
+      error: 'Адрес вне списка разрешённых',
+      key: 'error.net.notAllowed',
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -80,7 +84,11 @@ describe('service worker', () => {
       as: 'json',
     });
 
-    expect(res).toEqual({ ok: false, error: 'Адрес вне списка разрешённых' });
+    expect(res).toStrictEqual({
+      ok: false,
+      error: 'Адрес вне списка разрешённых',
+      key: 'error.net.notAllowed',
+    });
   });
 
   it.each<[string, chrome.runtime.MessageSender]>([
@@ -112,7 +120,41 @@ describe('service worker', () => {
       maxBytes: 2 * 1024 * 1024,
     });
 
-    expect(res).toEqual({ ok: false, error: 'Файл больше 2 МБ' });
+    expect(res).toStrictEqual({
+      ok: false,
+      error: 'Файл больше 2 МБ',
+      key: 'error.net.tooBig',
+      params: { size: 2 },
+    });
+  });
+
+  it('сетевой сбой отдаёт только текст браузера, без ключа', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const res = await send({
+      type: 'amo-stickers:fetch',
+      url: 'https://api.giphy.com/v1/gifs/trending',
+      as: 'json',
+    });
+
+    expect(res).toStrictEqual({ ok: false, error: 'Failed to fetch' });
+  });
+
+  it('HTTP-ошибка отдаёт только текст со статусом и телом, без ключа', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      mockResponse('Forbidden', {
+        url: 'https://api.giphy.com/v1/gifs/trending',
+        status: 403,
+      })
+    );
+
+    const res = await send({
+      type: 'amo-stickers:fetch',
+      url: 'https://api.giphy.com/v1/gifs/trending',
+      as: 'json',
+    });
+
+    expect(res).toStrictEqual({ ok: false, error: 'HTTP 403 Forbidden' });
   });
 
   it('отдаёт файл в пределах лимита base64-байтами с MIME', async () => {

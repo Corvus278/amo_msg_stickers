@@ -1,3 +1,4 @@
+import { t } from './i18n/translate';
 import type { FramePlanItem, FrameSource } from './frameSource.types';
 import { fit, MAX_DURATION_SEC, MAX_FRAMES, planItem } from './frameSourceCommon';
 
@@ -45,7 +46,7 @@ const openDecodedImage = async (blob: Blob, maxSide: number): Promise<FrameSourc
     await decoder.completed;
     const track = decoder.tracks.selectedTrack;
 
-    if (!track) throw new Error('image has no track');
+    if (!track) throw new Error(t('error.convert.noImageTrack'));
 
     const count = Math.min(track.frameCount, MAX_FRAMES);
     let startMs = 0;

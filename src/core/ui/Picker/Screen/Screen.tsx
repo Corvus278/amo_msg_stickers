@@ -1,5 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../i18n/translate';
+
 import { BackIcon } from './BackIcon/BackIcon';
 import { useScreenMotion } from './useScreenMotion/useScreenMotion';
 import type { ScreenProps } from './Screen.types';
@@ -36,7 +38,7 @@ export const Screen: FC<ScreenProps> = (props) => {
       <div className="flex shrink-0 px-1.5 pt-1.5">
         <button type="button" className={BACK_BUTTON_CLASS} onClick={handleBackClick}>
           <BackIcon />
-          Назад
+          {t('screen.back')}
         </button>
       </div>
 

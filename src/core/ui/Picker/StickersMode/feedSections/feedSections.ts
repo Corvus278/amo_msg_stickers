@@ -1,13 +1,11 @@
 import { CUSTOM_PACK_ID } from '../../../../db';
 import type { Pack, RecentRec, StickerRec, StickersByPack } from '../../../../db.types';
+import { t } from '../../../../i18n/translate';
 import { stickerCellName } from '../../cellName/cellName';
+import { packTitle } from '../../packTitle/packTitle';
 import { RECENT_SECTION_ID } from '../../usePickerView/sectionIds';
 
 import type { FeedSection, FeedSticker } from './feedSections.types';
-
-const RECENT_TITLE = 'Недавние';
-
-const PACK_HINT = 'Пак пуст';
 
 /**
  * Ячейка стикера.
@@ -72,7 +70,7 @@ export const feedSections = (
   if (recentItems.length) {
     sections.push({
       id: RECENT_SECTION_ID,
-      title: RECENT_TITLE,
+      title: t('stickers.recent'),
       pack: null,
       items: recentItems,
       hasCreateTile: false,
@@ -81,19 +79,19 @@ export const feedSections = (
   }
 
   for (const pack of packs) {
-    const { id, title } = pack;
+    const { id } = pack;
     const stickers = byPack.get(id) || [];
     const isCustom = id === CUSTOM_PACK_ID;
 
     sections.push({
       id,
-      title,
+      title: packTitle(pack),
       pack,
       items: stickers.map((sticker) => {
         return feedSticker(sticker.id, sticker);
       }),
       hasCreateTile: isCustom,
-      hint: isCustom ? '' : PACK_HINT,
+      hint: isCustom ? '' : t('stickers.packEmpty'),
     });
   }
 

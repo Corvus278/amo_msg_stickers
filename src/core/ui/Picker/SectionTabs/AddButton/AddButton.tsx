@@ -1,9 +1,8 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { PlusIcon } from '../../PlusIcon/PlusIcon';
 import { usePickerView } from '../../usePickerView/usePickerView';
-
-const TITLE = 'Добавить стикеры';
 
 /**
  * Вид — как у вкладки полосы, без выбранного состояния: кнопка стоит в одной строке с вкладками.
@@ -20,6 +19,7 @@ const BUTTON_CLASS = [
  */
 export const AddButton: FC = () => {
   const { openScreen } = usePickerView();
+  const title = t('add.title');
 
   const handleAddClick = () => {
     openScreen('add');
@@ -28,8 +28,8 @@ export const AddButton: FC = () => {
   return (
     <button
       type="button"
-      aria-label={TITLE}
-      title={TITLE}
+      aria-label={title}
+      title={title}
       className={BUTTON_CLASS}
       onClick={handleAddClick}
     >

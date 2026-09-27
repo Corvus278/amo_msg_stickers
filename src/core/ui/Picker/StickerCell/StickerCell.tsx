@@ -67,7 +67,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
       <button
         type="button"
         id={id}
-        aria-label={`Отправить ${name}`}
+        aria-label={name.send}
         aria-busy={isBusy}
         disabled={isBusy}
         className={CELL_CLASS}
@@ -91,7 +91,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
       {opening && (
         <CellMenu
           key={opening.seq}
-          name={name}
+          label={name.menu}
           kind={removeKind}
           opening={opening}
           onClose={handleMenuClose}

@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { Button } from '../../Button/Button';
 import { TextInput } from '../../TextInput/TextInput';
 import { useTelegramImport } from '../../useTelegramImport/useTelegramImport';
@@ -24,11 +25,10 @@ export const TelegramImport: FC = () => {
 
   return (
     <>
-      <h3 className="mt-1.5 text-xsm font-bold">Импорт из Telegram</h3>
+      <h3 className="mt-1.5 text-xsm font-bold">{t('add.telegram.title')}</h3>
 
       <p className="text-xs leading-[1.4] text-cadetGray-30 dark:text-gray-70">
-        Ссылка на пак. Статичные, анимированные (.tgs) и видео-стикеры конвертируются в
-        GIF.
+        {t('add.telegram.hint')}
       </p>
 
       <div className="flex items-center gap-1.5">
@@ -44,7 +44,7 @@ export const TelegramImport: FC = () => {
           isDisabled={isImporting || !hasLink}
           onClick={handleImportClick}
         >
-          Импорт
+          {t('add.telegram.import')}
         </Button>
       </div>
 

@@ -1,6 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { CUSTOM_PACK_ID } from '../../../db';
+import { packTitle } from '../packTitle/packTitle';
 
 import { CoverCanvas } from './CoverCanvas/CoverCanvas';
 import { coverLetters } from './coverLetters/coverLetters';
@@ -14,7 +15,7 @@ import type { PackCoverProps } from './PackCover.types';
  */
 export const PackCover: FC<PackCoverProps> = (props) => {
   const { pack, items, bitmaps } = props;
-  const { id, coverId, title } = pack;
+  const { id, coverId } = pack;
   const cover =
     items.find(({ sticker }) => {
       return sticker.id === coverId;
@@ -24,5 +25,5 @@ export const PackCover: FC<PackCoverProps> = (props) => {
 
   if (id === CUSTOM_PACK_ID) return <SmileIcon />;
 
-  return <>{coverLetters(title)}</>;
+  return <>{coverLetters(packTitle(pack))}</>;
 };

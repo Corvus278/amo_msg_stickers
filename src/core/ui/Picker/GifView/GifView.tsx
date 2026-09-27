@@ -2,6 +2,7 @@ import type { FunctionComponent as FC } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
 import type { RemoteGif } from '../../../db.types';
+import { t } from '../../../i18n/translate';
 import type { GifFeed } from '../../../sources/gifs.types';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
@@ -104,7 +105,7 @@ export const GifView: FC<GifViewProps> = (props) => {
           onRecentClear={handleRecentClear}
         >
           <EmptyState>
-            Для поиска GIF нужен API-ключ GIPHY или KLIPY
+            {t('gifs.noKeys')}
             <br />
             <button
               ref={settingsRef}
@@ -112,7 +113,7 @@ export const GifView: FC<GifViewProps> = (props) => {
               className={SETTINGS_LINK_CLASS}
               onClick={handleSettingsClick}
             >
-              Открыть настройки
+              {t('gifs.openSettings')}
             </button>
           </EmptyState>
         </MasonryGrid>
@@ -126,7 +127,7 @@ export const GifView: FC<GifViewProps> = (props) => {
         <TextInput
           type="search"
           value={query}
-          placeholder="Поиск GIF"
+          placeholder={t('gifs.search')}
           inputRef={searchRef}
           onInput={handleSearchInput}
         />
@@ -141,7 +142,7 @@ export const GifView: FC<GifViewProps> = (props) => {
         onRecentRemove={handleRecentRemove}
         onRecentClear={handleRecentClear}
       >
-        {isNothingFound && <EmptyState>Ничего не нашлось</EmptyState>}
+        {isNothingFound && <EmptyState>{t('gifs.nothingFound')}</EmptyState>}
 
         <div className="px-0.5 pt-1 text-right text-xxs text-cadetGray-30 dark:text-gray-70">
           {FEED_ATTRIBUTION[feed]}

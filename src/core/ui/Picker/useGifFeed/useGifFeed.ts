@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
 import type { RemoteGif } from '../../../db.types';
+import { getLocale, t } from '../../../i18n/translate';
 import { fetchGifs } from '../../../sources/gifs';
 import type { GifFeed } from '../../../sources/gifs.types';
 import { errorMessage } from '../PickerProvider/errorMessage';
@@ -124,7 +125,8 @@ export const useGifFeed = (
           settingsRef.current,
           feed,
           term,
-          shouldReset ? null : nextRef.current
+          shouldReset ? null : nextRef.current,
+          getLocale()
         );
 
         if (request !== requestRef.current) return;
@@ -136,7 +138,8 @@ export const useGifFeed = (
 
         if (shouldReset && !page.items.length) setIsNothingFound(true);
       } catch (error) {
-        if (request === requestRef.current) showError(`GIF: ${errorMessage(error)}`);
+        if (request === requestRef.current)
+          showError(t('status.gifFailed', { message: errorMessage(error) }));
       } finally {
         if (request === requestRef.current) {
           isLoadingRef.current = false;

@@ -1,5 +1,6 @@
 import { fetchChecked, readResponseLimited } from '../core/net';
 
+import { toFailureResponse } from './fetchResponse';
 import type { FetchRequest, FetchResponse } from './messages.types';
 
 /**
@@ -57,7 +58,7 @@ const handleFetch = async (request: FetchRequest): Promise<FetchResponse> => {
   try {
     return await readBody(await fetchChecked(request.url), request);
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    return toFailureResponse(error);
   }
 };
 

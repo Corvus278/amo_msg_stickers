@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { glob, readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -18,7 +18,13 @@ const devMatches = isWatch ? DEV_MATCHES : [];
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.11.1',
+  /**
+   * Описание без суффикса языка менеджер показывает по умолчанию, `:en` — браузеру на
+   * английском; название одно на все языки.
+   */
+  '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
+  '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
+  '// @version      0.12.0',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -214,6 +220,11 @@ const manifest = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'))
 
 for (const script of manifest.content_scripts) script.matches.push(...devMatches);
 writeFileSync('dist/extension/manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);
+/**
+ * Переводы описания: manifest ссылается на них через `__MSG_extDescription__`, и без
+ * каталога Chrome не загрузит расширение.
+ */
+cpSync('src/extension/_locales', 'dist/extension/_locales', { recursive: true });
 
 if (isWatch) {
   for (const config of configs) {

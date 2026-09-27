@@ -1,17 +1,10 @@
 import type { RecentRec, RemoteGif } from '../../../../db.types';
+import { t } from '../../../../i18n/translate';
 import type { GifSection } from '../../MasonryGrid/MasonryGrid.types';
 import { COLUMN_COUNT } from '../../MasonryGrid/tileBox/tileBox';
 import type { FeedLoading } from '../../useGifFeed/useGifFeed.types';
 
 import type { GifSectionsInput } from './gifSections.types';
-
-const RECENT_TITLE = 'Недавние';
-
-/**
- * Заголовок трендов нужен только под недавними — отделить одну выдачу от другой. Одна
- * выдача без недавних идёт без заголовка, как и результаты поиска.
- */
-const TRENDS_TITLE = 'Тренды';
 
 /**
  * Заглушек на всю ленту при первой загрузке: пустая область до ответа источника читается
@@ -66,16 +59,20 @@ export const gifSections = (input: GifSectionsInput): GifSection[] => {
   if (hasRecent)
     sections.push({
       id: 'recent',
-      title: RECENT_TITLE,
+      title: t('gifs.recent'),
       items: recent,
       skeletons: 0,
       isRecent: true,
     });
 
+  /**
+   * Заголовок трендов нужен только под недавними — отделить одну выдачу от другой. Одна
+   * выдача без недавних идёт без заголовка, как и результаты поиска.
+   */
   if (hasFeed) {
     sections.push({
       id: 'feed',
-      title: hasRecent ? TRENDS_TITLE : '',
+      title: hasRecent ? t('gifs.trends') : '',
       items: gifs,
       skeletons: skeletonsPerColumn(loading),
       isRecent: false,

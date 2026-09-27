@@ -1,3 +1,5 @@
+import { readAmoLocale } from './i18n/locale';
+import { setLocale, t } from './i18n/translate';
 import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
 import { composerOf, findComposers, injectMessageStyle, isDarkTheme } from './amoDom';
@@ -51,6 +53,7 @@ const setIconOpen = (button: HTMLElement | null, isOpen: boolean) => {
 };
 
 export const start = (host: Host) => {
+  setLocale(readAmoLocale());
   if (window.__amoStickers) return;
   window.__amoStickers = true;
   injectMessageStyle();
@@ -62,7 +65,7 @@ export const start = (host: Host) => {
       case 'local': {
         const sticker = await getSticker(item.stickerId);
 
-        if (!sticker) throw new SendError('Стикер удалён');
+        if (!sticker) throw new SendError(t('error.send.stickerDeleted'));
 
         return toGifFile(sticker.blob, sendFileName(item, sticker));
       }
@@ -95,7 +98,7 @@ export const start = (host: Host) => {
   const send = async (item: SendItem) => {
     const composer = activeButton && composerOf(activeButton);
 
-    if (!composer) throw new SendError('Поле ввода не найдено');
+    if (!composer) throw new SendError(t('error.send.noComposer'));
 
     await sendFile(composer, await toFile(item));
     await pushRecent(item);
@@ -174,7 +177,7 @@ export const start = (host: Host) => {
     /**
      * title на inner, а не на wrap: иначе подсказка всплывает над всем попапом.
      */
-    inner.title = 'Стикеры и GIF';
+    inner.title = t('picker.title');
     inner.innerHTML = stickerIcon(ICON_CLASS);
     inner.addEventListener('click', () => {
       hoverPopup.click(wrap);

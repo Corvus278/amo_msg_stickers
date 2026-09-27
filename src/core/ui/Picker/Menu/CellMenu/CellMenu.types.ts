@@ -7,9 +7,9 @@ export type CellRemoveKind = 'sticker' | 'recent';
 
 export type CellMenuProps = {
   /**
-   * Что в ячейке, в винительном падеже («стикер 😀», «GIF «cat»»): из него — название меню.
+   * Название меню на языке интерфейса: «Действия: стикер 😀».
    */
-  name: string;
+  label: string;
 
   /**
    * Что убирает пункт меню.

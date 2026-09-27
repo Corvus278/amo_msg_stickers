@@ -1,3 +1,4 @@
+import { t } from './i18n/translate';
 import type { FrameSink } from './frameSink.types';
 import type { GifEncoderOptions } from './gifEncoder.types';
 import type { GifWorkerResponse } from './gifWorker.types';
@@ -314,7 +315,7 @@ export const createWorkerSink = ({
    */
   const handleError = (event: ErrorEvent) => {
     if (hasAck) {
-      fail(new Error(event.message || 'GIF worker crashed'));
+      fail(new Error(event.message || t('error.convert.workerCrashed')));
 
       return;
     }

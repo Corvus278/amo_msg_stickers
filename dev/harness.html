@@ -144,6 +144,13 @@
   <body class="bg-white-0 dark:bg-black-70">
     <div id="tools">
       <button id="theme">тема</button>
+      <label>
+        язык amo
+        <select id="locale">
+          <option value="ru">ru</option>
+          <option value="en">en</option>
+        </select>
+      </label>
       <label><input type="checkbox" id="slow" /> медленная загрузка</label>
       <label><input type="checkbox" id="incoming" /> входящее</label>
       <label><input type="checkbox" id="author" /> с именем автора</label>
@@ -425,6 +432,18 @@
       };
       document.getElementById('theme').onclick = () =>
         document.documentElement.classList.toggle('dark');
+
+      // --- язык amo: пикер читает его при старте из того же ключа, что и amo, поэтому смена — с перезагрузкой ---
+      const LOCALE_KEY = 'i18nextLng';
+      const localeSelect = document.getElementById('locale');
+      // без ключа пикер берёт язык браузера, и переключатель ничего не выбирает
+      const storedLocale = (localStorage.getItem(LOCALE_KEY) || '').toLowerCase();
+      localeSelect.value = storedLocale.startsWith('en') ? 'en' : 'ru';
+      if (!storedLocale) localeSelect.selectedIndex = -1;
+      localeSelect.onchange = () => {
+        localStorage.setItem(LOCALE_KEY, localeSelect.value);
+        location.reload();
+      };
 
       // --- большая библиотека: 20 паков по 120 стикеров прямо в IndexedDB пикера ---
       const PACKS = 20;

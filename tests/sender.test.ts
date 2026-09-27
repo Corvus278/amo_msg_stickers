@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { setLocale } from '../src/core/i18n/translate';
 import { SendError, toCheckedGifFile, toGifFile } from '../src/core/sender';
 
 import { makeGif } from './helpers/makeGif';
@@ -42,4 +43,16 @@ describe('toCheckedGifFile', () => {
     await expect(result).rejects.toBeInstanceOf(SendError);
     await expect(result).rejects.toThrow('Файл не похож на GIF');
   });
+
+  it('в английском интерфейсе отклоняет с английским текстом', async () => {
+    setLocale('en');
+
+    await expect(
+      toCheckedGifFile(new Blob(['<html>404</html>']), GIF_NAME)
+    ).rejects.toThrow('The file does not look like a GIF');
+  });
+});
+
+afterEach(() => {
+  setLocale('ru');
 });

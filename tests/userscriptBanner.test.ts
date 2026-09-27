@@ -9,6 +9,20 @@ import { ALLOWED_DOMAINS, ALLOWED_HOSTS } from '../src/core/net';
 const CONNECT_PATTERN = /\/\/ @connect\s+(\S+?)'/g;
 
 /**
+ * Описание в заголовке userscript: русское — без суффикса языка, его менеджер
+ * показывает по умолчанию; английское — с суффиксом `:en`, его менеджер
+ * выбирает по языку браузера. Текст описания — кириллица и латиница
+ * соответственно, иначе строка с суффиксом не отличалась бы от перевода.
+ */
+const DESCRIPTION_RU_PATTERN = /'\/\/ @description\s+[^':]*[А-Яа-яЁё][^']*'/;
+const DESCRIPTION_EN_PATTERN = /'\/\/ @description:en\s+[A-Za-z][^'А-Яа-яЁё]*'/;
+
+/**
+ * Директива названия: `@name` без суффикса и с ним — название одно на все языки.
+ */
+const NAME_PATTERN = /\/\/ @name\S*\s/g;
+
+/**
  * Строковый литерал обёртки userscript в `build.mjs`; `\n` в нём записан escape-ом.
  */
 const WRAP_START_PATTERN = /const USERSCRIPT_WRAP_START = '(.*)';/;
@@ -44,6 +58,12 @@ describe('заголовок userscript', () => {
     });
 
     expect(connectHosts.sort()).toEqual([...ALLOWED_HOSTS, ...ALLOWED_DOMAINS].sort());
+  });
+
+  it('описание на русском по умолчанию и на английском, название одно', () => {
+    expect(buildSource).toMatch(DESCRIPTION_RU_PATTERN);
+    expect(buildSource).toMatch(DESCRIPTION_EN_PATTERN);
+    expect(buildSource.match(NAME_PATTERN)).toHaveLength(1);
   });
 
   it('обёртка стоит в banner и footer сборки userscript', () => {

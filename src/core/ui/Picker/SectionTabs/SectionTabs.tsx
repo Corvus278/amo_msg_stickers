@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../i18n/translate';
 import { PackCover } from '../PackCover/PackCover';
 import { usePickerView } from '../usePickerView/usePickerView';
 
@@ -70,7 +71,7 @@ export const SectionTabs: FC<SectionTabsProps> = (props) => {
       <div
         ref={stripRef}
         role="tablist"
-        aria-label="Разделы стикеров"
+        aria-label={t('picker.sections')}
         className={STRIP_CLASS}
       >
         <div ref={indicatorRef} aria-hidden="true" className={INDICATOR_CLASS} />

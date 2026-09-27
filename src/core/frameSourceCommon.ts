@@ -1,3 +1,4 @@
+import { t } from './i18n/translate';
 import type { FramePlanItem } from './frameSource.types';
 
 export const MAX_FRAMES = 100;
@@ -84,7 +85,7 @@ export const waitForEvent = (
     const listeners = new AbortController();
     const timer = setTimeout(() => {
       listeners.abort();
-      reject(new Error(`timeout: ${event}`));
+      reject(new Error(t('error.convert.videoTimeout', { event })));
     }, timeoutMs);
 
     const settle = () => {
@@ -104,7 +105,7 @@ export const waitForEvent = (
       'error',
       () => {
         settle();
-        reject(new Error(`error while waiting for ${event}`));
+        reject(new Error(t('error.convert.videoFailed', { event })));
       },
       { signal: listeners.signal }
     );
