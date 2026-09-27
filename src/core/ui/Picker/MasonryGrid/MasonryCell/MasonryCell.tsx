@@ -8,12 +8,12 @@ import { useCellSend } from '../../useCellSend/useCellSend';
 import type { MasonryCellProps } from './MasonryCell.types';
 
 /**
- * Пропорции ячейки задаются до загрузки превью: иначе колонки перестраивались бы на
+ * Размер ячейки задан раскладкой до загрузки превью: иначе колонки перестраивались бы на
  * каждой загруженной картинке. Заливка поля ввода видна, пока превью грузится.
  */
 const cellVariants = cva(
   [
-    'block w-full cursor-pointer overflow-hidden rounded-lg p-0',
+    'absolute block cursor-pointer overflow-hidden rounded-lg p-0',
     'bg-cadetGray-30/[.12] dark:bg-white-0/[.06]',
   ],
   {
@@ -26,11 +26,12 @@ const cellVariants = cva(
 );
 
 /**
- * Ячейка GIF в ленте: без удаления — найденные GIF не хранятся.
+ * Ячейка GIF в ленте, абсолютно поставленная на место из раскладки: без удаления — найденные
+ * GIF не хранятся.
  */
 export const MasonryCell: FC<MasonryCellProps> = (props) => {
-  const { gif } = props;
-  const { width, height, previewUrl } = gif;
+  const { gif, box } = props;
+  const { previewUrl } = gif;
   const item: SendItem = { kind: 'remote', gif };
   const { isBusy, sendItem } = useCellSend(item);
 
@@ -44,7 +45,7 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
       aria-label={`Отправить ${gifCellName(gif)}`}
       disabled={isBusy}
       className={cellVariants({ isBusy })}
-      style={{ aspectRatio: `${width} / ${height}` }}
+      style={box}
       onClick={handleCellClick}
     >
       <img

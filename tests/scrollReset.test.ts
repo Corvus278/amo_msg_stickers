@@ -1,0 +1,67 @@
+import { describe, expect, it } from 'vitest';
+
+import { createScrollReset } from '../src/core/ui/Picker/MasonryGrid/scrollReset/scrollReset';
+import type { ResetBox } from '../src/core/ui/Picker/MasonryGrid/scrollReset/scrollReset.types';
+
+/**
+ * Элемент, которому тест меняет ширину: показ скрытой ленты.
+ */
+type TestBox = { -readonly [Key in keyof ResetBox]: ResetBox[Key] };
+
+/**
+ * Прокручиваемый элемент без браузера.
+ *
+ * @param scrollTop — прокрутка
+ * @param clientWidth — ширина; 0 — элемент скрыт
+ * @returns элемент ленты
+ */
+const box = (scrollTop: number, clientWidth = 336): TestBox => {
+  return { scrollTop, clientWidth };
+};
+
+describe('createScrollReset', () => {
+  it('прокручивает видимую ленту к началу по запросу сброса', () => {
+    const reset = createScrollReset();
+    const feed = box(695);
+
+    reset.request();
+
+    expect(reset.apply(feed)).toBe(true);
+    expect(feed.scrollTop).toBe(0);
+  });
+
+  it('без запроса сброса прокрутку не трогает', () => {
+    const reset = createScrollReset();
+    const feed = box(1500);
+
+    expect(reset.apply(feed)).toBe(false);
+    expect(feed.scrollTop).toBe(1500);
+  });
+
+  it('сброс скрытой ленты ждёт показа и перекрывает прокрутку, возвращённую при показе', () => {
+    const reset = createScrollReset();
+    const feed = box(1500, 0);
+
+    reset.request();
+
+    expect(reset.apply(feed)).toBe(false);
+
+    feed.clientWidth = 336;
+    feed.scrollTop = 420;
+
+    expect(reset.apply(feed)).toBe(true);
+    expect(feed.scrollTop).toBe(0);
+  });
+
+  it('сбрасывает один раз на запрос: следующая прокрутка остаётся', () => {
+    const reset = createScrollReset();
+    const feed = box(700);
+
+    reset.request();
+    reset.apply(feed);
+    feed.scrollTop = 300;
+
+    expect(reset.apply(feed)).toBe(false);
+    expect(feed.scrollTop).toBe(300);
+  });
+});

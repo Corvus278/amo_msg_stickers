@@ -6,7 +6,7 @@ import type { GifFeed } from '../../../sources/gifs.types';
 import { errorMessage } from '../PickerProvider/errorMessage';
 import { usePicker } from '../PickerProvider/usePicker';
 
-import type { GifFeedState } from './useGifFeed.types';
+import type { FeedLoading, GifFeedState } from './useGifFeed.types';
 
 const GIF_SEARCH_DEBOUNCE_MS = 350;
 
@@ -69,6 +69,8 @@ export const useGifFeed = (
   const [term, setTerm] = useState(query.trim());
   const [gifs, setGifs] = useState<RemoteGif[]>([]);
   const [isNothingFound, setIsNothingFound] = useState(false);
+  const [loading, setLoading] = useState<FeedLoading | null>(null);
+  const [resetId, setResetId] = useState(0);
 
   /**
    * Номер последнего запроса: ответ устаревшего запроса не попадает в выдачу.
@@ -108,9 +110,13 @@ export const useGifFeed = (
         nextRef.current = null;
         setGifs([]);
         setIsNothingFound(false);
+        setResetId((id) => {
+          return id + 1;
+        });
       }
 
       isLoadingRef.current = true;
+      setLoading(shouldReset ? 'first' : 'more');
 
       try {
         const page = await fetchGifs(
@@ -132,7 +138,10 @@ export const useGifFeed = (
       } catch (error) {
         if (request === requestRef.current) showError(`GIF: ${errorMessage(error)}`);
       } finally {
-        if (request === requestRef.current) isLoadingRef.current = false;
+        if (request === requestRef.current) {
+          isLoadingRef.current = false;
+          setLoading(null);
+        }
       }
     },
     [env, feed, term, showError]
@@ -146,6 +155,7 @@ export const useGifFeed = (
     return () => {
       requestRef.current += 1;
       isLoadingRef.current = false;
+      setLoading(null);
     };
   }, [isOpen, load, giphyKey, klipyKey]);
 
@@ -160,5 +170,5 @@ export const useGifFeed = (
     [load]
   );
 
-  return { gifs, isNothingFound, checkScroll };
+  return { gifs, term, loading, isNothingFound, resetId, checkScroll };
 };
