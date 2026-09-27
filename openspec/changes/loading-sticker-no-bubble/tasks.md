@@ -1,12 +1,12 @@
 ## 1. Подготовка
 
-- [ ] 1.1 Issue «Стикер при открытии чата показан в пузыре и в размере фото, пока картинка грузится» с меткой `bug`:
+- [x] 1.1 Issue «Стикер при открытии чата показан в пузыре и в размере фото, пока картинка грузится» с меткой `bug`:
   наблюдаемое поведение (заглушка 420 px в пузыре → скачок до 208 px без пузыря) и критерий готовности из спеки,
-  зависимость от правки amo; назначить на себя (`gh issue edit <N> --add-assignee @me`); проверка:
-  `gh issue view <N>` — исполнитель стоит
-- [ ] 1.2 Ветка `fix/<N>-loading-sticker-no-bubble` от свежего `master`, файлы change переносятся в неё; проверка:
-  `git log origin/master..HEAD` пуст до первых коммитов
-- [ ] 1.3 Версия `0.11.1` в `package.json` (`pnpm version 0.11.1 --no-git-tag-version`),
+  зависимость от правки amo; назначить на себя (`gh issue edit 48 --add-assignee @me`); проверка:
+  `gh issue view 48` — исполнитель стоит
+- [x] 1.2 Ветка `fix/48-loading-sticker-no-bubble` от свежего `master`, файлы change переносятся в неё; проверка:
+  `git log origin/master..HEAD` — только коммиты change
+- [ ] 1.3 Версия `0.11.2` в `package.json` (`pnpm version 0.11.2 --no-git-tag-version`),
   `src/extension/manifest.json` и `@version` в `build.mjs`; проверка:
   `node scripts/check-version.mjs --base origin/master` — код 0
 
