@@ -1,3 +1,5 @@
+import { readAmoLocale } from './i18n/locale';
+import { setLocale, t } from './i18n/translate';
 import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
 import { composerOf, findComposers, injectMessageStyle, isDarkTheme } from './amoDom';
@@ -55,6 +57,7 @@ const setIconOpen = (button: HTMLElement | null, isOpen: boolean) => {
 };
 
 export const start = (host: Host) => {
+  setLocale(readAmoLocale());
   if (window.__amoStickers) return;
   window.__amoStickers = true;
   injectMessageStyle();
@@ -167,7 +170,7 @@ export const start = (host: Host) => {
     /**
      * title на inner, а не на wrap: иначе подсказка всплывает над всем попапом.
      */
-    inner.title = 'Стикеры и GIF';
+    inner.title = t('picker.title');
     inner.innerHTML = stickerIcon(ICON_CLASS);
     inner.addEventListener('click', () => {
       hoverPopup.click(wrap);
