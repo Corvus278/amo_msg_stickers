@@ -10,6 +10,7 @@ import { feedActiveSection } from '../feedActiveSection/feedActiveSection';
 import type { FeedSection } from '../feedSections/feedSections.types';
 import { createScrollLock } from '../scrollLock/scrollLock';
 import { sectionScrollPlan } from '../sectionScrollPlan/sectionScrollPlan';
+import { wheelDeltaPx } from '../wheelDeltaPx/wheelDeltaPx';
 
 import type { FeedWindow } from './useFeedWindow.types';
 
@@ -25,10 +26,9 @@ const SCROLL_QUIET_MS = 150;
  * Ввод пользователя на ленте, который прерывает плавный переход к разделу: колесо, касание,
  * нажатие (в том числе на полосу прокрутки) и клавиатура.
  *
- * Колесо слушается не пассивно: у пассивного слушателя браузер прокручивает ленту колесом
- * параллельно с ним, и остановка перехода по прочитанной до этого прокрутке съедает шаг колеса,
- * который его прервал. Слушатели стоят только на время перехода — в остальное время колесо
- * ленты не ждёт главный поток.
+ * Колесо слушается не пассивно: шаг колеса, который прервал переход, слушатель отменяет и
+ * делает сам. Слушатели стоят только на время перехода — в остальное время колесо ленты не
+ * ждёт главный поток.
  */
 const INTERRUPT_EVENTS = [
   ['wheel', false],
@@ -95,11 +95,33 @@ export const useFeedWindow = (
      * Удержание есть — лента ещё едет к разделу. Chrome не обрывает плавную программную
      * прокрутку вводом пользователя: без мгновенной остановки лента доехала бы до раздела
      * поверх колеса, касания и клавиш.
+     *
+     * Шаг колеса, который прервал переход, лента делает сама, а родную прокрутку колесом
+     * отменяет: Chrome вливает его в ещё живую программную прокрутку, и остановка на месте
+     * съедала бы его. Дальше колесо прокручивает ленту само — слушатели снимаются вместе с
+     * удержанием. Колесо с Ctrl — масштаб страницы, а не прокрутка: его не отменяем.
      */
-    const handleUserInput = () => {
+    const handleUserInput = (event: Event) => {
       if (lock.current() === null) return;
 
       lock.interrupt();
+
+      if (event instanceof WheelEvent && !event.ctrlKey) {
+        event.preventDefault();
+        element.scrollTo({
+          top:
+            element.scrollTop +
+            wheelDeltaPx({
+              delta: event.deltaY,
+              deltaMode: event.deltaMode,
+              pageHeight: element.clientHeight,
+            }),
+          behavior: scrollMotion(),
+        });
+
+        return;
+      }
+
       element.scrollTo({ top: element.scrollTop, behavior: 'instant' });
     };
 
