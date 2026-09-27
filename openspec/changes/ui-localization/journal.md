@@ -102,3 +102,11 @@ gmNetwork.ts: NETWORK/TIMEOUT/ABORT/BODY_NOT_BYTES — ключи, new Error(t(K
 П.4: translate.ts экспортирует messageTemplate(key) и PLACEHOLDER; renderMessage и fetchResponse берут их оттуда; PLACEHOLDER_SPLIT (без g, для split) не дубль.
 Отступление: в openspec/specs/telegram-import нет сценария «ни один стикер не импортирован» — предложить дельтой.
 Аудит: ok с первого круга. Долг: CLAUDE.md:332 — строка 131 символ при ширине 120.
+
+### Итог
+
+Гейт pnpm lint && pnpm test — ok (68 файлов, 810 тестов); pnpm build ok; openspec validate --strict ok.
+Покрытие: 22/22 задач, требований 7, сценариев 19, без проверки 0 (после F1).
+Итоговый аудит: ok; F1 (ответы пользователя: первый отказ импорта, methodFailed/noImageTrack, importProgress, дубли словаря) — ok, перепроверено итоговым аудитором.
+Открыто для /opsx:update до архива: сценарий telegram-import «ни один стикер не импортирован → причина первого отказа»; формулировка проверки 3.3 про буквы обложки своего пака (недостижима).
+Долг: CLAUDE.md:332 и :335 — переносы строк; экспорты только для тестов (formatMessage, resolveLocale, renderTemplate); «Userscript в менеджере» — только тест баннера; строка статуса перекрывает «Сохранить» на ~9 px (не язык, отдельный issue); «Лимит 5 МБ» после F1 в живом amo не перепроверялся (покрыт двумя юнит-звеньями).
