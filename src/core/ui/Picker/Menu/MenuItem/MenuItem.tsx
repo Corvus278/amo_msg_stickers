@@ -6,7 +6,7 @@ import type { MenuItemProps } from './MenuItem.types';
 export const menuItemVariants = cva(
   [
     'flex h-8 w-full shrink-0 cursor-pointer items-center whitespace-nowrap rounded-md bg-transparent px-3',
-    'text-left font-primary text-xsm leading-[normal] outline-none transition-colors duration-base',
+    'text-left font-primary text-xsm leading-[normal] transition-colors duration-base',
     'hover:bg-cadetGray-30/[.14] focus-visible:bg-cadetGray-30/[.14]',
     'dark:hover:bg-white-0/[.07] dark:focus-visible:bg-white-0/[.07]',
   ],

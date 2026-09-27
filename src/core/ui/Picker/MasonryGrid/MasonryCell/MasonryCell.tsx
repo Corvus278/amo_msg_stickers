@@ -1,4 +1,3 @@
-import { cva } from 'class-variance-authority';
 import type {
   FunctionComponent as FC,
   TargetedKeyboardEvent,
@@ -7,6 +6,7 @@ import type {
 
 import type { SendItem } from '../../../../db.types';
 import { gifCellName } from '../../cellName/cellName';
+import { CellSpinner } from '../../CellSpinner/CellSpinner';
 import { CellMenu } from '../../Menu/CellMenu/CellMenu';
 import { isMenuKey } from '../../Menu/menuKey/menuKey';
 import { useContextMenu } from '../../Menu/useContextMenu/useContextMenu';
@@ -17,20 +17,21 @@ import type { MasonryCellProps } from './MasonryCell.types';
 /**
  * Размер ячейки задан раскладкой до загрузки превью: иначе колонки перестраивались бы на
  * каждой загруженной картинке. Заливка поля ввода видна, пока превью грузится.
+ *
+ * Занятая отправкой ячейка — `disabled`: не принимает клики до конца отправки, превью
+ * приглушено, а индикатор поверх него — нет.
  */
-const cellVariants = cva(
-  [
-    'absolute block cursor-pointer overflow-hidden rounded-lg p-0',
-    'bg-cadetGray-30/[.12] dark:bg-white-0/[.06]',
-  ],
-  {
-    variants: {
-      isBusy: {
-        true: 'pointer-events-none opacity-40',
-      },
-    },
-  }
-);
+const CELL_CLASS = [
+  'group absolute block cursor-pointer overflow-hidden rounded-lg p-0',
+  'bg-cadetGray-30/[.12] dark:bg-white-0/[.06] disabled:pointer-events-none',
+].join(' ');
+
+/**
+ * Наведение — затемнение поверх превью: фон ячейки закрыт картинкой, и подсветить её фоном,
+ * как стикер, нельзя.
+ */
+const HOVER_CLASS =
+  'pointer-events-none absolute inset-0 bg-black-0/0 transition-colors duration-base group-hover:bg-black-0/[.12]';
 
 /**
  * Ячейка GIF в ленте, абсолютно поставленная на место из раскладки. Контекстное меню
@@ -78,8 +79,9 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
         type="button"
         aria-label={`Отправить ${name}`}
         aria-haspopup={onRemove ? 'menu' : undefined}
+        aria-busy={isBusy}
         disabled={isBusy}
-        className={cellVariants({ isBusy })}
+        className={CELL_CLASS}
         style={box}
         onClick={handleCellClick}
         onContextMenu={handleCellContextMenu}
@@ -89,8 +91,12 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
           src={previewUrl}
           alt=""
           loading="lazy"
-          className="pointer-events-none block size-full object-cover"
+          className="pointer-events-none block size-full object-cover group-disabled:opacity-40"
         />
+
+        <span aria-hidden="true" className={HOVER_CLASS} />
+
+        {isBusy && <CellSpinner />}
       </button>
 
       {opening && (

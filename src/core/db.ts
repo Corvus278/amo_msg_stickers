@@ -121,7 +121,7 @@ export const ensureCustomPack = async (): Promise<Pack> => {
   return pack;
 };
 
-export const listStickers = async (packId: string): Promise<StickerRec[]> => {
+const listStickers = async (packId: string): Promise<StickerRec[]> => {
   const index = (await store(STORE.stickers)).index(PACK_ID_INDEX);
   const stickers = await promisify<StickerRec[]>(index.getAll(packId));
 
@@ -298,11 +298,13 @@ export const listRecent = async (kind: RecentKind): Promise<RecentRec[]> => {
 export const clearRecent = async (kind: RecentKind) => {
   const all = await promisify<RecentRec[]>((await store(STORE.recent)).getAll());
 
-  await deleteRecentKeys(
-    recentOfKind(all, kind).map(({ key }) => {
-      return key;
-    })
-  );
+  const keys = all.reduce<string[]>((acc, { key, item }) => {
+    if (recentKindOf(item) === kind) acc.push(key);
+
+    return acc;
+  }, []);
+
+  await deleteRecentKeys(keys);
 };
 
 export const deleteRecent = async (item: SendItem) => {

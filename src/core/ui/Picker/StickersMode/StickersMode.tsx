@@ -1,13 +1,15 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import type { SendItem } from '../../../db.types';
 import { useCoverBitmaps } from '../PackCover/useCoverBitmaps/useCoverBitmaps';
 import { SectionTabs } from '../SectionTabs/SectionTabs';
 import { StickerFeed } from '../StickerFeed/StickerFeed';
 import { RECENT_SECTION_ID } from '../usePickerView/sectionIds';
 
+import type { FeedSticker } from './feedSections/feedSections.types';
+import { cellRemovalTargets, sectionRemovalTargets } from './removalFocus/removalFocus';
 import { useFeedSections } from './useFeedSections/useFeedSections';
 import { useFeedWindow } from './useFeedWindow/useFeedWindow';
+import { useRemovalFocus } from './useRemovalFocus/useRemovalFocus';
 import type { StickersModeProps } from './StickersMode.types';
 
 /**
@@ -29,12 +31,18 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
     isCurrent
   );
   const bitmaps = useCoverBitmaps(isOpen);
+  const expectRemoval = useRemovalFocus(sections, scrollRef, isOpen);
+  const feed = sections || [];
 
   const handleFeedScroll = () => {
     trackScroll();
   };
 
-  const handleCellDelete = (sectionId: string, item: SendItem) => {
+  const handleCellDelete = (sectionId: string, cell: FeedSticker) => {
+    const { key, item } = cell;
+
+    expectRemoval(cellRemovalTargets(feed, sectionId, key));
+
     if (sectionId === RECENT_SECTION_ID) {
       void removeRecent(item);
     } else if (item.kind === 'local') {
@@ -43,19 +51,21 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
   };
 
   const handlePackDelete = (packId: string) => {
+    expectRemoval(sectionRemovalTargets(feed, packId));
     void removePack(packId);
   };
 
   const handleRecentClear = () => {
+    expectRemoval(sectionRemovalTargets(feed, RECENT_SECTION_ID));
     void clearRecentStickers();
   };
 
   return (
     <>
-      <SectionTabs sections={sections || []} activeId={activeId} bitmaps={bitmaps} />
+      <SectionTabs sections={feed} activeId={activeId} bitmaps={bitmaps} />
 
       <StickerFeed
-        sections={sections || []}
+        sections={feed}
         layout={layout}
         range={range}
         activeId={activeId}

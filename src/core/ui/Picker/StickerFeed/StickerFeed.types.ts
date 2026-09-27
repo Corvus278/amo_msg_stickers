@@ -1,6 +1,5 @@
 import type { RefObject } from 'preact';
 
-import type { SendItem } from '../../../db.types';
 import type { RowRange, StickerLayout } from '../stickerLayout/stickerLayout.types';
 import type {
   FeedSection,
@@ -41,7 +40,7 @@ export type StickerFeedProps = {
   /**
    * Колбэк на удаление элемента ячейки раздела.
    */
-  onCellDelete: (sectionId: string, item: SendItem) => void;
+  onCellDelete: (sectionId: string, cell: FeedSticker) => void;
 
   /**
    * Колбэк на подтверждённое удаление пака из заголовка его раздела.

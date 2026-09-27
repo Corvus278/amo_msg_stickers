@@ -1,4 +1,3 @@
-import type { SendItem } from '../../../../db.types';
 import type { StickerRow } from '../../stickerLayout/stickerLayout.types';
 import type { FeedSticker } from '../../StickersMode/feedSections/feedSections.types';
 
@@ -17,5 +16,5 @@ export type FeedRowProps = {
    * Колбэк на удаление элемента ячейки: стикера из пака или элемента из недавних — по разделу
    * ряда.
    */
-  onCellDelete: (item: SendItem) => void;
+  onCellDelete: (cell: FeedSticker) => void;
 };

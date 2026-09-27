@@ -1,10 +1,10 @@
-import { cva } from 'class-variance-authority';
 import type {
   FunctionComponent as FC,
   TargetedKeyboardEvent,
   TargetedMouseEvent,
 } from 'preact';
 
+import { CellSpinner } from '../CellSpinner/CellSpinner';
 import { CellMenu } from '../Menu/CellMenu/CellMenu';
 import { isMenuKey } from '../Menu/menuKey/menuKey';
 import { useContextMenu } from '../Menu/useContextMenu/useContextMenu';
@@ -13,21 +13,14 @@ import { useCellSend } from '../useCellSend/useCellSend';
 import type { StickerCellProps } from './StickerCell.types';
 
 /**
- * Занятая отправкой ячейка приглушена и не принимает клики до конца отправки.
+ * Занятая отправкой ячейка — `disabled`: не принимает клики до конца отправки, картинка
+ * приглушена, а индикатор поверх неё — нет.
  */
-const cellVariants = cva(
-  [
-    'flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg bg-transparent p-1',
-    'transition-colors duration-base hover:bg-cadetGray-30/[.14] dark:hover:bg-white-0/[.07]',
-  ],
-  {
-    variants: {
-      isBusy: {
-        true: 'pointer-events-none opacity-40',
-      },
-    },
-  }
-);
+const CELL_CLASS = [
+  'group relative flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg bg-transparent p-1',
+  'transition-colors duration-base hover:bg-cadetGray-30/[.14] dark:hover:bg-white-0/[.07]',
+  'disabled:pointer-events-none',
+].join(' ');
 
 /**
  * Ячейка стикера: отправка нажатием, удаление — пунктом контекстного меню.
@@ -36,7 +29,7 @@ const cellVariants = cva(
  * ряда оно места не занимает — у него `position: fixed`.
  */
 export const StickerCell: FC<StickerCellProps> = (props) => {
-  const { item, url, name, removeKind, onRemove } = props;
+  const { id, item, url, name, removeKind, onRemove } = props;
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
 
@@ -70,10 +63,12 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
     <>
       <button
         type="button"
+        id={id}
         aria-label={`Отправить ${name}`}
         aria-haspopup="menu"
+        aria-busy={isBusy}
         disabled={isBusy}
-        className={cellVariants({ isBusy })}
+        className={CELL_CLASS}
         onClick={handleSendClick}
         onContextMenu={handleSendContextMenu}
         onKeyDown={handleSendKeyDown}
@@ -82,8 +77,10 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
           src={url}
           alt=""
           loading="lazy"
-          className="pointer-events-none block max-h-full max-w-full object-contain"
+          className="pointer-events-none block max-h-full max-w-full object-contain group-disabled:opacity-40"
         />
+
+        {isBusy && <CellSpinner />}
       </button>
 
       {opening && (

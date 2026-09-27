@@ -3,6 +3,11 @@ import type { CellRemoveKind } from '../Menu/CellMenu/CellMenu.types';
 
 export type StickerCellProps = {
   /**
+   * id кнопки ячейки — по нему ячейку находит фокус после удаления соседней.
+   */
+  id?: string;
+
+  /**
    * Что отправляет ячейка по нажатию.
    */
   item: SendItem;

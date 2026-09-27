@@ -13,9 +13,9 @@ import type { MasonryGridProps } from './MasonryGrid.types';
 
 /**
  * Отступы по бокам — у прокручиваемого элемента: ширина его содержимого, по которой считается
- * ширина колонки, уже без них и без полосы прокрутки.
+ * ширина колонки, уже без них и без полосы прокрутки. Полоса — `feed-scroll` из `picker.css`.
  */
-const GRID_CLASS = 'min-h-0 flex-1 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]';
+const GRID_CLASS = 'feed-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-2';
 
 const SKELETON_CLASS = 'absolute rounded-lg bg-cadetGray-30/[.12] dark:bg-white-0/[.06]';
 

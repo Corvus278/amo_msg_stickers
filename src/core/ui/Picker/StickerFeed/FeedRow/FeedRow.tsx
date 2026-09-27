@@ -5,6 +5,7 @@ import { usePicker } from '../../PickerProvider/usePicker';
 import { StickerCell } from '../../StickerCell/StickerCell';
 import { COLUMNS, GAP } from '../../stickerLayout/stickerLayout';
 import { RECENT_SECTION_ID } from '../../usePickerView/sectionIds';
+import { cellId } from '../cellId';
 
 import type { FeedRowProps } from './FeedRow.types';
 
@@ -42,15 +43,22 @@ export const FeedRow: FC<FeedRowProps> = (props) => {
 
   return (
     <div className="absolute inset-x-0 grid" style={{ ...position, ...GRID_STYLE }}>
-      {items.map(({ key, item, sticker, name }) => {
+      {items.map((cell) => {
+        const { key, item, sticker, name } = cell;
+
+        const handleCellRemove = () => {
+          onCellDelete(cell);
+        };
+
         return (
           <StickerCell
             key={key}
+            id={cellId(sectionId, key)}
             item={item}
             url={urlOf(sticker.id, sticker.blob)}
             name={name}
             removeKind={removeKind}
-            onRemove={onCellDelete}
+            onRemove={handleCellRemove}
           />
         );
       })}
