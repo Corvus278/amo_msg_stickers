@@ -170,7 +170,9 @@ describe('openVideoSource', () => {
   it('таймаут loadeddata — ошибка и видео освобождено', async () => {
     vi.useFakeTimers();
     const opening = openVideoSource(new Blob(), 512);
-    const assertion = expect(opening).rejects.toThrow('timeout: loadeddata');
+    const assertion = expect(opening).rejects.toThrow(
+      'Видео не ответило вовремя (loadeddata)'
+    );
 
     await vi.advanceTimersByTimeAsync(EVENT_TIMEOUT_MS);
     await assertion;

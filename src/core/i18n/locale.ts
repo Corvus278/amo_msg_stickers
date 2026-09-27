@@ -25,15 +25,9 @@ export const resolveLocale = (
 ): Locale => {
   const [primary] = (stored || languages[0] || '').split(TAG_SEPARATOR);
 
-  switch (primary?.toLowerCase()) {
-    case 'en': {
-      return 'en';
-    }
+  if (primary?.toLowerCase() === 'en') return 'en';
 
-    default: {
-      return 'ru';
-    }
-  }
+  return 'ru';
 };
 
 /**

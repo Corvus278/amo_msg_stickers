@@ -1,15 +1,9 @@
 import type { ComponentChild } from 'preact';
 
 import type { MessageKey } from '../../i18n/i18n.types';
-import { messageTemplate } from '../../i18n/translate';
+import { messageTemplate, PLACEHOLDER } from '../../i18n/translate';
 
 import type { MessageNodes, TemplateNodes } from './renderMessage.types';
-
-/**
- * Группа захвата оставляет имя подстановки в результате `split`: куски текста стоят на чётных местах,
- * имена — на нечётных.
- */
-const PLACEHOLDER_SPLIT = /\{(\w+)\}/;
 
 /**
  * Текст склеивается с соседним текстом: строка без узлов остаётся одним текстовым узлом.
@@ -32,26 +26,26 @@ const pushText = (children: ComponentChild[], text: string) => {
 };
 
 /**
- * Подстановка без узла остаётся в тексте как есть — пропуск виден в интерфейсе, как у `t`.
+ * Подстановка без узла остаётся в тексте как есть — пропуск виден в интерфейсе, как у `t`. Группа
+ * захвата `PLACEHOLDER` оставляет имя подстановки в результате `split`: куски текста стоят на чётных
+ * местах, имена — на нечётных.
  *
  * @param template — строка с подстановками `{name}`
  * @param nodes — узлы подстановок
  * @returns узлы строки по порядку: текст и узлы подстановок на своих местах
  */
 export const renderTemplate = (template: string, nodes: TemplateNodes) => {
-  return template
-    .split(PLACEHOLDER_SPLIT)
-    .reduce<ComponentChild[]>((children, part, index) => {
-      const isName = index % 2 === 1;
+  return template.split(PLACEHOLDER).reduce<ComponentChild[]>((children, part, index) => {
+    const isName = index % 2 === 1;
 
-      if (isName && Object.hasOwn(nodes, part)) {
-        children.push(nodes[part]);
-      } else {
-        pushText(children, isName ? `{${part}}` : part);
-      }
+    if (isName && Object.hasOwn(nodes, part)) {
+      children.push(nodes[part]);
+    } else {
+      pushText(children, isName ? `{${part}}` : part);
+    }
 
-      return children;
-    }, []);
+    return children;
+  }, []);
 };
 
 /**
