@@ -24,3 +24,11 @@ dist/amo-stickers.user.js — 318 075 Б (gzip -9: 96 609 Б)
 Отступление: RecentKind в db.types.ts (вне файлов группы) — по typescript.md.
 Аудит: ok с первого круга, 0 кругов доработки.
 Долг: pickerMode.test.ts:17 `|| null` маскирует случай ''; db.ts:301 clearRecent — filter+map двумя проходами (code-style #15); db.ts:163 countStickers без jsdoc; clearRecent/listAllStickers/countStickers/readMode/writeMode пока без потребителей — проверить подключение на аудите G4/G5.
+
+### G2 · Геометрия лент
+
+Решения: K4 — buildStickerLayout {rows, sectionTops, total}, пустой раздел = заголовок + ряд cells с items: [] (место под подсказку), зазор 4 px только между рядами ячеек; visibleRows → [from, to); activeSection → string | null (null — пустая лента, отступление от K4 по задаче 3.2).
+K5 — splitColumns(sections, {count, width, gap}) → {tiles, total}, visibleTiles; skeletons — заглушки в конец каждой колонки; MasonryGrid переведён на новую сигнатуру без смены поведения (доли ширины, gap 0) до 7.1.
+Решения без заказчика: ACTIVE_SLACK = 1 px — раздел активен, если верх окна не дошёл до его заголовка меньше чем на 1 px (браузер округляет дробный верх при переходе по вкладке); заглушки GIF квадратные — пропорции будущих GIF заранее неизвестны.
+Аудит: ok с первого круга.
+Долг: HEADER_HEIGHT = 32 объявлен дважды (stickerLayout.ts:12, splitColumns.ts:13); геометрия пока без потребителей — подключение проверить на аудите G5/G6.

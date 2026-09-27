@@ -1,10 +1,18 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import type { RemoteGif } from '../../../db.types';
+
 import { MasonryCell } from './MasonryCell/MasonryCell';
 import { splitColumns } from './splitColumns/splitColumns';
 import type { MasonryGridProps } from './MasonryGrid.types';
 
 const COLUMN_COUNT = 2;
+
+/**
+ * Геометрия в долях ширины колонки и без зазоров: ширина колонки в пикселях до рендера неизвестна, колонки
+ * тянутся flex-ом.
+ */
+const PROPORTIONAL = { count: COLUMN_COUNT, width: 1, gap: 0 };
 
 /**
  * Лента GIF в две колонки с сохранением пропорций: GIF разной формы, и квадратная сетка
@@ -16,7 +24,19 @@ const COLUMN_COUNT = 2;
  */
 export const MasonryGrid: FC<MasonryGridProps> = (props) => {
   const { gifs } = props;
-  const columns = splitColumns(gifs, COLUMN_COUNT);
+  const { tiles } = splitColumns([{ id: 'feed', items: gifs }], PROPORTIONAL);
+  const columns = tiles.reduce<RemoteGif[][]>(
+    (acc, tile) => {
+      if (tile.kind === 'item') {
+        acc[tile.column]?.push(tile.item);
+      }
+
+      return acc;
+    },
+    Array.from({ length: COLUMN_COUNT }, (): RemoteGif[] => {
+      return [];
+    })
+  );
 
   return (
     <div className="flex items-start gap-1">
