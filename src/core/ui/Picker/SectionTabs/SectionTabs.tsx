@@ -1,10 +1,10 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { PackCover } from '../PackCover/PackCover';
+import { PlusIcon } from '../PlusIcon/PlusIcon';
 import { usePickerView } from '../usePickerView/usePickerView';
 
 import { ClockIcon } from './ClockIcon/ClockIcon';
-import { PlusIcon } from './PlusIcon/PlusIcon';
 import { SectionTab } from './SectionTab/SectionTab';
 import { useRevealTab } from './useRevealTab/useRevealTab';
 import { ADD_TAB_ID, FEED_PANEL_ID, sectionTabId } from './sectionTabIds';

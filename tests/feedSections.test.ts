@@ -58,13 +58,34 @@ describe('feedSections', () => {
     ]);
   });
 
-  it('пак без стикеров — раздел без ячеек, у «Моих стикеров» подсказка про «+»', () => {
+  it('пак без стикеров — раздел без ячеек: у «Моих стикеров» плитка без подсказки, у пака — «Пак пуст» без плитки', () => {
     const [custom, packA] = feedSections(PACKS, new Map([['tg:a', []]]), []);
 
     expect(custom?.items).toEqual([]);
-    expect(custom?.hint).toBe('Создайте свой стикер во вкладке «+»');
+    expect(custom?.hasCreateTile).toBe(true);
+    expect(custom?.hint).toBe('');
     expect(packA?.items).toEqual([]);
+    expect(packA?.hasCreateTile).toBe(false);
     expect(packA?.hint).toBe('Пак пуст');
+  });
+
+  it('плитка «Создать стикер» — только у «Моих стикеров», и со стикерами тоже', () => {
+    const sections = feedSections(
+      PACKS,
+      new Map([...BY_PACK, ['custom', [sticker('c1', 'custom')]]]),
+      [recent('a1')]
+    );
+
+    expect(
+      sections.map(({ id, hasCreateTile }) => {
+        return [id, hasCreateTile];
+      })
+    ).toEqual([
+      ['recent', false],
+      ['custom', true],
+      ['tg:a', false],
+      ['tg:b', false],
+    ]);
   });
 
   it('стикеры пака идут в порядке группы, с отправкой своего стикера и именем по эмодзи', () => {

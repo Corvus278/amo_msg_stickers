@@ -12,15 +12,36 @@ import type { StickerSection } from '../src/core/ui/Picker/stickerLayout/sticker
  *
  * @param id — идентификатор раздела
  * @param count — число стикеров
+ * @param hasCreateTile — раздел заканчивается плиткой «Создать стикер»
  * @returns раздел
  */
-const section = (id: string, count: number): StickerSection<number> => {
+const section = (
+  id: string,
+  count: number,
+  hasCreateTile = false
+): StickerSection<number> => {
   return {
     id,
     items: Array.from({ length: count }, (_, index) => {
       return index;
     }),
+    hasCreateTile,
   };
+};
+
+/**
+ * Ряды с признаком плитки — геометрию проще сравнивать литералом.
+ *
+ * @param sections — разделы
+ * @param width — ширина ленты
+ * @returns вид, раздел, верх, число стикеров и признак плитки каждого ряда
+ */
+const tileShape = (sections: StickerSection<number>[], width: number): unknown[] => {
+  return buildStickerLayout(sections, width).rows.map(
+    ({ kind, sectionId, top, items, hasCreateTile }) => {
+      return [kind, sectionId, top, items.length, hasCreateTile];
+    }
+  );
 };
 
 /**
@@ -95,6 +116,65 @@ describe('buildStickerLayout', () => {
     expect(buildStickerLayout([section('custom', 6)], 330).total).toBeCloseTo(
       32 + 62.8 + 4 + 62.8
     );
+  });
+
+  it('пустой раздел с плиткой — один ряд с плиткой без стикеров', () => {
+    expect(tileShape([section('custom', 0, true)], 336)).toEqual([
+      ['header', 'custom', 0, 0, false],
+      ['cells', 'custom', 32, 0, true],
+    ]);
+  });
+
+  it('3 стикера — плитка в том же ряду', () => {
+    expect(tileShape([section('custom', 3, true)], 336)).toEqual([
+      ['header', 'custom', 0, 0, false],
+      ['cells', 'custom', 32, 3, true],
+    ]);
+  });
+
+  it('5 стикеров при 5 колонках — второй ряд из одной плитки', () => {
+    expect(tileShape([section('custom', 5, true)], 336)).toEqual([
+      ['header', 'custom', 0, 0, false],
+      ['cells', 'custom', 32, 5, false],
+      ['cells', 'custom', 100, 0, true],
+    ]);
+  });
+
+  it('10 стикеров при 5 колонках — третий ряд из плитки, следующий раздел сдвинут на ряд', () => {
+    const withTile = buildStickerLayout(
+      [section('custom', 10, true), section('tg:a', 2)],
+      336
+    );
+    const withoutTile = buildStickerLayout(
+      [section('custom', 10), section('tg:a', 2)],
+      336
+    );
+
+    expect(tileShape([section('custom', 10, true)], 336)).toEqual([
+      ['header', 'custom', 0, 0, false],
+      ['cells', 'custom', 32, 5, false],
+      ['cells', 'custom', 100, 5, false],
+      ['cells', 'custom', 168, 0, true],
+    ]);
+    expect(withTile.sectionTops).toEqual([
+      { sectionId: 'custom', top: 0 },
+      { sectionId: 'tg:a', top: 232 },
+    ]);
+    expect(withTile.sectionTops[1]?.top).toBe(
+      (withoutTile.sectionTops[1]?.top || 0) + 64 + 4
+    );
+    expect(withTile.total).toBe(withoutTile.total + 64 + 4);
+  });
+
+  it('раздел без плитки считается как прежде, у всех его рядов плитки нет', () => {
+    expect(tileShape(SAMPLE, 336)).toEqual([
+      ['header', 'custom', 0, 0, false],
+      ['cells', 'custom', 32, 5, false],
+      ['cells', 'custom', 100, 2, false],
+      ['header', 'tg:empty', 164, 0, false],
+      ['cells', 'tg:empty', 196, 0, false],
+    ]);
+    expect(buildStickerLayout(SAMPLE, 336).total).toBe(260);
   });
 
   it('без разделов — пустая лента', () => {

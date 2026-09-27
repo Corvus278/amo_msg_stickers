@@ -26,3 +26,11 @@ centerScrollLeft, sectionScrollPlan (прыжок только при строг
 Отступление: удаление revealScrollLeft перенесено в G5.
 Аудит: ok с первого круга.
 Долг: K3 в plan.md пишет schedule обязательным и ScheduleTimer из hoverPopup.ts (фактически необязательный, тип из hoverPopup.types.ts); jsdoc dispose не говорит, что current() после него отдаёт последнее значение; подключение K1–K4 проверяет итоговый аудит.
+
+### G3 · Плитка «Создать стикер»
+
+StickerSection.hasCreateTile (K5): слотов items.length + 1, плитка на последнем ряду раздела; плитка только у custom, подсказка CUSTOM_HINT удалена. PlusIcon перенесён в Picker/PlusIcon (K6).
+CreateTile лежит в StickerFeed/CreateTile/; переход motion-safe:transition-colors duration-base (K8); приглушённые цвета подобраны по стенду: рамка cadetGray-30/.4, знак /.6, тёмная — white-0/.2 и /.4.
+Стенд (исполнитель, headless Chrome): пустой раздел, 3 и 5 стикеров, обе темы, hover/focus, Tab, Enter → «Добавить стикеры», без контекстного меню, новый стикер встаёт перед плиткой.
+Аудит: ok с первого круга.
+Долг: CreateTile в FeedRow без явного key после ячеек с ключами.

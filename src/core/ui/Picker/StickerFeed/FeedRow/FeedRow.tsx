@@ -6,6 +6,7 @@ import { StickerCell } from '../../StickerCell/StickerCell';
 import { COLUMNS, GAP } from '../../stickerLayout/stickerLayout';
 import { RECENT_SECTION_ID } from '../../usePickerView/sectionIds';
 import { cellId } from '../cellId';
+import { CreateTile } from '../CreateTile/CreateTile';
 
 import type { FeedRowProps } from './FeedRow.types';
 
@@ -23,17 +24,19 @@ const HINT_CLASS =
 
 /**
  * Ряд ячеек ленты стикеров, абсолютно поставленный по своей геометрии: до пяти ячеек или
- * подсказка пустого раздела. Object URL стикера создаётся здесь — только для ячеек в окне ленты.
+ * подсказка пустого раздела. Плитка «Создать стикер» — последний слот ряда с `hasCreateTile`, в
+ * пустых «Моих стикерах» — вместо подсказки. Object URL стикера создаётся здесь — только для
+ * ячеек в окне ленты.
  */
 export const FeedRow: FC<FeedRowProps> = (props) => {
   const { row, hint, onCellDelete } = props;
   const { urlOf } = usePicker();
-  const { sectionId, top, height, items } = row;
+  const { sectionId, top, height, items, hasCreateTile } = row;
   const removeKind: CellRemoveKind =
     sectionId === RECENT_SECTION_ID ? 'recent' : 'sticker';
   const position = { top, height };
 
-  if (!items.length) {
+  if (!items.length && !hasCreateTile) {
     return (
       <div className={HINT_CLASS} style={position}>
         {hint}
@@ -62,6 +65,7 @@ export const FeedRow: FC<FeedRowProps> = (props) => {
           />
         );
       })}
+      {hasCreateTile && <CreateTile />}
     </div>
   );
 };

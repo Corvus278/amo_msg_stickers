@@ -41,9 +41,11 @@ const cellSide = (width: number): number => {
 /**
  * Раскладывает разделы ленты стикеров в ряды с известной геометрией — окно видимых рядов считается без рендера.
  *
- * Раздел — заголовок и ряды по 5 стикеров, последний ряд может быть неполным. Между соседними рядами ячеек —
- * зазор, заголовок прилегает к рядам вплотную: отступы вокруг названия — внутри его высоты. Пустой раздел
- * получает один ряд ячеек без стикеров высотой в ячейку — место под подсказку.
+ * Раздел — заголовок и ряды по 5 слотов, последний ряд может быть неполным. Слот — стикер или плитка «Создать
+ * стикер» после последнего стикера раздела с плиткой; полный последний ряд стикеров отдаёт плитку в новый ряд.
+ * Между соседними рядами ячеек — зазор, заголовок прилегает к рядам вплотную: отступы вокруг названия — внутри
+ * его высоты. Пустой раздел без плитки получает один ряд ячеек без стикеров высотой в ячейку — место под
+ * подсказку.
  *
  * @param sections — разделы в порядке ленты
  * @param width — ширина ленты в пикселях, без полосы прокрутки
@@ -58,12 +60,20 @@ export const buildStickerLayout = <T>(
   const sectionTops: SectionTop[] = [];
   let top = 0;
 
-  for (const { id: sectionId, items } of sections) {
+  for (const { id: sectionId, items, hasCreateTile } of sections) {
     sectionTops.push({ sectionId, top });
-    rows.push({ kind: 'header', sectionId, top, height: HEADER_HEIGHT, items: [] });
+    rows.push({
+      kind: 'header',
+      sectionId,
+      top,
+      height: HEADER_HEIGHT,
+      items: [],
+      hasCreateTile: false,
+    });
     top += HEADER_HEIGHT;
 
-    const rowCount = Math.max(1, Math.ceil(items.length / COLUMNS));
+    const slots = items.length + (hasCreateTile ? 1 : 0);
+    const rowCount = Math.max(1, Math.ceil(slots / COLUMNS));
 
     for (let index = 0; index < rowCount; index++) {
       if (index > 0) {
@@ -76,6 +86,7 @@ export const buildStickerLayout = <T>(
         top,
         height: side,
         items: items.slice(index * COLUMNS, (index + 1) * COLUMNS),
+        hasCreateTile: hasCreateTile && index === rowCount - 1,
       });
       top += side;
     }
