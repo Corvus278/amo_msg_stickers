@@ -42,10 +42,10 @@ export type FocusSection = {
   /**
    * Ячейки раздела в порядке показа.
    */
-  items: ReadonlyArray<{
+  items: readonly {
     /**
      * Ключ ячейки, уникальный в разделе.
      */
     key: string;
-  }>;
+  }[];
 };

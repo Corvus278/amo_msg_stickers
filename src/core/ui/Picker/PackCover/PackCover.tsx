@@ -3,13 +3,9 @@ import type { FunctionComponent as FC } from 'preact';
 import { CUSTOM_PACK_ID } from '../../../db';
 
 import { CoverCanvas } from './CoverCanvas/CoverCanvas';
+import { coverLetters } from './coverLetters/coverLetters';
 import { SmileIcon } from './SmileIcon/SmileIcon';
 import type { PackCoverProps } from './PackCover.types';
-
-/**
- * Длина подписи вкладки пака без обложки: больше двух букв в 34px вкладки не влезает.
- */
-const TITLE_LETTERS = 2;
 
 /**
  * Обложка вкладки пака — статичный первый кадр стикера-обложки пака, а если её нет в паке —
@@ -28,5 +24,5 @@ export const PackCover: FC<PackCoverProps> = (props) => {
 
   if (id === CUSTOM_PACK_ID) return <SmileIcon />;
 
-  return <>{title.slice(0, TITLE_LETTERS)}</>;
+  return <>{coverLetters(title)}</>;
 };

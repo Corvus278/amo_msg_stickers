@@ -6,7 +6,7 @@
  * @param count — число вкладок
  * @returns `null` — клавиша не навигационная
  */
-const nextIndex = (key: string, index: number, count: number): number | null => {
+export const nextIndex = (key: string, index: number, count: number): number | null => {
   switch (key) {
     case 'ArrowRight': {
       return (index + 1) % count;

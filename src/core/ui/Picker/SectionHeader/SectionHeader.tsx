@@ -17,7 +17,7 @@ const TITLE_CLASS =
 export const SectionHeader: FC<SectionHeaderProps> = (props) => {
   const { sectionId, title, top, height, onPackDelete, onRecentClear } = props;
 
-  const handleRecentConfirm = () => {
+  const handleClearConfirm = () => {
     onRecentClear();
   };
 
@@ -28,7 +28,7 @@ export const SectionHeader: FC<SectionHeaderProps> = (props) => {
   const renderAction = () => {
     switch (headerAction(sectionId)) {
       case 'clear': {
-        return <ClearRecentButton onConfirm={handleRecentConfirm} />;
+        return <ClearRecentButton onConfirm={handleClearConfirm} />;
       }
 
       case 'menu': {

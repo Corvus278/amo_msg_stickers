@@ -1,7 +1,6 @@
 import type { FunctionComponent as FC, TargetedKeyboardEvent } from 'preact';
 
 import { moveTabFocus } from '../../moveTabFocus/moveTabFocus';
-import { FEED_PANEL_ID } from '../sectionTabIds';
 
 import type { SectionTabProps } from './SectionTab.types';
 
@@ -27,7 +26,7 @@ const TAB_CLASS = [
  * вкладками ходят стрелками, `Home` и `End`, выбирают — кликом, Enter или пробелом.
  */
 export const SectionTab: FC<SectionTabProps> = (props) => {
-  const { id, title, isSelected, isFocusable, onSelect, children } = props;
+  const { id, title, controlsId, isSelected, isFocusable, onSelect, children } = props;
 
   const handleTabClick = () => {
     onSelect();
@@ -44,7 +43,7 @@ export const SectionTab: FC<SectionTabProps> = (props) => {
       id={id}
       title={title}
       aria-selected={isSelected}
-      aria-controls={FEED_PANEL_ID}
+      aria-controls={controlsId}
       tabIndex={isFocusable ? 0 : -1}
       className={TAB_CLASS}
       onClick={handleTabClick}

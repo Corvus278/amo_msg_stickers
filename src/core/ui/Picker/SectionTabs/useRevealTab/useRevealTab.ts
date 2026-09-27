@@ -1,5 +1,5 @@
 import type { RefObject } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useLayoutEffect, useRef } from 'preact/hooks';
 
 import { revealScrollLeft } from '../revealScrollLeft/revealScrollLeft';
 
@@ -11,13 +11,16 @@ import { revealScrollLeft } from '../revealScrollLeft/revealScrollLeft';
  * `offsetLeft` вкладки считается вместе с внутренним отступом полосы, поэтому отступ передаётся
  * расчёту: без него переход к первой вкладке увёл бы левый отступ полосы за край.
  *
+ * Прокрутка ставится в layout-эффекте, до отрисовки: в обычном эффекте кадр успел бы показать
+ * полосу со старой прокруткой, и вкладка прыгала бы на место.
+ *
  * @param activeId — раздел выбранной вкладки
  * @returns ссылка на полосу вкладок; полоса — `position: relative`, от неё считается `offsetLeft`
  */
 export const useRevealTab = (activeId: string | null): RefObject<HTMLDivElement> => {
   const stripRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const strip = stripRef.current;
     const tab = strip?.querySelector<HTMLElement>('[aria-selected="true"]');
 

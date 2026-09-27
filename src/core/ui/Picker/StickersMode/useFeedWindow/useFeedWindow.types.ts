@@ -3,21 +3,6 @@ import type { RefObject } from 'preact';
 import type { RowRange, StickerLayout } from '../../stickerLayout/stickerLayout.types';
 import type { FeedSticker } from '../feedSections/feedSections.types';
 
-/**
- * Размеры видимой области ленты.
- */
-export type FeedBox = {
-  /**
-   * Ширина содержимого без отступов и полосы прокрутки — по ней считается сторона ячейки.
-   */
-  width: number;
-
-  /**
-   * Высота видимой области.
-   */
-  height: number;
-};
-
 export type FeedWindow = {
   /**
    * Прокручиваемый элемент ленты.

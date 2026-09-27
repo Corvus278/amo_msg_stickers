@@ -45,6 +45,7 @@ export const Footer: FC = () => {
     <div className={FOOTER_CLASS}>
       <div role="tablist" aria-label="Режимы" className="flex items-center gap-0.5">
         <ModeTab mode="stickers" title="Стикеры" />
+
         <ModeTab mode="gifs" title="GIF" />
       </div>
 

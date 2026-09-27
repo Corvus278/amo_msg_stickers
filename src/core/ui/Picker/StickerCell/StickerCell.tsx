@@ -27,6 +27,9 @@ const CELL_CLASS = [
  *
  * Меню стоит рядом с кнопкой, а не внутри: кнопка внутри кнопки — невалидный HTML. В сетке
  * ряда оно места не занимает — у него `position: fixed`.
+ *
+ * `aria-haspopup` у кнопки нет: скринридер объявил бы её кнопкой меню, а Enter и пробел
+ * отправляют стикер — меню открывают только правый клик, клавиша меню и `Shift+F10`.
  */
 export const StickerCell: FC<StickerCellProps> = (props) => {
   const { id, item, url, name, removeKind, onRemove } = props;
@@ -65,7 +68,6 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
         type="button"
         id={id}
         aria-label={`Отправить ${name}`}
-        aria-haspopup="menu"
         aria-busy={isBusy}
         disabled={isBusy}
         className={CELL_CLASS}

@@ -7,7 +7,7 @@ import { ClockIcon } from './ClockIcon/ClockIcon';
 import { PlusIcon } from './PlusIcon/PlusIcon';
 import { SectionTab } from './SectionTab/SectionTab';
 import { useRevealTab } from './useRevealTab/useRevealTab';
-import { ADD_TAB_ID, sectionTabId } from './sectionTabIds';
+import { ADD_TAB_ID, FEED_PANEL_ID, sectionTabId } from './sectionTabIds';
 import type { SectionTabsProps } from './SectionTabs.types';
 
 /**
@@ -55,6 +55,7 @@ export const SectionTabs: FC<SectionTabsProps> = (props) => {
             key={id}
             id={sectionTabId(id)}
             title={title}
+            controlsId={FEED_PANEL_ID}
             isSelected={isSelected}
             isFocusable={hasActive ? isSelected : index === 0}
             onSelect={handleSectionSelect}

@@ -33,7 +33,8 @@ export type SectionAnchor = {
 
 export type PickerViewValue = {
   /**
-   * Режим попапа, выбранный нижним переключателем.
+   * Режим попапа: его выбирает нижний переключатель, а переход к разделу (`scrollToSection`)
+   * переключает в «Стикеры».
    */
   mode: PickerMode;
 

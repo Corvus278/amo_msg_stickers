@@ -21,7 +21,10 @@ export const scheduleTimeout: ScheduleTimer = (callback, ms) => {
   };
 };
 
-const NO_TIMER = () => {};
+/**
+ * Отмена таймера, которого нет: вызывается без проверки, запланирован ли таймер.
+ */
+export const NO_TIMER = () => {};
 
 const NOT_LEAVING = () => {
   return false;

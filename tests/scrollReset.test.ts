@@ -9,13 +9,18 @@ import type { ResetBox } from '../src/core/ui/Picker/MasonryGrid/scrollReset/scr
 type TestBox = { -readonly [Key in keyof ResetBox]: ResetBox[Key] };
 
 /**
+ * Ширина видимой ленты.
+ */
+const VISIBLE_WIDTH = 336;
+
+/**
  * Прокручиваемый элемент без браузера.
  *
  * @param scrollTop — прокрутка
  * @param clientWidth — ширина; 0 — элемент скрыт
  * @returns элемент ленты
  */
-const box = (scrollTop: number, clientWidth = 336): TestBox => {
+const box = (scrollTop: number, clientWidth = VISIBLE_WIDTH): TestBox => {
   return { scrollTop, clientWidth };
 };
 
@@ -46,7 +51,7 @@ describe('createScrollReset', () => {
 
     expect(reset.apply(feed)).toBe(false);
 
-    feed.clientWidth = 336;
+    feed.clientWidth = VISIBLE_WIDTH;
     feed.scrollTop = 420;
 
     expect(reset.apply(feed)).toBe(true);

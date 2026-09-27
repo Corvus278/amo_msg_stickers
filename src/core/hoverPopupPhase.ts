@@ -1,7 +1,5 @@
-import { scheduleTimeout } from './hoverPopup';
+import { NO_TIMER, scheduleTimeout } from './hoverPopup';
 import type { PanelPhase, PanelPhaseOptions, PanelPhaseState } from './hoverPopup.types';
-
-const NO_TIMER = () => {};
 
 /**
  * Фаза панели попапа с анимацией ухода: закрытая панель сначала остаётся видимой в фазе

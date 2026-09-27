@@ -23,7 +23,7 @@ const gif = (id: string): RemoteGif => {
   };
 };
 
-const RECENT = [gif('r1'), gif('r2')];
+const RECENT: [RemoteGif, RemoteGif] = [gif('r1'), gif('r2')];
 const TRENDS = [gif('t1'), gif('t2'), gif('t3')];
 
 describe('gifSections', () => {
@@ -123,9 +123,9 @@ describe('gifSections', () => {
 describe('recentGifs', () => {
   it('берёт GIF из записей недавних в их порядке и пропускает стикеры', () => {
     const records: RecentRec[] = [
-      { key: 'r:giphy:r2', ts: 3, item: { kind: 'remote', gif: RECENT[1] as RemoteGif } },
+      { key: 'r:giphy:r2', ts: 3, item: { kind: 'remote', gif: RECENT[1] } },
       { key: 'l:s1', ts: 2, item: { kind: 'local', stickerId: 's1' } },
-      { key: 'r:giphy:r1', ts: 1, item: { kind: 'remote', gif: RECENT[0] as RemoteGif } },
+      { key: 'r:giphy:r1', ts: 1, item: { kind: 'remote', gif: RECENT[0] } },
     ];
 
     expect(recentGifs(records)).toEqual([RECENT[1], RECENT[0]]);

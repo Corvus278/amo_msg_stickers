@@ -20,7 +20,7 @@ const storedMode = (value: string | null): ModeStorage => {
 };
 
 /**
- * Хранилище, которое бросает на чтении — как `localStorage` под запретом сайта.
+ * Хранилище, которое бросает на чтении и на записи — как `localStorage` под запретом сайта.
  */
 const THROWING_STORAGE: ModeStorage = {
   getItem: () => {

@@ -36,6 +36,9 @@ const HOVER_CLASS =
 /**
  * Ячейка GIF в ленте, абсолютно поставленная на место из раскладки. Контекстное меню
  * «Убрать из недавних» — только у недавних: найденные GIF не хранятся.
+ *
+ * `aria-haspopup` у кнопки нет: скринридер объявил бы её кнопкой меню, а Enter и пробел
+ * отправляют GIF — меню открывают только правый клик, клавиша меню и `Shift+F10`.
  */
 export const MasonryCell: FC<MasonryCellProps> = (props) => {
   const { id, gif, box, onRemove } = props;
@@ -79,7 +82,6 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
         type="button"
         id={id}
         aria-label={`Отправить ${name}`}
-        aria-haspopup={onRemove ? 'menu' : undefined}
         aria-busy={isBusy}
         disabled={isBusy}
         className={CELL_CLASS}

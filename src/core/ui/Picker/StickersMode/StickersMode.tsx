@@ -48,7 +48,7 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
 
     if (sectionId === RECENT_SECTION_ID) {
       void removeRecent(item);
-    } else if (item.kind === 'local') {
+    } else {
       void removeSticker(item.stickerId);
     }
   };

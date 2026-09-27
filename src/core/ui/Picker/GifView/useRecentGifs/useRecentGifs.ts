@@ -11,7 +11,9 @@ import type { RecentGifs } from './useRecentGifs.types';
 /**
  * Недавно отправленные GIF. Список перечитывается на каждое открытие пикера: отправка
  * закрывает его, и без этого отправленный GIF не поднялся бы наверх. Ответ, пришедший после
- * закрытия или после более свежего чтения, отбрасывается.
+ * закрытия или после более свежего чтения, отбрасывается. Так же отбрасывается и сбой уборки:
+ * панель после закрытия остаётся смонтированной, и ошибка забытого действия всплыла бы в статусе
+ * следующего открытия.
  *
  * @param isOpen — открыт ли пикер
  * @returns недавние GIF, свежие первыми, и их уборка
@@ -46,10 +48,12 @@ export const useRecentGifs = (isOpen: boolean): RecentGifs => {
 
   const remove = useCallback(
     async (gif: RemoteGif) => {
+      const request = requestRef.current;
+
       try {
         await deleteRecent({ kind: 'remote', gif });
       } catch (error) {
-        showError(errorMessage(error));
+        if (request === requestRef.current) showError(errorMessage(error));
 
         return;
       }
@@ -63,10 +67,12 @@ export const useRecentGifs = (isOpen: boolean): RecentGifs => {
    * Очищаются только недавние GIF: недавние стикеры живут в режиме «Стикеры» отдельно.
    */
   const clear = useCallback(async () => {
+    const request = requestRef.current;
+
     try {
       await clearRecent('gif');
     } catch (error) {
-      showError(errorMessage(error));
+      if (request === requestRef.current) showError(errorMessage(error));
 
       return;
     }

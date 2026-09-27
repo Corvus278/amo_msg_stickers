@@ -13,6 +13,10 @@ import type { PickerCallbacks, PickerHandle } from './createPicker.types';
 
 /**
  * Длительность ухода панели, мс — как у перехода `duration-lg` панели и у попапа эмодзи.
+ *
+ * Пара токену `transitionDuration.lg` в `tailwind.config.ts`: конфиг Tailwind в код пикера не
+ * импортируется, поэтому значения меняются вместе. Таймер короче перехода скрыл бы панель до
+ * конца анимации, длиннее — держал бы невидимую панель в документе.
  */
 const CLOSE_ANIMATION_MS = 200;
 
