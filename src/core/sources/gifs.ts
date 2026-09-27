@@ -1,6 +1,7 @@
 import type { RemoteGif } from '../db.types';
 import type { Host, Settings } from '../host.types';
 import type { Locale, MessageKey } from '../i18n/i18n.types';
+import { t } from '../i18n/translate';
 import { isAllowedUrl } from '../net';
 
 import {
@@ -116,7 +117,8 @@ const giphy = async (
   const endpoint = q ? 'search' : 'trending';
   const response = await host.fetchJson(`${GIPHY_BASE}/${kind}/${endpoint}?${params}`);
 
-  if (!isGiphyResponse(response)) throw new Error('GIPHY: неожиданный ответ');
+  if (!isGiphyResponse(response))
+    throw new Error(t('error.source.badResponse', { source: 'GIPHY' }));
   const { data, pagination } = response;
 
   const items = data.reduce<RemoteGif[]>((acc, item) => {
@@ -164,7 +166,8 @@ const klipy = async (
   const endpoint = q ? 'search' : 'featured';
   const response = await host.fetchJson(`${KLIPY_BASE}/${endpoint}?${params}`);
 
-  if (!isTenorResponse(response)) throw new Error('KLIPY: неожиданный ответ');
+  if (!isTenorResponse(response))
+    throw new Error(t('error.source.badResponse', { source: 'KLIPY' }));
   const { results, next: nextPos } = response;
 
   const items = results.reduce<RemoteGif[]>((acc, result) => {

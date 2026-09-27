@@ -1,3 +1,5 @@
+import type { MessageKey } from './i18n/i18n.types';
+import { t } from './i18n/translate';
 import { isLottieJson } from './convert.types';
 import { BYTES_IN_MB, readLimited } from './net';
 
@@ -7,8 +9,7 @@ import { BYTES_IN_MB, readLimited } from './net';
  */
 const MAX_TGS_JSON_BYTES = 8 * BYTES_IN_MB;
 
-const NOT_LOTTIE = 'Файл .tgs не похож на Lottie-анимацию';
-const BROKEN_GZIP = 'Файл .tgs повреждён';
+const NOT_LOTTIE = 'error.tgs.notLottie' satisfies MessageKey;
 
 /**
  * Битый gzip распаковщик отдаёт `TypeError` с текстом браузера, а пикер показывает текст
@@ -22,7 +23,8 @@ const readUnzipped = async (stream: ReadableStream<Uint8Array>) => {
   try {
     return await readLimited(stream, MAX_TGS_JSON_BYTES);
   } catch (error) {
-    if (error instanceof TypeError) throw new Error(BROKEN_GZIP, { cause: error });
+    if (error instanceof TypeError)
+      throw new Error(t('error.tgs.broken'), { cause: error });
     throw error;
   }
 };
@@ -43,10 +45,10 @@ export const readTgs = async (blob: Blob) => {
   try {
     json = JSON.parse(new TextDecoder().decode(bytes));
   } catch {
-    throw new Error(NOT_LOTTIE);
+    throw new Error(t(NOT_LOTTIE));
   }
 
-  if (!isLottieJson(json)) throw new Error(NOT_LOTTIE);
+  if (!isLottieJson(json)) throw new Error(t(NOT_LOTTIE));
 
   return json;
 };

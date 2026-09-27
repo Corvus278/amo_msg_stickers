@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { setLocale } from '../src/core/i18n/translate';
 import { readTgs } from '../src/core/tgs';
 
 import { gzip } from './helpers/gzip';
@@ -49,4 +50,16 @@ describe('readTgs', () => {
   it('отклоняет не-gzip', async () => {
     await expect(readTgs(new Blob(['{"w":1}']))).rejects.toThrow('Файл .tgs повреждён');
   });
+
+  it('в английском интерфейсе отклоняет не-gzip с английским текстом', async () => {
+    setLocale('en');
+
+    await expect(readTgs(new Blob(['{"w":1}']))).rejects.toThrow(
+      'The .tgs file is corrupted'
+    );
+  });
+});
+
+afterEach(() => {
+  setLocale('ru');
 });

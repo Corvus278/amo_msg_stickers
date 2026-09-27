@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_SETTINGS } from '../src/core/host';
+import { setLocale } from '../src/core/i18n/translate';
 import { fetchGifs } from '../src/core/sources/gifs';
 
 import { fakeHost } from './helpers/fakeHost';
@@ -152,6 +153,18 @@ describe('fetchGifs: KLIPY', () => {
       fetchGifs(fakeHost({ json: { results: {} } }), SETTINGS, 'klipy', '', null, 'ru')
     ).rejects.toThrow('KLIPY: неожиданный ответ');
   });
+
+  it('в английском интерфейсе битый ответ — английский текст', async () => {
+    setLocale('en');
+
+    await expect(
+      fetchGifs(fakeHost({ json: { results: {} } }), SETTINGS, 'klipy', '', null, 'en')
+    ).rejects.toThrow('KLIPY: unexpected response');
+  });
+});
+
+afterEach(() => {
+  setLocale('ru');
 });
 
 describe('fetchGifs: язык выдачи', () => {

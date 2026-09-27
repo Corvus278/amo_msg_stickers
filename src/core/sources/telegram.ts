@@ -3,6 +3,7 @@ import type { SourceKind } from '../convert.types';
 import { deletePack, getPack, putPack, putSticker } from '../db';
 import type { Pack } from '../db.types';
 import type { Host } from '../host.types';
+import { t } from '../i18n/translate';
 import { BYTES_IN_MB } from '../net';
 
 import {
@@ -33,7 +34,15 @@ const TG_ID_PREFIX = 'tg:';
  */
 const MAX_STICKER_FILE_BYTES = 5 * BYTES_IN_MB;
 
-const BAD_RESPONSE = 'Telegram: неожиданный ответ';
+/**
+ * Ошибка создаётся на каждый отказ, а не хранится готовой: текст берётся на языке интерфейса в момент
+ * отказа, а модуль вычисляется раньше, чем `start()` выставит язык.
+ *
+ * @returns ошибка ответа не по форме Bot API
+ */
+const badResponse = () => {
+  return new Error(t('error.source.badResponse', { source: 'Telegram' }));
+};
 
 const SET_LINK_RE = /(?:t\.me|telegram\.me)\/(?:addstickers|addemoji)\/([A-Za-z0-9_]+)/;
 
@@ -65,7 +74,7 @@ const call = async (
     `${TG_API}/bot${token}/${method}?${new URLSearchParams(params)}`
   );
 
-  if (!isTgResponse(response)) throw new Error(BAD_RESPONSE);
+  if (!isTgResponse(response)) throw badResponse();
   const { ok, result, description } = response;
 
   if (!ok) throw new Error(description || `Telegram: ${method} failed`);
@@ -114,12 +123,12 @@ export const importTelegramSet = async (
 ): Promise<Pack> => {
   const name = parseSetName(input);
 
-  if (!name) throw new Error('Не понял ссылку. Нужна вида t.me/addstickers/Name');
-  if (!token) throw new Error('Укажите токен бота в настройках');
+  if (!name) throw new Error(t('error.telegram.badLink'));
+  if (!token) throw new Error(t('error.telegram.noToken'));
 
   const set = await call(host, token, 'getStickerSet', { name });
 
-  if (!isTgStickerSet(set)) throw new Error(BAD_RESPONSE);
+  if (!isTgStickerSet(set)) throw badResponse();
   const { name: setName, title, stickers } = set;
 
   const pack: Pack = {
@@ -141,11 +150,11 @@ export const importTelegramSet = async (
 
   for (const [index, sticker] of stickers.entries()) {
     try {
-      if (!isTgSticker(sticker)) throw new Error(BAD_RESPONSE);
+      if (!isTgSticker(sticker)) throw badResponse();
       const { file_id: fileId, file_unique_id: fileUniqueId, emoji } = sticker;
       const file = await call(host, token, 'getFile', { file_id: fileId });
 
-      if (!isTgFile(file)) throw new Error('Telegram: недопустимый путь файла');
+      if (!isTgFile(file)) throw new Error(t('error.telegram.badFilePath'));
       const { file_path: filePath } = file;
       const raw = await host.fetchBlob(
         `${TG_API}/file/bot${token}/${filePath}`,
@@ -183,7 +192,7 @@ export const importTelegramSet = async (
    */
   if (!pack.coverId) {
     await (previous ? putPack(previous) : deletePack(pack.id));
-    throw new Error('Telegram: в паке нет пригодных стикеров');
+    throw new Error(t('error.telegram.noStickers'));
   }
 
   return pack;

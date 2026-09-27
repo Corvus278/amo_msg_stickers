@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { deletePack, getPack, putPack, putSticker } from '../src/core/db';
 import type { Pack } from '../src/core/db.types';
+import { setLocale } from '../src/core/i18n/translate';
 import { importTelegramSet } from '../src/core/sources/telegram';
 
 import { fakeHost } from './helpers/fakeHost';
@@ -58,6 +59,10 @@ const botApi = (set: unknown, paths: Record<string, string> = {}) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+afterEach(() => {
+  setLocale('ru');
 });
 
 describe('importTelegramSet', () => {
@@ -167,5 +172,13 @@ describe('importTelegramSet', () => {
     await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
       'Telegram: неожиданный ответ'
     );
+  });
+
+  it('в английском интерфейсе непонятая ссылка — английский текст', async () => {
+    setLocale('en');
+
+    await expect(
+      importTelegramSet(fakeHost({}), TOKEN, 'не ссылка', vi.fn())
+    ).rejects.toThrow("Couldn't parse the link. Expected t.me/addstickers/Name");
   });
 });

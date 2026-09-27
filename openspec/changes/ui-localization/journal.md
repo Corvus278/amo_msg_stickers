@@ -53,3 +53,11 @@ FEED_LABELS → Record<GifFeed, MessageKey>, t в FeedChip (модуль гру�
 «Powered by GIPHY/KLIPY» не переводится — атрибуция провайдеров, английская для обоих языков (осознанное исключение).
 5.1: locale последним позиционным аргументом fetchGifs/giphy/klipy; GIPHY lang только с q, KLIPY ru_RU/en_US в поиске и трендах; useGifFeed передаёт getLocale() на каждый запрос.
 Аудит: ok с первого круга. Долг: подпись чипа через t(FEED_LABELS[feed]) тестом не наблюдается (только стенд); «неожиданный ответ» в gifs.ts — G5.
+
+### G5 · Ошибки ядра в мире страницы
+
+Ошибки ядра — new Error(t(...)) / new SendError(t(...)) в момент броска (мир страницы, не LocalizedError); BAD_RESPONSE telegram.ts → badResponse(), NOT_LOTTIE tgs.ts → ключ: модули вычисляются до setLocale.
+Один ключ error.source.badResponse «{source}: неожиданный ответ» для Telegram/GIPHY/KLIPY.
+Не переведены осознанно: `Telegram: ${method} failed` (ok:false без description, технический текст, как HTTP <код>), недостижимые `Unknown …` exhaustive-ветки, fileName.ts:112 (ошибка программиста) — для 4.5 (G8) это исключения.
+Отступление: ошибки app.ts и convert.ts юнит-тестом не покрыты (DOM amo / gif-worker:code); «занятое поле ввода» на en — только стенд (G8/G9).
+Аудит: ok с первого круга. TS2322 в translate.ts:67 в IDE — устаревшая диагностика (исправлено в 55a633f), TS 6.0.3 и TS 7 чисты.
