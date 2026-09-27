@@ -1,6 +1,6 @@
 import type { MessageArgs, MessageKey } from '../core/i18n/i18n.types';
 import { RU } from '../core/i18n/messages.ru';
-import { LocalizedError } from '../core/i18n/translate';
+import { LocalizedError, PLACEHOLDER } from '../core/i18n/translate';
 
 import type { FetchFailure, FetchResponse, FetchSuccess } from './messages.types';
 
@@ -9,8 +9,6 @@ import type { FetchFailure, FetchResponse, FetchSuccess } from './messages.types
  * переводится.
  */
 const FETCH_FAILED = 'fetch failed';
-
-const PLACEHOLDER = /\{(\w+)\}/g;
 
 /**
  * Параметры пришли JSON-ом runtime-сообщения, и компилятор не знает, каких подстановок ждёт строка `key`:

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deletePack, getPack, putPack, putSticker } from '../src/core/db';
 import type { Pack } from '../src/core/db.types';
 import { setLocale } from '../src/core/i18n/translate';
+import { tooBigError } from '../src/core/net';
 import { importTelegramSet } from '../src/core/sources/telegram';
 
 import { fakeHost } from './helpers/fakeHost';
@@ -32,6 +33,8 @@ const TOKEN = '123456:secret';
 const FILE_API = `https://api.telegram.org/file/bot${TOKEN}/`;
 
 const NO_STICKERS = 'Telegram: в паке нет пригодных стикеров';
+const BAD_RESPONSE = 'Telegram: неожиданный ответ';
+const BAD_FILE_PATH = 'Telegram: недопустимый путь файла';
 
 const sticker = (id: string) => {
   return { file_id: `f-${id}`, file_unique_id: id, is_animated: false, is_video: false };
@@ -97,7 +100,7 @@ describe('importTelegramSet', () => {
       });
 
       await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
-        NO_STICKERS
+        BAD_FILE_PATH
       );
       expect(host.fetchBlob).not.toHaveBeenCalled();
     }
@@ -129,22 +132,73 @@ describe('importTelegramSet', () => {
     const host = fakeHost({ onJson: botApi(set) });
 
     await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
-      'Telegram: неожиданный ответ'
+      BAD_RESPONSE
     );
     expect(putPack).not.toHaveBeenCalled();
   });
 
-  it.each([[[{}]], [[]]])(
-    'пак без пригодных стикеров %j — ошибка, новый пак удалён',
-    async (stickers) => {
+  it.each([
+    { stickers: [{}], message: BAD_RESPONSE },
+    { stickers: [], message: NO_STICKERS },
+  ])(
+    'пак без пригодных стикеров $stickers — ошибка «$message», новый пак удалён',
+    async ({ stickers, message }) => {
       const host = fakeHost({ onJson: botApi({ name: 'Pack', title: 'Пак', stickers }) });
 
       await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
-        NO_STICKERS
+        message
       );
       expect(deletePack).toHaveBeenCalledWith('tg:Pack');
     }
   );
+
+  it.each([
+    ['ru', 'Файл больше 5 МБ'],
+    ['en', 'File is larger than 5 MB'],
+  ] as const)(
+    'ни один стикер не импортирован — причина первого отказа на %s',
+    async (locale, message) => {
+      setLocale(locale);
+      const host = fakeHost({
+        onJson: botApi({
+          name: 'Pack',
+          title: 'Пак',
+          stickers: [sticker('a'), { file_id: 'f-x' }],
+        }),
+      });
+
+      vi.mocked(host.fetchBlob).mockImplementation(async (_url, maxBytes) => {
+        throw tooBigError(maxBytes);
+      });
+
+      await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+        message
+      );
+      expect(deletePack).toHaveBeenCalledWith('tg:Pack');
+    }
+  );
+
+  it.each([
+    ['ru', 'Telegram: метод getStickerSet не выполнен'],
+    ['en', 'Telegram: getStickerSet failed'],
+  ] as const)('отказ Bot API без описания — текст на %s', async (locale, message) => {
+    setLocale(locale);
+    const host = fakeHost({ json: { ok: false } });
+
+    await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+      message
+    );
+  });
+
+  it('отказ Bot API с описанием — описание Telegram как есть', async () => {
+    const host = fakeHost({
+      json: { ok: false, description: 'Bad Request: STICKERSET_INVALID' },
+    });
+
+    await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
+      'Bad Request: STICKERSET_INVALID'
+    );
+  });
 
   it('неудачный повтор импорта не удаляет ранее импортированный пак', async () => {
     const previous: Pack = {
@@ -160,7 +214,7 @@ describe('importTelegramSet', () => {
     });
 
     await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
-      NO_STICKERS
+      BAD_RESPONSE
     );
     expect(deletePack).not.toHaveBeenCalled();
     expect(putPack).toHaveBeenLastCalledWith(previous);
@@ -170,7 +224,7 @@ describe('importTelegramSet', () => {
     const host = fakeHost({ json: '<html>' });
 
     await expect(importTelegramSet(host, TOKEN, 'Pack', vi.fn())).rejects.toThrow(
-      'Telegram: неожиданный ответ'
+      BAD_RESPONSE
     );
   });
 

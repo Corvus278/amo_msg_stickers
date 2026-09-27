@@ -6,6 +6,7 @@ import {
   formatMessage,
   getLocale,
   LocalizedError,
+  messageTemplate,
   setLocale,
   t,
 } from '../src/core/i18n/translate';
@@ -69,6 +70,28 @@ describe('язык модуля', () => {
     setLocale('en');
 
     expect(t('settings.giphy.hint', { link: 'giphy.com' })).toBe('Free at giphy.com');
+  });
+});
+
+describe('messageTemplate', () => {
+  it('отдаёт шаблон текущего языка без подстановки', () => {
+    expect(messageTemplate('settings.giphy.hint')).toBe('Бесплатно на {link}');
+
+    setLocale('en');
+
+    expect(messageTemplate('settings.giphy.hint')).toBe('Free at {link}');
+  });
+});
+
+describe('status.importProgress', () => {
+  it('название пака в кавычках языка, счётчик как есть', () => {
+    const params = { title: 'Cats', done: 3, total: 12 };
+
+    expect(t('status.importProgress', params)).toBe('«Cats»: 3/12');
+
+    setLocale('en');
+
+    expect(t('status.importProgress', params)).toBe('“Cats”: 3/12');
   });
 });
 

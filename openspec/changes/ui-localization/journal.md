@@ -86,3 +86,19 @@ gmNetwork.ts: NETWORK/TIMEOUT/ABORT/BODY_NOT_BYTES — ключи, new Error(t(K
 Отступление: сценарий «Лимит размера в расширении» дословно не выполним — ключ error.net.tooBig проходит границу SW и даёт «File is larger than 5 MB», но импорт Telegram глотает ошибку стикера (sources/telegram.ts:181, console.warn), и в статусе «Telegram: the pack has no usable stickers». Лимит в статусе проверен на GIF 8 МБ (en/ru). Вопрос пользователю: правка сценария или показ первой ошибки.
 Аудит не проводился: код не менялся, группа проверочная.
 Побочно на стенде: лишние GIF в тестовом чате, у B импортирован пак Animals.
+
+### Ответы пользователя, доработка F1
+
+Критерии F1 (по ответам пользователя 2026-09-27):
+1. Импорт Telegram: если не удалось ни одного стикера — в статусе причина первого отказа (например «File is larger than 5 MB» / «Файл больше 5 МБ»), а не «pack has no usable stickers». Частичный успех — как сейчас.
+2. `Telegram: ${method} failed` (telegram.ts:80) и `image has no track` (frameSourceImage.ts:48) — через словарь, ключи error.*.
+3. Прогресс импорта usePackImport.ts:42 — ключ status.importProgress, в en кавычки “…”.
+4. Дубли: renderMessage.ts берёт шаблон из translate.ts (один источник выбора словаря), fetchResponse.ts берёт регулярку подстановок из translate.ts.
+
+### F1
+
+П.1: импорт Telegram без единого стикера бросает первый пойманный отказ (firstError ||= e) — LocalizedError лимита сохраняет язык; пустой пак без отказов — noStickers; частичный успех не задет. Старые ожидания тестов badFilePath/badResponse стали первым отказом.
+П.2: error.telegram.methodFailed, error.convert.noImageTrack; description Bot API — как есть. П.3: status.importProgress, en — “…”.
+П.4: translate.ts экспортирует messageTemplate(key) и PLACEHOLDER; renderMessage и fetchResponse берут их оттуда; PLACEHOLDER_SPLIT (без g, для split) не дубль.
+Отступление: в openspec/specs/telegram-import нет сценария «ни один стикер не импортирован» — предложить дельтой.
+Аудит: ok с первого круга. Долг: CLAUDE.md:332 — строка 131 символ при ширине 120.

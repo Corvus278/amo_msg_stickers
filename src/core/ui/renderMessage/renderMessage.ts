@@ -1,16 +1,9 @@
 import type { ComponentChild } from 'preact';
 
-import type { Locale, MessageKey, Messages } from '../../i18n/i18n.types';
-import { EN } from '../../i18n/messages.en';
-import { RU } from '../../i18n/messages.ru';
-import { getLocale } from '../../i18n/translate';
+import type { MessageKey } from '../../i18n/i18n.types';
+import { messageTemplate } from '../../i18n/translate';
 
 import type { MessageNodes, TemplateNodes } from './renderMessage.types';
-
-/**
- * Шаблон нужен до подстановки: `t` склеивает строку, а здесь на место подстановки встаёт узел.
- */
-const TEMPLATES: Readonly<Record<Locale, Messages>> = { ru: RU, en: EN };
 
 /**
  * Группа захвата оставляет имя подстановки в результате `split`: куски текста стоят на чётных местах,
@@ -70,5 +63,5 @@ export const renderTemplate = (template: string, nodes: TemplateNodes) => {
  * @returns узлы строки на текущем языке
  */
 export const renderMessage = <K extends MessageKey>(key: K, nodes: MessageNodes<K>) => {
-  return renderTemplate(TEMPLATES[getLocale()][key], nodes);
+  return renderTemplate(messageTemplate(key), nodes);
 };

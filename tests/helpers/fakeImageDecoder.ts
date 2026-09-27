@@ -45,7 +45,9 @@ export class FakeImageDecoder {
 
   tracks = {
     ready: Promise.resolve(),
-    selectedTrack: { frameCount: FakeImageDecoder.init.frameCount },
+    selectedTrack: FakeImageDecoder.init.isTrackMissing
+      ? null
+      : { frameCount: FakeImageDecoder.init.frameCount },
   };
 
   completed = Promise.resolve();

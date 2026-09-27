@@ -10,7 +10,12 @@ import { RU } from './messages.ru';
 
 const MESSAGES: Readonly<Record<Locale, Messages>> = { ru: RU, en: EN };
 
-const PLACEHOLDER = /\{(\w+)\}/g;
+/**
+ * Подстановка `{name}` строки словаря, имя — в группе захвата. Флаг `g` нужен `replaceAll` и `matchAll`,
+ * и общая регулярка между вызовами состояния не копит: `matchAll` идёт по её копии, а `replaceAll`
+ * сбрасывает `lastIndex` перед проходом и после него.
+ */
+export const PLACEHOLDER = /\{(\w+)\}/g;
 
 /**
  * Язык не меняется до перезагрузки страницы, поэтому он — состояние модуля без подписок. Русский по
@@ -27,6 +32,16 @@ export const setLocale = (locale: Locale) => {
 
 export const getLocale = (): Locale => {
   return currentLocale;
+};
+
+/**
+ * Шаблон нужен тем, кто подставляет сам: `renderMessage` ставит на место подстановки узел, а не строку.
+ *
+ * @param key — ключ словаря
+ * @returns строка словаря текущего языка с подстановками `{name}` как есть
+ */
+export const messageTemplate = (key: MessageKey) => {
+  return MESSAGES[currentLocale][key];
 };
 
 /**
@@ -51,7 +66,7 @@ export const formatMessage = (
  * @returns текст на текущем языке
  */
 export const t = <K extends MessageKey>(key: K, ...[params]: MessageArgs<K>): string => {
-  return formatMessage(MESSAGES[currentLocale][key], params);
+  return formatMessage(messageTemplate(key), params);
 };
 
 /**

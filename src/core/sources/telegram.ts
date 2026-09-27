@@ -77,7 +77,7 @@ const call = async (
   if (!isTgResponse(response)) throw badResponse();
   const { ok, result, description } = response;
 
-  if (!ok) throw new Error(description || `Telegram: ${method} failed`);
+  if (!ok) throw new Error(description || t('error.telegram.methodFailed', { method }));
 
   return result;
 };
@@ -148,6 +148,13 @@ export const importTelegramSet = async (
 
   let done = 0;
 
+  /**
+   * Причина первого отказа: если не импортируется ни один стикер, пользователь видит её, а не общее
+   * «нет пригодных стикеров» — лимит размера или сеть подсказывают, что делать. Отказы стикеров одного
+   * пака обычно одной природы, и одной причины достаточно.
+   */
+  let firstError: unknown;
+
   for (const [index, sticker] of stickers.entries()) {
     try {
       if (!isTgSticker(sticker)) throw badResponse();
@@ -180,6 +187,7 @@ export const importTelegramSet = async (
       }
     } catch (e) {
       console.warn('[amo-stickers] sticker import failed', index, e);
+      firstError ||= e;
     }
 
     done++;
@@ -188,11 +196,12 @@ export const importTelegramSet = async (
 
   /**
    * Ни одного стикера не импортировано — это ошибка, а не пустая вкладка. Пак, импортированный
-   * раньше, не сносим: неудачный повтор (например, без сети) вернёт его запись как была.
+   * раньше, не сносим: неудачный повтор (например, без сети) вернёт его запись как была. Общий текст
+   * остаётся пустому паку, где отказов не было.
    */
   if (!pack.coverId) {
     await (previous ? putPack(previous) : deletePack(pack.id));
-    throw new Error(t('error.telegram.noStickers'));
+    throw firstError || new Error(t('error.telegram.noStickers'));
   }
 
   return pack;
