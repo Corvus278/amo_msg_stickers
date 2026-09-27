@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_SETTINGS } from '../src/core/host';
+import { BYTES_IN_MB as MB } from '../src/core/net';
 import { fetchGifs } from '../src/core/sources/gifs';
 
 import { fakeHost } from './helpers/fakeHost';
@@ -18,8 +19,6 @@ const giphyPage = (data: unknown[]) => {
 const tenorMedia = (url: string) => {
   return { url, dims: [220, 110] };
 };
-
-const MB = 1024 * 1024;
 
 /**
  * Вес версии по имени: число — в МБ, строка — сырое значение поля `size`, null — поля нет.
