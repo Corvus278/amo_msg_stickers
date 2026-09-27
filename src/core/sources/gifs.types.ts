@@ -35,6 +35,13 @@ export type GiphyImage = {
    * Высота в пикселях — GIPHY отдаёт числа строками.
    */
   height: string;
+
+  /**
+   * Вес файла в байтах строкой: `"1953125"`. Гард поле не проверяет — рендишн без веса
+   * или с непригодным весом остаётся в выдаче; пригодность веса проверяет выбор версии
+   * для отправки.
+   */
+  size?: string;
 };
 
 export type GiphyItem = {
@@ -94,6 +101,12 @@ export type TenorMedia = {
    * Размеры в пикселях: [ширина, высота].
    */
   dims: [number, number];
+
+  /**
+   * Вес файла в байтах. Гард поле не проверяет — формат без веса или с непригодным весом
+   * остаётся в выдаче; пригодность веса проверяет выбор версии для отправки.
+   */
+  size?: number;
 };
 
 export type TenorResult = {
@@ -108,7 +121,7 @@ export type TenorResult = {
   content_description?: string;
 
   /**
-   * Файлы по формату (`gif`, `tinygif`); приходят только запрошенные в `media_filter`,
+   * Файлы по формату (`gif`, `mediumgif`, `tinygif` …); приходят только запрошенные в `media_filter`,
    * каждый проверяется `isTenorMedia` при выборе.
    */
   media_formats: Record<string, unknown>;
@@ -214,4 +227,19 @@ export const isTenorResponse = (value: unknown): value is TenorResponse => {
     Array.isArray(value.results) &&
     (!('next' in value) || typeof value.next === 'string')
   );
+};
+
+/**
+ * Версия GIF для отправки с известным весом.
+ */
+export type WeightedVariant<T> = {
+  /**
+   * Вариант файла, прошедший гард формы и сетевую политику.
+   */
+  variant: T;
+
+  /**
+   * Вес файла в байтах из ответа источника — положительное число.
+   */
+  bytes: number;
 };
