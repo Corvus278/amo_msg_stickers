@@ -12,7 +12,7 @@
    скрипт — в панели менеджера скриптов. Если скрипт стоит в Tampermonkey, но не работает, — следующий вопрос.
 
 Если всё включено, а кнопки нет, возможно, amo изменил страницу. Напишите об этом в
-[issues на GitHub](https://github.com/Corvus278/amo_msg_stickers/issues).
+[issues на GitHub](https://github.com/mcar2107/amo_msg_stickers/issues).
 
 ## Tampermonkey не запускает скрипт
 

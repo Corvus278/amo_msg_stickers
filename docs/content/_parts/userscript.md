@@ -1,5 +1,5 @@
 **Установите скрипт.** Нажмите ссылку
-[amo-stickers.user.js](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js) —
+[amo-stickers.user.js](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js) —
 это последняя версия. Менеджер предложит установить скрипт «amo stickers» и покажет номер версии — подтвердите
 установку:
 

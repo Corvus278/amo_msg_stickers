@@ -4,7 +4,7 @@ import type { UserDocsPage } from './userDocs.types';
  * Сайт доки на GitHub Pages проекта. Путь совпадает с `base` в `docs/.vitepress/config.mts` —
  * их сверяет тест.
  */
-export const USER_DOCS_URL = 'https://corvus278.github.io/amo_msg_stickers/';
+export const USER_DOCS_URL = 'https://mcar2107.github.io/amo_msg_stickers/';
 
 /**
  * Страницы, на которые ссылается интерфейс, — пути исходников в `docs/` без `.md`: сайт собран

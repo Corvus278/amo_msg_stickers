@@ -140,7 +140,7 @@ Userscripts синхронные `GM_getValue` / `GM_setValue`, при напи�
 ### Автообновление userscript
 
 В `USERSCRIPT_BANNER` — `@updateURL` и `@downloadURL` на
-`https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js`, добавляются так же, как
+`https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js`, добавляются так же, как
 `devMatches`: только при `!isWatch`. `latest` — всегда наибольшая версия: это уже обеспечивает `release.yml`.
 
 Отдельный `.meta.js` не выпускаем. Менеджер сравнивает `@version` из файла по `@updateURL` с установленной; без
@@ -215,7 +215,7 @@ Preact покажет текстом.
 
 1. Мерж PR: релиз с `amo-stickers.zip` и userscript с `@updateURL` выходит сам.
 2. Pages включён заранее — `pages.yml` публикует доку тем же мержем. Проверка после мержа: прогон `pages.yml`
-   зелёный, `https://corvus278.github.io/amo_msg_stickers/` открывается, ссылки из пикера ведут на существующие
+   зелёный, `https://mcar2107.github.io/amo_msg_stickers/` открывается, ссылки из пикера ведут на существующие
    страницы.
 3. Уже установленный userscript без `@updateURL` менеджер не обновит: один раз поставить новую версию по ссылке из
    доки, дальше — сам. Об этом — в разделе «Обновление».

@@ -44,7 +44,7 @@ const ESBUILD_PROLOGUE = '"use strict";(()=>{})();';
  * находит по этому адресу каждое следующее обновление.
  */
 const LATEST_USERSCRIPT_URL =
-  'https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+  'https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
 
 /**
  * Литерал адреса обновления в `build.mjs`.

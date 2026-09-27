@@ -42,7 +42,7 @@
 - **THEN** появляется тег `v0.3.0` на коммите мержа и релиз `v0.3.0` с `amo-stickers.zip` и `amo-stickers.user.js`
 
 #### Scenario: Ссылка на последнюю версию
-- **WHEN** пользователь открывает `https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.zip`
+- **WHEN** пользователь открывает `https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip`
 - **THEN** скачивается архив расширения из релиза с наибольшей версией
 
 #### Scenario: Установка из релиза

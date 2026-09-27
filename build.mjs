@@ -20,7 +20,7 @@ const devMatches = isWatch ? DEV_MATCHES : [];
  * находит по этому адресу каждое следующее обновление.
  */
 const LATEST_USERSCRIPT_URL =
-  'https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+  'https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
 
 /**
  * Автообновление — только у боевой сборки: userscript из `pnpm watch` менеджер

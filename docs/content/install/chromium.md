@@ -23,7 +23,7 @@
 **Установка**
 
 1. Скачайте архив последней версии:
-   [amo-stickers.zip](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.zip).
+   [amo-stickers.zip](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip).
 2. Заведите для расширения постоянную папку, например `Документы/amo-stickers`, и распакуйте архив в неё. В папке
    должен оказаться файл `manifest.json`. Не удаляйте и не переносите эту папку: браузер загружает расширение из неё.
 3. Откройте страницу расширений — введите её адрес в адресной строке:
@@ -49,7 +49,7 @@
 **Обновление**
 
 1. Скачайте новый архив по той же ссылке:
-   [amo-stickers.zip](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.zip).
+   [amo-stickers.zip](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip).
 2. Удалите всё содержимое папки расширения, саму папку оставьте. Распаковка поверх старых файлов оставила бы файлы,
    которых в новой версии уже нет.
 3. Распакуйте новый архив в ту же папку.

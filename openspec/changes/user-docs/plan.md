@@ -9,13 +9,13 @@
 
 - **K1 Страницы доки** — `docs/{index,update,faq,privacy}.md`, `docs/install/{index,chromium,firefox,safari,desktop}.md`,
   `docs/setup/{gif-keys,telegram}.md`, фрагмент `docs/_parts/userscript.md` (в `srcExclude`). Владелец G1; G3, G4, G5.
-- **K2 Адрес доки** — `https://corvus278.github.io/amo_msg_stickers/` = `base: '/amo_msg_stickers/'` + `cleanUrls`:
+- **K2 Адрес доки** — `https://mcar2107.github.io/amo_msg_stickers/` = `base: '/amo_msg_stickers/'` + `cleanUrls`:
   адрес страницы — база + slug без `.md` (`setup/gif-keys`). Владелец G1 (config.mts); потребитель G3 (`userDocs.ts`).
 - **K3 Скрипты и установка доки** — корневые `docs:dev|docs:build|docs:preview` = `pnpm -C docs …`;
   `.github/actions/setup` ставит `pnpm -C docs install --frozen-lockfile`. После G1 любой worktree перед коммитом
   делает `pnpm -C docs i`: хук гоняет `pnpm typecheck` по `docs/tsconfig.json`. Владелец G1; потребители G2, G6.
 - **K4 Файлы релиза** — `…/releases/latest/download/amo-stickers.zip` и `…/amo-stickers.user.js`
-  (`https://github.com/Corvus278/amo_msg_stickers`); `@updateURL` = `@downloadURL` = адрес user.js. Владелец G2;
+  (`https://github.com/mcar2107/amo_msg_stickers`); `@updateURL` = `@downloadURL` = адрес user.js. Владелец G2;
   потребители G4, G5 (`update.md`), G6 (README).
 - **K5 Место скрина** — `<!-- скрин: img/<раздел>/<имя>.png — что на нём -->`, без `![](…)` на несуществующий файл.
   Владелец G4; потребители G5, G6.

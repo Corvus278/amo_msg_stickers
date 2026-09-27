@@ -47,4 +47,4 @@ amo stickers обращается только к трём сервисам и�
 ## Изменения
 
 Если amo stickers начнёт хранить или передавать что-то ещё, эта страница изменится до выхода такой версии. Вопросы —
-в [issues на GitHub](https://github.com/Corvus278/amo_msg_stickers/issues).
+в [issues на GitHub](https://github.com/mcar2107/amo_msg_stickers/issues).

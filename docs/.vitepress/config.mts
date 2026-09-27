@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress';
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs';
 
-const REPO_URL = 'https://github.com/Corvus278/amo_msg_stickers';
+const REPO_URL = 'https://github.com/mcar2107/amo_msg_stickers';
 
 /**
  * Сайт живёт на GitHub Pages проекта: адрес страницы — база плюс путь файла без `.md`.

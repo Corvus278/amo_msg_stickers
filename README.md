@@ -10,17 +10,17 @@
 - **Поиск GIF** — GIPHY и KLIPY по своему бесплатному ключу, недавние GIF всегда под рукой.
 - **Отправка кликом** — собеседник получит стикер картинкой GIF, даже если amo stickers у него нет.
 
-**[Установить →](https://corvus278.github.io/amo_msg_stickers/install/)** — пошаговая инструкция для Chrome,
+**[Установить →](https://mcar2107.github.io/amo_msg_stickers/install/)** — пошаговая инструкция для Chrome,
 Яндекс Браузера, Edge, Opera, Firefox и Safari.
 
 Прямые ссылки на последнюю версию:
-[скачать архив расширения](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.zip) ·
-[установить userscript](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js).
+[скачать архив расширения](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip) ·
+[установить userscript](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js).
 
-[Документация](https://corvus278.github.io/amo_msg_stickers/) ·
-[Частые вопросы](https://corvus278.github.io/amo_msg_stickers/faq) ·
-[Политика конфиденциальности](https://corvus278.github.io/amo_msg_stickers/privacy) ·
-[Сообщить о проблеме](https://github.com/Corvus278/amo_msg_stickers/issues)
+[Документация](https://mcar2107.github.io/amo_msg_stickers/) ·
+[Частые вопросы](https://mcar2107.github.io/amo_msg_stickers/faq) ·
+[Политика конфиденциальности](https://mcar2107.github.io/amo_msg_stickers/privacy) ·
+[Сообщить о проблеме](https://github.com/mcar2107/amo_msg_stickers/issues)
 
 ## Разработка
 

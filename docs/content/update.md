@@ -15,7 +15,7 @@
 Архив сам не обновляется: браузер не знает, откуда брать новую версию.
 
 1. Скачайте новый архив по той же ссылке:
-   [amo-stickers.zip](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.zip) — это
+   [amo-stickers.zip](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip) — это
    всегда последняя версия.
 2. Удалите всё содержимое папки расширения, саму папку оставьте. Распаковка поверх старых файлов оставила бы файлы,
    которых в новой версии уже нет.
@@ -32,7 +32,7 @@
 :::
 
 Установленная версия видна на карточке amo stickers на странице расширений, последняя — на странице
-[релизов](https://github.com/Corvus278/amo_msg_stickers/releases/latest).
+[релизов](https://github.com/mcar2107/amo_msg_stickers/releases/latest).
 
 ## Userscript
 
@@ -45,7 +45,7 @@ updates»). Новая версия заработает после переза
 ::: warning Один раз — переустановить
 Скрипт, поставленный до появления этой инструкции, сам не обновится: в нём ещё нет адреса, откуда брать новую версию.
 Поставьте скрипт один раз заново по ссылке
-[amo-stickers.user.js](https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js) —
+[amo-stickers.user.js](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js) —
 менеджер предложит обновить установленный amo stickers. Дальше обновления будут приходить сами.
 :::
 

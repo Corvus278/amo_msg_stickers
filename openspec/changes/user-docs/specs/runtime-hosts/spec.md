@@ -23,7 +23,7 @@
 
 ### Requirement: Автообновление userscript
 Заголовок userscript из боевой сборки SHALL содержать `@updateURL` и `@downloadURL`, указывающие на файл userscript
-последнего релиза: `https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js`.
+последнего релиза: `https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js`.
 Userscript dev-сборки (`pnpm watch`) MUST NOT содержать этих директив: менеджер не должен заменять его версией из релиза.
 
 #### Scenario: Вышла новая версия
