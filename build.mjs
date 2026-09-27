@@ -42,7 +42,7 @@ const USERSCRIPT_BANNER = [
    */
   '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
   '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
-  '// @version      0.12.0',
+  '// @version      0.13.0',
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),

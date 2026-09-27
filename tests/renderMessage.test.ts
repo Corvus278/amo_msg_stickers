@@ -63,7 +63,7 @@ describe('renderMessage', () => {
 
   it('ставит узлы ссылок на места подстановок в строке каждого языка', () => {
     expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
-      'Создайте любого бота в ',
+      'Создайте любого бота в\u00a0',
       LINK,
       '. Токен хранится локально. ',
       DOCS,
@@ -72,9 +72,9 @@ describe('renderMessage', () => {
     setLocale('en');
 
     expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
-      'Create any bot in ',
+      'Create any bot in\u00a0',
       LINK,
-      '. The token is stored locally. ',
+      '. The\u00a0token is\u00a0stored locally. ',
       DOCS,
     ]);
   });

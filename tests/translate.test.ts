@@ -64,24 +64,26 @@ describe('язык модуля', () => {
 
   it('подставляет параметры в строку текущего языка', () => {
     expect(t('settings.giphy.hint', { link: 'giphy.com', docs: 'doc' })).toBe(
-      'Бесплатно на giphy.com. doc'
+      'Бесплатно на\u00a0giphy.com. doc'
     );
 
     setLocale('en');
 
     expect(t('settings.giphy.hint', { link: 'giphy.com', docs: 'doc' })).toBe(
-      'Free at giphy.com. doc'
+      'Free at\u00a0giphy.com. doc'
     );
   });
 });
 
 describe('messageTemplate', () => {
   it('отдаёт шаблон текущего языка без подстановки', () => {
-    expect(messageTemplate('settings.giphy.hint')).toBe('Бесплатно на {link}. {docs}');
+    expect(messageTemplate('settings.giphy.hint')).toBe(
+      'Бесплатно на\u00a0{link}. {docs}'
+    );
 
     setLocale('en');
 
-    expect(messageTemplate('settings.giphy.hint')).toBe('Free at {link}. {docs}');
+    expect(messageTemplate('settings.giphy.hint')).toBe('Free at\u00a0{link}. {docs}');
   });
 });
 
@@ -117,7 +119,7 @@ describe('LocalizedError', () => {
 
     expect(error.key).toBe('settings.giphy.hint');
     expect(error.params).toEqual({ link: 'giphy.com', docs: 'doc' });
-    expect(error.message).toBe('Free at giphy.com. doc');
+    expect(error.message).toBe('Free at\u00a0giphy.com. doc');
   });
 
   it('текст фиксируется при создании', () => {

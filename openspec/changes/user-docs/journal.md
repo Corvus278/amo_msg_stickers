@@ -58,3 +58,11 @@ K6: ru-фраза add.telegram.hint дословно из telegram.md:49; en «C
 Отступление: правлены tests/translate.test.ts и tests/renderMessage.test.ts (вне файлов G3) — сверяют реальные строки словаря.
 Стенд headless Chrome: ru/en, обе темы, порядок полей, 7 ссылок target=_blank. Эстафета нарушена: 3.5 отдан тому же исполнителю после 71 вызова (сообщение ушло до уведомления).
 Аудит: ok с первого круга. Долг: *_DOCS_URL и jsdoc повторены в трёх компонентах — можно отдавать адреса из userDocs.ts; цикл типов userDocs.types.ts ↔ userDocs.ts.
+
+### G6 · Полировка текстов, README, версия, финал
+
+typograf портил Markdown (маркеры, ссылки, ::::, код) — взят только «пробел → U+00A0», разметка возвращена. Тесты translate/renderMessage правлены под NBSP (вне файлов группы).
+Долг G4/G5 закрыт полностью (аудит подтвердил).
+Скрины для PR (17): home/picker (index); install/extensions-load-unpacked, install/allow-user-scripts (chromium); install/tampermonkey-install, install/sticker-button (_parts/userscript → chromium, firefox, safari); install/safari-userscripts (safari); update/extensions-reload, update/tampermonkey-check-updates (update); setup/klipy-api-keys, setup/gif-mode-klipy, setup/giphy-dashboard (gif-keys); setup/botfather-newbot, setup/botfather-token, setup/settings-token, setup/telegram-pack-link, setup/telegram-import (telegram); README: docs/img/readme/demo.gif. Без скринов: faq, privacy, install/index, desktop.
+7.3: гейт ok, стенд ru/en × светлая/тёмная — 8 ссылок, target=_blank. 5.1 «ссылки на GitHub открываются» — после Pages (6.3) и первого релиза.
+Аудит: ok с первого круга. Долг: CLAUDE.md:602 длинная строка; старое имя архива в openspec/specs/ci-cd/spec.md:72,82 — уйдёт при архиве.
