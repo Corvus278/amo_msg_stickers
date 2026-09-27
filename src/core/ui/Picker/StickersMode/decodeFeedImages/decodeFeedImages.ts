@@ -1,4 +1,4 @@
-import type { DecodeFeedImagesOptions } from './decodeFeedImages.types';
+import type { DecodeFeedImagesOptions, FeedImage } from './decodeFeedImages.types';
 
 /**
  * Битая или снятая до конца декодирования картинка ожидание не обрывает: лента едет дальше, а
@@ -6,7 +6,7 @@ import type { DecodeFeedImagesOptions } from './decodeFeedImages.types';
  *
  * @param image — картинка ячейки
  */
-const decodeQuietly = async (image: HTMLImageElement): Promise<void> => {
+const decodeQuietly = async (image: FeedImage): Promise<void> => {
   try {
     await image.decode();
   } catch {
