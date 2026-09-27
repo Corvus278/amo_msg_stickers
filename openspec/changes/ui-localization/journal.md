@@ -78,3 +78,11 @@ gmNetwork.ts: NETWORK/TIMEOUT/ABORT/BODY_NOT_BYTES — ключи, new Error(t(K
 7.4: в CLAUDE.md — «Структура» (i18n/, renderMessage/, packTitle/, fetchResponse.ts, _locales/), раздел «Язык интерфейса», правило «строки — только через словарь»; сверено аудитором с кодом.
 Вне языка: на «Add stickers» при полной прокрутке строка статуса закрывает низ кнопки «Сохранить» ~9 px (ru и en одинаково) — кандидат в отдельный issue.
 Аудит: ok с первого круга. Долг: рваный перенос CLAUDE.md:335; в тёмной теме нет снимков add/busy (раскладка от темы не зависит); долги renderMessage-таблицы и PLACEHOLDER в fetchResponse.ts остаются.
+
+### G9 · Живой amo
+
+Живой web.dev.amo.tm, расширение: A (профиль en-US) ↔ B (ru-RU). Пикер, «My stickers» при «Мои стикеры» в IndexedDB, занятое поле, GIPHY lang только в поиске, KLIPY locale en_US/ru_RU, отправка A↔B — стикер без пузыря у собеседника, имя файла одинаковое. Снимки — local/g9/ (вне git).
+Отступление: --lang в Chrome на macOS не работает — язык задан intl.selected_languages/accept_languages и app_locale профиля; amo сам записал i18nextLng en-US/ru-RU.
+Отступление: сценарий «Лимит размера в расширении» дословно не выполним — ключ error.net.tooBig проходит границу SW и даёт «File is larger than 5 MB», но импорт Telegram глотает ошибку стикера (sources/telegram.ts:181, console.warn), и в статусе «Telegram: the pack has no usable stickers». Лимит в статусе проверен на GIF 8 МБ (en/ru). Вопрос пользователю: правка сценария или показ первой ошибки.
+Аудит не проводился: код не менялся, группа проверочная.
+Побочно на стенде: лишние GIF в тестовом чате, у B импортирован пак Animals.
