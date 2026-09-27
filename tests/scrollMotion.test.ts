@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { scrollMotion } from '../src/core/ui/Picker/scrollMotion/scrollMotion';
+import {
+  isMotionReduced,
+  scrollMotion,
+} from '../src/core/ui/Picker/scrollMotion/scrollMotion';
 
 const REDUCE_QUERY = '(prefers-reduced-motion: reduce)';
 
@@ -46,5 +49,27 @@ describe('scrollMotion', () => {
     stubMotion(true);
 
     expect(scrollMotion()).toBe('auto');
+  });
+});
+
+describe('isMotionReduced', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reduce — движение уменьшено', () => {
+    stubMotion(true);
+
+    expect(isMotionReduced()).toBe(true);
+  });
+
+  it('no-preference и без matchMedia — движение есть', () => {
+    stubMotion(false);
+
+    expect(isMotionReduced()).toBe(false);
+
+    vi.stubGlobal('matchMedia', undefined);
+
+    expect(isMotionReduced()).toBe(false);
   });
 });

@@ -1,26 +1,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import { scrollMotion } from '../../scrollMotion/scrollMotion';
-import { buildStickerLayout, visibleRows } from '../../stickerLayout/stickerLayout';
+import { buildStickerLayout } from '../../stickerLayout/stickerLayout';
 import type { RowRange } from '../../stickerLayout/stickerLayout.types';
 import { usePickerView } from '../../usePickerView/usePickerView';
 import { useScrollArea } from '../../useScrollArea/useScrollArea';
 import { anchorTop } from '../anchorTop/anchorTop';
+import { decodeFeedImages } from '../decodeFeedImages/decodeFeedImages';
 import { feedActiveSection } from '../feedActiveSection/feedActiveSection';
 import type { FeedSection } from '../feedSections/feedSections.types';
+import { feedWindowRanges } from '../feedWindowRanges/feedWindowRanges';
 import { createScrollLock } from '../scrollLock/scrollLock';
 import { sectionScrollPlan } from '../sectionScrollPlan/sectionScrollPlan';
 import { wheelDeltaPx } from '../wheelDeltaPx/wheelDeltaPx';
 
-import type { FeedWindow } from './useFeedWindow.types';
+import type { FeedGlide, FeedWindow } from './useFeedWindow.types';
 
-const EMPTY_RANGE: RowRange = [0, 0];
+const EMPTY_RANGES: RowRange[] = [[0, 0]];
 
 /**
  * Тишина прокрутки, после которой плавный переход считается законченным, мс: события плавной
  * прокрутки идут раз в кадр (~16 мс), и без них дольше этого лента уже стоит.
  */
 const SCROLL_QUIET_MS = 150;
+
+/**
+ * Потолок подготовки окна перед мгновенным переходом, мс: столько клик по вкладке может ждать
+ * декодирования картинок, не выглядя зависшим. Он меньше тишины `SCROLL_QUIET_MS`, поэтому
+ * удержание вкладки, продлённое в начале подготовки, доживает до перехода.
+ */
+const JUMP_PREPARE_MS = 120;
 
 /**
  * Ввод пользователя на ленте, который прерывает плавный переход к разделу: колесо, касание,
@@ -49,10 +58,13 @@ const INTERRUPT_EVENTS = [
  *
  * Переход по вкладке (`'smooth'`) едет плавно, а к разделу дальше видимой области сначала
  * мгновенно встаёт на экран от него (`sectionScrollPlan`): иначе проезд провёл бы окно рядов
- * через все промежуточные паки. Пока лента едет, выбранной остаётся нажатая вкладка, а не
- * разделы, мимо которых идёт прокрутка; колесо, касание, нажатие или клавиша на ленте снимают
- * удержание, и выбранная снова считается по прокрутке. При уменьшении движения в системе и для
- * `'instant'` раздел ставится сразу.
+ * через все промежуточные паки. Окно точки перехода монтируется и декодируется до перехода — не
+ * дольше `JUMP_PREPARE_MS`, — и лента после него заполнена с первого кадра. Пока лента едет,
+ * запас рядов держится только по ходу движения (`feedWindowRanges`), а выбранной остаётся
+ * нажатая вкладка, а не разделы, мимо которых идёт прокрутка; колесо, касание, нажатие или
+ * клавиша на ленте снимают удержание и отменяют ещё не сделанный переход, и выбранная снова
+ * считается по прокрутке. При уменьшении движения в системе и для `'instant'` раздел ставится
+ * сразу.
  *
  * @param sections — разделы ленты; `null` — ещё не прочитаны
  * @param isCurrent — разделы прочитаны для текущего списка паков
@@ -67,15 +79,36 @@ export const useFeedWindow = (
     useScrollArea();
   const appliedSeqRef = useRef(0);
   const [lockedId, setLockedId] = useState<string | null>(null);
+  const [glide, setGlide] = useState<FeedGlide | null>(null);
   const [lock] = useState(() => {
-    return createScrollLock({ quietMs: SCROLL_QUIET_MS, onChange: setLockedId });
+    /**
+     * Снятое удержание заканчивает доезд, но не подготовку перехода: тишина прокрутки во время
+     * подготовки — не конец движения, а его ожидание. Подготовку отменяет ввод пользователя.
+     */
+    const handleLockChange = (sectionId: string | null) => {
+      setLockedId(sectionId);
+
+      if (sectionId !== null) return;
+
+      setGlide((current) => {
+        return current && current.jumpTo !== null ? current : null;
+      });
+    };
+
+    return createScrollLock({ quietMs: SCROLL_QUIET_MS, onChange: handleLockChange });
   });
   const layout = useMemo(() => {
     return width && sections ? buildStickerLayout(sections, width) : null;
   }, [sections, width]);
-  const range = layout
-    ? visibleRows(layout.rows, scrollTop, viewport, viewport)
-    : EMPTY_RANGE;
+  const ranges = layout
+    ? feedWindowRanges({
+        rows: layout.rows,
+        scrollTop,
+        viewport,
+        glideTo: glide ? glide.target : null,
+        jumpTo: glide ? glide.jumpTo : null,
+      })
+    : EMPTY_RANGES;
   const scrolledId = layout ? feedActiveSection(layout, scrollTop, viewport) : null;
   const activeId = lockedId || scrolledId;
   const isLocked = lockedId !== null;
@@ -105,6 +138,7 @@ export const useFeedWindow = (
       if (lock.current() === null) return;
 
       lock.interrupt();
+      setGlide(null);
 
       if (event instanceof WheelEvent && !event.ctrlKey) {
         event.preventDefault();
@@ -163,23 +197,69 @@ export const useFeedWindow = (
        * Лента уже стоит на цели с точностью до пикселя: событий прокрутки не будет, и удержание
        * только задержало бы подсветку на время тишины.
        */
-      if (Math.abs(target - from) >= 1) lock.lock(anchor.sectionId);
+      if (Math.abs(target - from) < 1) {
+        setGlide(null);
+      } else {
+        lock.lock(anchor.sectionId);
+        setGlide({ sectionId: anchor.sectionId, target, jumpTo });
+      }
 
-      if (jumpTo !== null) element.scrollTop = jumpTo;
-
-      element.scrollTo({ top: target, behavior: 'smooth' });
+      /**
+       * Переход к далёкому разделу делает подготовка окна, когда его ряды смонтированы.
+       */
+      if (jumpTo === null) element.scrollTo({ top: target, behavior: 'smooth' });
     } else {
       lock.interrupt();
+      setGlide(null);
       element.scrollTop = top;
     }
 
     syncScroll();
   }, [anchor, layout, isCurrent, scrollRef, syncScroll, lock]);
 
+  useEffect(() => {
+    const element = scrollRef.current;
+
+    if (!element || !glide || glide.jumpTo === null) return;
+
+    const { sectionId, target, jumpTo } = glide;
+    const { clientHeight } = element;
+    let isCancelled = false;
+
+    /**
+     * Ряды точки перехода уже в документе. Удержание продлевается от начала подготовки, а не от
+     * клика: монтирование рядов не съедает тишину, после которой удержание снялось бы.
+     */
+    lock.lock(sectionId);
+
+    const jump = async () => {
+      await decodeFeedImages({
+        element,
+        top: jumpTo - clientHeight,
+        bottom: jumpTo + clientHeight * 2,
+        ceilingMs: JUMP_PREPARE_MS,
+      });
+
+      if (isCancelled) return;
+
+      lock.lock(sectionId);
+      element.scrollTop = jumpTo;
+      element.scrollTo({ top: target, behavior: 'smooth' });
+      setGlide({ sectionId, target, jumpTo: null });
+      syncScroll();
+    };
+
+    void jump();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [glide, scrollRef, lock, syncScroll]);
+
   const handleScroll = useCallback(() => {
     lock.scroll();
     trackScroll();
   }, [lock, trackScroll]);
 
-  return { scrollRef, layout, range, activeId, trackScroll: handleScroll };
+  return { scrollRef, layout, ranges, activeId, trackScroll: handleScroll };
 };

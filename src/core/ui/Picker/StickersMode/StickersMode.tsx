@@ -27,7 +27,7 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
     removePack,
     clearRecentStickers,
   } = useFeedSections(isOpen);
-  const { scrollRef, layout, range, activeId, trackScroll } = useFeedWindow(
+  const { scrollRef, layout, ranges, activeId, trackScroll } = useFeedWindow(
     sections,
     isCurrent
   );
@@ -70,7 +70,7 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
       <StickerFeed
         sections={feed}
         layout={layout}
-        range={range}
+        ranges={ranges}
         activeId={activeId}
         scrollRef={scrollRef}
         onScroll={handleFeedScroll}
