@@ -2,7 +2,8 @@ import type { ComponentChildren } from 'preact';
 
 import type { Pack, SendItem } from '../../../db.types';
 import type { Host, Settings } from '../../../host.types';
-import type { PickerViewValue, View } from '../usePickerView/usePickerView.types';
+import type { HoldReason, OpenedBy, PopupHolds } from '../../../hoverPopup.types';
+import type { PickerScreen, PickerViewValue } from '../usePickerView/usePickerView.types';
 
 export type PickerStatus = {
   /**
@@ -83,6 +84,17 @@ export type PickerContextValue = {
    * Импорт пака из Telegram: его ход переживает уход с вкладки «Добавить стикеры».
    */
   packImport: PackImportState;
+
+  /**
+   * Чем открыт пикер последний раз: наведением фокус из поля сообщения не уводится.
+   */
+  openedBy: OpenedBy;
+
+  /**
+   * Включает или снимает причину удержания пикера: удержанный пикер не закрывается уходом
+   * курсора. Ссылка стабильна между рендерами.
+   */
+  setHold: (reason: HoldReason, isActive: boolean) => void;
 };
 
 export type PackImportState = {
@@ -116,6 +128,12 @@ export type PackImportOptions = {
   settings: Settings;
 
   /**
+   * Открытый экран поверх режима: к паку лента прокручивается, только если по завершении
+   * открыт экран «Добавить стикеры».
+   */
+  screen: PickerScreen | null;
+
+  /**
    * Перечитывает паки: вкладка пака появляется после первого стикера и по завершении.
    */
   refreshPacks: () => Promise<void>;
@@ -131,9 +149,9 @@ export type PackImportOptions = {
   showError: (text: string) => void;
 
   /**
-   * Открывает вкладку импортированного пака.
+   * Открывает раздел импортированного пака в ленте стикеров.
    */
-  switchTo: (view: View) => void;
+  scrollToSection: (sectionId: string) => void;
 };
 
 export type PickerProviderProps = {
@@ -153,9 +171,20 @@ export type PickerProviderProps = {
   onClose: () => void;
 
   /**
-   * Открыт ли пикер: при закрытии отзываются object URL стикеров.
+   * Виден ли пикер, в том числе пока уходит анимацией закрытия: при скрытии отзываются
+   * object URL стикеров.
    */
   isOpen: boolean;
+
+  /**
+   * Чем открыт пикер последний раз: наведением или кликом.
+   */
+  openedBy: OpenedBy;
+
+  /**
+   * Общий объект удержания фасада: провайдер и панель пишут в него причины.
+   */
+  holds: PopupHolds;
 
   /**
    * Дерево пикера.
@@ -180,9 +209,20 @@ export type PickerStateOptions = {
   onClose: () => void;
 
   /**
-   * Открыт ли пикер: при закрытии отзываются object URL стикеров.
+   * Виден ли пикер, в том числе пока уходит анимацией закрытия: при скрытии отзываются
+   * object URL стикеров.
    */
   isOpen: boolean;
+
+  /**
+   * Чем открыт пикер последний раз: наведением или кликом.
+   */
+  openedBy: OpenedBy;
+
+  /**
+   * Общий объект удержания фасада: провайдер и панель пишут в него причины.
+   */
+  holds: PopupHolds;
 };
 
 export type PickerStateValue = {

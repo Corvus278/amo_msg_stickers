@@ -10,3 +10,30 @@
 :host {
   all: initial;
 }
+
+@layer base {
+  /**
+   * Кольцо фокуса — одно на все кнопки и ссылки панели и только по `:focus-visible`: с
+   * клавиатуры оно видно, после нажатия мышью — нет.
+   *
+   * Кольцо внутри границы элемента (`outline-offset` меньше нуля): снаружи его обрезали бы
+   * края прокручиваемых лент и полосы вкладок, а контур, в отличие от `box-shadow`, рисуется
+   * поверх картинки ячейки.
+   */
+  :is(button, a):focus-visible {
+    @apply outline outline-2 -outline-offset-2 outline-blue-50 dark:outline-beige-70;
+  }
+}
+
+@layer components {
+  /**
+   * Полоса прокрутки ленты: место под неё занято всегда (`scrollbar-gutter: stable`), а
+   * видна она только под курсором — появление полосы не меняет ширину ленты и не
+   * сдвигает сетку.
+   */
+  .feed-scroll {
+    @apply [scrollbar-color:transparent_transparent] [scrollbar-gutter:stable] [scrollbar-width:thin];
+    @apply hover:[scrollbar-color:theme(colors.cadetGray.30/50%)_transparent];
+    @apply dark:hover:[scrollbar-color:theme(colors.white.0/20%)_transparent];
+  }
+}

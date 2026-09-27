@@ -4,7 +4,7 @@ import type { ViewHeaderProps } from './ViewHeader.types';
 
 /**
  * Шапка представления. Отступы общие у всех представлений: тело панели не прыгает при
- * переключении вкладок.
+ * переключении режимов и экранов.
  */
 export const ViewHeader: FC<ViewHeaderProps> = (props) => {
   const { children } = props;

@@ -1,6 +1,7 @@
-import type { FunctionComponent as FC, TargetedEvent } from 'preact';
-import { useState } from 'preact/hooks';
+import type { FunctionComponent as FC } from 'preact';
+import { useMemo, useState } from 'preact/hooks';
 
+import type { RemoteGif } from '../../../db.types';
 import type { GifFeed } from '../../../sources/gifs.types';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
@@ -8,12 +9,13 @@ import { usePicker } from '../PickerProvider/usePicker';
 import { TextInput } from '../TextInput/TextInput';
 import { useGifFeed } from '../useGifFeed/useGifFeed';
 import { usePickerView } from '../usePickerView/usePickerView';
-import type { View } from '../usePickerView/usePickerView.types';
-import { ViewBody } from '../ViewBody/ViewBody';
 import { ViewHeader } from '../ViewHeader/ViewHeader';
 
 import { FeedChips } from './FeedChips/FeedChips';
+import { gifSections } from './gifSections/gifSections';
 import { useFeedChoice } from './useFeedChoice/useFeedChoice';
+import { useGifRemovalFocus } from './useGifRemovalFocus/useGifRemovalFocus';
+import { useRecentGifs } from './useRecentGifs/useRecentGifs';
 import { useSearchFocus } from './useSearchFocus/useSearchFocus';
 import type { GifViewProps } from './GifView.types';
 
@@ -26,30 +28,43 @@ const FEED_ATTRIBUTION: Record<GifFeed, string> = {
   klipy: 'Powered by KLIPY',
 };
 
-const GIFS_VIEW: View = { kind: 'gifs' };
-
 /**
- * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — переход во
- * вкладку, а не навигация.
+ * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — открытие
+ * экрана, а не навигация.
  */
 const SETTINGS_LINK_CLASS =
   'cursor-pointer border-0 bg-transparent p-0 text-blue-50 underline dark:text-beige-70';
 
 /**
- * Поиск GIF и трендовая выдача выбранного источника. Без ключей — подсказка с переходом
- * в настройки.
+ * Поиск GIF и трендовая выдача выбранного источника, при пустом запросе над ней — недавние GIF.
+ * Без ключей — недавние и подсказка с переходом в настройки.
  */
 export const GifView: FC<GifViewProps> = (props) => {
   const { isOpen } = props;
   const { settings } = usePicker();
-  const { switchTo } = usePickerView();
+  const { openScreen } = usePickerView();
   const { feeds, feed, selectFeed } = useFeedChoice(settings);
   const [query, setQuery] = useState('');
-  const { gifs, isNothingFound, checkScroll } = useGifFeed(feed, query, isOpen);
+  const { gifs, term, loading, isNothingFound, resetId, checkScroll } = useGifFeed(
+    feed,
+    query,
+    isOpen
+  );
+  const { recent, remove, clear } = useRecentGifs(isOpen);
   const searchRef = useSearchFocus(isOpen);
+  const { settingsRef, expectGifRemoval, expectRecentClear } = useGifRemovalFocus(
+    recent,
+    isOpen,
+    searchRef
+  );
+  const hasFeed = Boolean(feed);
+
+  const sections = useMemo(() => {
+    return gifSections({ recent, gifs, term, hasFeed, loading });
+  }, [recent, gifs, term, hasFeed, loading]);
 
   const handleSettingsClick = () => {
-    switchTo({ kind: 'settings' });
+    openScreen('settings');
   };
 
   const handleSearchInput = (value: string) => {
@@ -60,8 +75,18 @@ export const GifView: FC<GifViewProps> = (props) => {
     selectFeed(nextFeed);
   };
 
-  const handleBodyScroll = (event: TargetedEvent<HTMLDivElement>) => {
-    checkScroll(event.currentTarget);
+  const handleGridScroll = (element: HTMLElement) => {
+    checkScroll(element);
+  };
+
+  const handleRecentRemove = (gif: RemoteGif) => {
+    expectGifRemoval(gif);
+    void remove(gif);
+  };
+
+  const handleRecentClear = () => {
+    expectRecentClear();
+    void clear();
   };
 
   if (!feed) {
@@ -69,11 +94,18 @@ export const GifView: FC<GifViewProps> = (props) => {
       <>
         <ViewHeader />
 
-        <ViewBody view={GIFS_VIEW}>
+        <MasonryGrid
+          sections={sections}
+          resetKey={resetId}
+          onScroll={handleGridScroll}
+          onRecentRemove={handleRecentRemove}
+          onRecentClear={handleRecentClear}
+        >
           <EmptyState>
-            Для поиска GIF нужен API-ключ GIPHY или KLIPY.
+            Для поиска GIF нужен API-ключ GIPHY или KLIPY
             <br />
             <button
+              ref={settingsRef}
               type="button"
               className={SETTINGS_LINK_CLASS}
               onClick={handleSettingsClick}
@@ -81,7 +113,7 @@ export const GifView: FC<GifViewProps> = (props) => {
               Открыть настройки
             </button>
           </EmptyState>
-        </ViewBody>
+        </MasonryGrid>
       </>
     );
   }
@@ -100,17 +132,19 @@ export const GifView: FC<GifViewProps> = (props) => {
         <FeedChips feeds={feeds} feed={feed} onSelect={handleFeedSelect} />
       </ViewHeader>
 
-      <ViewBody view={GIFS_VIEW} onScroll={handleBodyScroll}>
-        {isNothingFound ? (
-          <EmptyState>Ничего не нашлось</EmptyState>
-        ) : (
-          <MasonryGrid gifs={gifs} />
-        )}
+      <MasonryGrid
+        sections={sections}
+        resetKey={resetId}
+        onScroll={handleGridScroll}
+        onRecentRemove={handleRecentRemove}
+        onRecentClear={handleRecentClear}
+      >
+        {isNothingFound && <EmptyState>Ничего не нашлось</EmptyState>}
 
         <div className="px-0.5 pt-1 text-right text-xxs text-cadetGray-30 dark:text-gray-70">
           {FEED_ATTRIBUTION[feed]}
         </div>
-      </ViewBody>
+      </MasonryGrid>
     </>
   );
 };

@@ -1,17 +1,20 @@
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent as FC } from 'preact';
+import type { FunctionComponent as FC, TargetedFocusEvent } from 'preact';
+
+import type { PanelPhase } from '../../hoverPopup.types';
 
 import { AddView } from './AddView/AddView';
+import { Footer } from './Footer/Footer';
 import { GifView } from './GifView/GifView';
-import { PackView } from './PackView/PackView';
-import { RecentView } from './RecentView/RecentView';
+import { ModePanel } from './ModePanel/ModePanel';
+import { usePicker } from './PickerProvider/usePicker';
+import { Screen } from './Screen/Screen';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
-import { TAB_PANEL_ID, tabId } from './tabIds/tabIds';
-import { Tabs } from './Tabs/Tabs';
+import { StickersMode } from './StickersMode/StickersMode';
 import { useOpenLoad } from './useOpenLoad/useOpenLoad';
 import { usePickerView } from './usePickerView/usePickerView';
-import type { View } from './usePickerView/usePickerView.types';
+import type { PickerScreen } from './usePickerView/usePickerView.types';
 import type { PickerProps } from './Picker.types';
 
 /**
@@ -45,35 +48,33 @@ const OPEN_ANIMATION_CLASS =
   'transition-[opacity,transform] duration-lg ease-linear [@starting-style]:translate-y-[5px] [@starting-style]:opacity-0';
 
 /**
- * `flex` — только у открытой панели: закрытая остаётся смонтированной и скрыта
+ * `flex` — только у видимой панели: скрытая остаётся смонтированной и скрыта
  * `display: none`, чтобы вкладка и запрос поиска пережили повторное открытие.
+ *
+ * Уходящая панель проигрывает переход открытия в обратную сторону тем же переходом и не
+ * принимает курсор: клик по ней в эти 200 мс ушёл бы в невидимую ячейку.
  */
 const panelVariants = cva([...PANEL_CLASS, OPEN_ANIMATION_CLASS], {
   variants: {
-    isOpen: {
-      true: 'flex',
-      false: 'hidden',
-    },
+    phase: {
+      open: 'flex',
+      closing: 'pointer-events-none flex translate-y-[5px] opacity-0',
+      closed: 'hidden',
+    } satisfies Record<PanelPhase, string>,
     isDark: {
       true: 'dark',
     },
   },
 });
 
-const renderView = (view: View, isOpen: boolean) => {
-  switch (view.kind) {
-    case 'recent': {
-      return <RecentView isOpen={isOpen} />;
-    }
+/**
+ * Область над футером. Экран и строка статуса лежат в ней слоями поверх режима, а не в
+ * потоке: лента не меняет высоту, и её прокрутка не сдвигается.
+ */
+const BODY_CLASS = 'relative flex min-h-0 flex-1 flex-col';
 
-    case 'gifs': {
-      return <GifView isOpen={isOpen} />;
-    }
-
-    case 'pack': {
-      return <PackView packId={view.packId} />;
-    }
-
+const renderScreen = (screen: PickerScreen) => {
+  switch (screen) {
     case 'add': {
       return <AddView />;
     }
@@ -83,16 +84,42 @@ const renderView = (view: View, isOpen: boolean) => {
     }
 
     default: {
-      const unknownView: never = view;
+      const unknownScreen: never = screen;
 
-      throw new Error(`Unknown picker view: ${JSON.stringify(unknownView)}`);
+      throw new Error(`Unknown picker screen: ${String(unknownScreen)}`);
     }
   }
 };
 
+/**
+ * Типы `input`, в которые печатают: фокус в них удерживает попап, пока идёт ввод.
+ */
+const TEXT_INPUT_TYPES = new Set([
+  'text',
+  'search',
+  'password',
+  'url',
+  'email',
+  'tel',
+  'number',
+]);
+
+const isTextField = (target: EventTarget | null) => {
+  if (target instanceof HTMLTextAreaElement) return true;
+
+  return target instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(target.type);
+};
+
 export const Picker: FC<PickerProps> = (props) => {
-  const { isOpen, isDark, onClose } = props;
-  const { view } = usePickerView();
+  const { phase, isDark, onClose } = props;
+  const { setHold } = usePicker();
+  const { mode, screen } = usePickerView();
+  /**
+   * Уходящая панель ещё видна: содержимое живёт как у открытой, и возврат курсора во время
+   * ухода ничего в нём не перезагружает.
+   */
+  const isOpen = phase !== 'closed';
+  const isCovered = screen !== null;
 
   useOpenLoad(isOpen);
 
@@ -104,29 +131,42 @@ export const Picker: FC<PickerProps> = (props) => {
     event.stopPropagation();
   };
 
+  /**
+   * Фокус переходит между полями панели парой `focusout` → `focusin`, поэтому удержание
+   * между ними не прерывается.
+   */
+  const handlePanelFocusIn = (event: TargetedFocusEvent<HTMLDialogElement>) => {
+    if (isTextField(event.target)) setHold('field', true);
+  };
+
+  const handlePanelFocusOut = (event: TargetedFocusEvent<HTMLDialogElement>) => {
+    if (isTextField(event.target)) setHold('field', false);
+  };
+
   return (
     <dialog
       open={isOpen}
       aria-label="Стикеры и GIF"
-      className={panelVariants({ isOpen, isDark })}
+      className={panelVariants({ phase, isDark })}
       onKeyDown={handlePanelKeyDown}
+      onFocusIn={handlePanelFocusIn}
+      onFocusOut={handlePanelFocusOut}
     >
-      {/**
-       * Панель занимает место тела, а шапка и тело представления ложатся в неё так же,
-       * как лежали бы прямо в колонке диалога.
-       */}
-      <div
-        role="tabpanel"
-        id={TAB_PANEL_ID}
-        aria-labelledby={tabId(view)}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        {renderView(view, isOpen)}
+      <div className={BODY_CLASS}>
+        <ModePanel mode="stickers" isActive={mode === 'stickers'} isInert={isCovered}>
+          <StickersMode isOpen={isOpen} />
+        </ModePanel>
+
+        <ModePanel mode="gifs" isActive={mode === 'gifs'} isInert={isCovered}>
+          <GifView isOpen={isOpen} />
+        </ModePanel>
+
+        {screen && <Screen>{renderScreen(screen)}</Screen>}
+
+        <StatusBar />
       </div>
 
-      <StatusBar />
-
-      <Tabs />
+      <Footer />
     </dialog>
   );
 };

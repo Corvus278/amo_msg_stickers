@@ -4,10 +4,10 @@ import { PickerViewContext } from './PickerViewContext';
 import type { PickerViewValue } from './usePickerView.types';
 
 /**
- * Открытое представление пикера и переключение между представлениями. Выбор
- * переживает закрытие и повторное открытие пикера.
+ * Режим, экран поверх него и якорь ленты стикеров. Выбор переживает закрытие и повторное
+ * открытие пикера, режим — ещё и перезагрузку страницы.
  *
- * @returns открытое представление и `switchTo`
+ * @returns состояние вида и его методы
  */
 export const usePickerView = (): PickerViewValue => {
   const value = useContext(PickerViewContext);

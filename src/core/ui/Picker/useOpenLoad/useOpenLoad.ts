@@ -1,34 +1,26 @@
 import { useEffect, useRef } from 'preact/hooks';
 
-import { ensureCustomPack, listRecent } from '../../../db';
+import { ensureCustomPack } from '../../../db';
 import { errorMessage } from '../PickerProvider/errorMessage';
 import { usePicker } from '../PickerProvider/usePicker';
-import { usePickerView } from '../usePickerView/usePickerView';
 
 /**
  * Загрузка на каждое открытие пикера: сброс статуса, свежие настройки и паки (их могли
- * поменять в другой вкладке). Без истории отправок открывается «GIF» вместо пустых
- * недавних; выбранная пользователем вкладка не трогается. Сбой загрузки (окружение или
- * база недоступны) показывается ошибкой в статусе.
+ * поменять в другой вкладке). Сбой загрузки (окружение или база недоступны) показывается
+ * ошибкой в статусе. Сбой загрузки, завершившейся после закрытия или после более свежего
+ * открытия, не показывается: иначе ошибка прошлого открытия встала бы поверх статуса нового.
  *
  * @param isOpen — открыт ли пикер
  */
 export const useOpenLoad = (isOpen: boolean) => {
   const { refreshSettings, refreshPacks, clearStatus, showError } = usePicker();
-  const { view, switchTo } = usePickerView();
-
-  /**
-   * Вкладка читается через ref: загрузка идёт на открытие, а не на каждое переключение
-   * вкладок, поэтому `view` не должен попадать в зависимости эффекта.
-   */
-  const viewRef = useRef(view);
-
-  useEffect(() => {
-    viewRef.current = view;
-  });
+  const requestRef = useRef(0);
 
   useEffect(() => {
     if (!isOpen) return;
+
+    requestRef.current += 1;
+    const request = requestRef.current;
 
     const load = async () => {
       clearStatus();
@@ -37,16 +29,15 @@ export const useOpenLoad = (isOpen: boolean) => {
         await refreshSettings();
         await ensureCustomPack();
         await refreshPacks();
-        const recent = await listRecent();
-
-        if (viewRef.current.kind === 'recent' && !recent.length) {
-          switchTo({ kind: 'gifs' });
-        }
       } catch (error) {
-        showError(errorMessage(error));
+        if (request === requestRef.current) showError(errorMessage(error));
       }
     };
 
     void load();
-  }, [isOpen, refreshSettings, refreshPacks, clearStatus, showError, switchTo]);
+
+    return () => {
+      requestRef.current += 1;
+    };
+  }, [isOpen, refreshSettings, refreshPacks, clearStatus, showError]);
 };

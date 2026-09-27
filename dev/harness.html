@@ -149,6 +149,7 @@
       <label><input type="checkbox" id="author" /> с именем автора</label>
       <button id="plain">картинка без метки</button>
       <button id="reply">ответ с цитатой</button>
+      <button id="library">20×120 паков</button>
     </div>
     <div class="relative h-screen">
       <div id="chat"></div>
@@ -424,6 +425,72 @@
       };
       document.getElementById('theme').onclick = () =>
         document.documentElement.classList.toggle('dark');
+
+      // --- большая библиотека: 20 паков по 120 стикеров прямо в IndexedDB пикера ---
+      const PACKS = 20;
+      const STICKERS = 120;
+
+      const openLibrary = () =>
+        new Promise((resolve, reject) => {
+          const req = indexedDB.open('amo-stickers', 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            db.createObjectStore('packs', { keyPath: 'id' });
+            db.createObjectStore('stickers', { keyPath: 'id' }).createIndex(
+              'packId',
+              'packId'
+            );
+            db.createObjectStore('recent', { keyPath: 'key' });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+
+      const stickerBlob = (pack, index) => {
+        const canvas = new OffscreenCanvas(96, 96);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = `hsl(${(pack * 360) / PACKS} 70% 60%)`;
+        ctx.beginPath();
+        ctx.arc(48, 48, 44, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${pack + 1}.${index + 1}`, 48, 57);
+        return canvas.convertToBlob({ type: 'image/png' });
+      };
+
+      document.getElementById('library').onclick = async () => {
+        const button = document.getElementById('library');
+        button.disabled = true;
+        const records = [];
+        for (let pack = 0; pack < PACKS; pack++) {
+          for (let index = 0; index < STICKERS; index++) {
+            records.push({
+              id: `bench-${pack}-${index}`,
+              packId: `tg:bench_${pack + 1}`,
+              blob: await stickerBlob(pack, index),
+              width: 96,
+              height: 96,
+              emoji: '😀',
+              createdAt: index,
+            });
+          }
+        }
+        const db = await openLibrary();
+        const tx = db.transaction(['packs', 'stickers'], 'readwrite');
+        for (let pack = 0; pack < PACKS; pack++) {
+          tx.objectStore('packs').put({
+            id: `tg:bench_${pack + 1}`,
+            title: `Тестовый пак ${pack + 1} с длинным названием для проверки обрезки`,
+            source: 'telegram',
+            sourceRef: `bench_${pack + 1}`,
+            createdAt: Date.now() + pack,
+          });
+        }
+        for (const record of records) tx.objectStore('stickers').put(record);
+        tx.oncomplete = () => location.reload();
+      };
     </script>
     <script src="../dist/amo-stickers.user.js"></script>
   </body>

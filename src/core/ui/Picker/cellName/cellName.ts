@@ -1,12 +1,19 @@
-import type { RemoteGif } from '../../../db.types';
+import type { RemoteGif, StickerRec } from '../../../db.types';
 
 /**
- * Имя стикера для кнопок ячейки: эмодзи из Telegram отличает соседние стикеры на слух.
+ * Имя стикера для кнопок ячейки. Подпись своего стикера — то, что на нём написано, и по ней его
+ * узнают на слух; у стикера из Telegram подписи нет, и соседние стикеры отличает эмодзи.
  *
- * @param emoji — эмодзи стикера; нет — имя без него
- * @returns имя в винительном падеже, «стикер 😀»
+ * @param sticker — подпись и эмодзи стикера; нет обоих — имя без них
+ * @returns имя в винительном падеже: «стикер «привет»», «стикер 😀»
  */
-export const stickerCellName = (emoji: string | undefined): string => {
+export const stickerCellName = (
+  sticker: Pick<StickerRec, 'emoji' | 'caption'>
+): string => {
+  const { emoji, caption } = sticker;
+
+  if (caption) return `стикер «${caption}»`;
+
   return emoji ? `стикер ${emoji}` : 'стикер';
 };
 

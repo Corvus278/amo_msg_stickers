@@ -27,8 +27,8 @@ const BYTES_IN_KB = 1024;
  * @returns черновик, выбор файла, смена подписи и сохранение
  */
 export const useStickerDraft = (): StickerDraftState => {
-  const { refreshPacks, showStatus, showError } = usePicker();
-  const { switchTo } = usePickerView();
+  const { refreshPacks, showStatus, showError, setHold } = usePicker();
+  const { scrollToSection } = usePickerView();
   const [source, setSource] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [captionText, setCaptionText] = useState('');
@@ -45,6 +45,18 @@ export const useStickerDraft = (): StickerDraftState => {
       clearTimeout(timer);
     };
   }, [caption]);
+
+  /**
+   * Идущая конвертация удерживает попап: закрытый уходом курсора пикер спрятал бы её
+   * результат. Форма размонтирована — результат отбрасывается, и удержание снимается.
+   */
+  useEffect(() => {
+    setHold('conversion', isConverting);
+
+    return () => {
+      setHold('conversion', false);
+    };
+  }, [isConverting, setHold]);
 
   useEffect(() => {
     if (!source) return;
@@ -117,13 +129,13 @@ export const useStickerDraft = (): StickerDraftState => {
         createdAt: Date.now(),
       });
       await refreshPacks();
-      switchTo({ kind: 'pack', packId: CUSTOM_PACK_ID });
+      scrollToSection(CUSTOM_PACK_ID);
     } catch (error) {
       showError(errorMessage(error));
     } finally {
       setIsSaving(false);
     }
-  }, [draft, isConverting, isSaving, refreshPacks, switchTo, showError]);
+  }, [draft, isConverting, isSaving, refreshPacks, scrollToSection, showError]);
 
   return {
     fileName: source?.name || null,

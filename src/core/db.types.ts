@@ -73,6 +73,11 @@ export type StickerRec = {
   createdAt: number;
 };
 
+/**
+ * Стикеры библиотеки по пакам: ключ — `packId`, стикеры — по времени добавления.
+ */
+export type StickersByPack = Map<string, StickerRec[]>;
+
 export type RemoteGif = {
   /**
    * Идентификатор GIF у провайдера.
@@ -135,6 +140,11 @@ export type RemoteSendItem = {
 };
 
 export type SendItem = LocalSendItem | RemoteSendItem;
+
+/**
+ * Вид недавних: стикер из пака или GIF из поиска — у каждого свой список и свой лимит.
+ */
+export type RecentKind = 'sticker' | 'gif';
 
 export type RecentRec = {
   /**

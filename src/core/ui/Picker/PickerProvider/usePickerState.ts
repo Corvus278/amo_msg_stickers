@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import { listPacks } from '../../../db';
 import type { Pack, SendItem } from '../../../db.types';
 import { DEFAULT_SETTINGS } from '../../../host';
 import type { Settings } from '../../../host.types';
 import { useObjectUrls } from '../useObjectUrls/useObjectUrls';
-import type { View } from '../usePickerView/usePickerView.types';
+import { usePickerViewState } from '../usePickerView/usePickerViewState';
 
 import { errorMessage } from './errorMessage';
 import type {
@@ -15,8 +15,6 @@ import type {
 } from './PickerProvider.types';
 import { usePackImport } from './usePackImport';
 
-const INITIAL_VIEW: View = { kind: 'recent' };
-
 /**
  * Состояние `PickerProvider`. Методы стабильны между рендерами: потребители кладут их в
  * зависимости эффектов, не рискуя перезапуском на каждый рендер.
@@ -25,11 +23,11 @@ const INITIAL_VIEW: View = { kind: 'recent' };
  * @returns значения обоих контекстов провайдера
  */
 export const usePickerState = (options: PickerStateOptions): PickerStateValue => {
-  const { env, onSend, onClose, isOpen } = options;
+  const { env, onSend, onClose, isOpen, openedBy, holds } = options;
+  const { set: setHold } = holds;
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [status, setStatus] = useState<PickerStatus | null>(null);
-  const [view, setView] = useState<View>(INITIAL_VIEW);
   const { urlOf, dropUrl } = useObjectUrls(isOpen);
 
   const refreshSettings = useCallback(async () => {
@@ -67,19 +65,23 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
     [onSend, onClose, showStatus, showError, clearStatus]
   );
 
-  const switchTo = useCallback((nextView: View) => {
-    setView(nextView);
-    setStatus(null);
-  }, []);
+  const view = usePickerViewState(isOpen, clearStatus);
+  const { screen, scrollToSection } = view;
 
   const packImport = usePackImport({
     env,
     settings,
+    screen,
     refreshPacks,
     showStatus,
     showError,
-    switchTo,
+    scrollToSection,
   });
+  const { isImporting } = packImport;
+
+  useEffect(() => {
+    setHold('import', isImporting);
+  }, [isImporting, setHold]);
 
   return {
     picker: {
@@ -96,7 +98,9 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
       urlOf,
       dropUrl,
       packImport,
+      openedBy,
+      setHold,
     },
-    view: { view, switchTo },
+    view,
   };
 };

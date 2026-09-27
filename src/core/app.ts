@@ -6,6 +6,8 @@ import { getSticker, pushRecent } from './db';
 import type { SendItem } from './db.types';
 import { sendFileName } from './fileName';
 import type { Host } from './host.types';
+import { createHoverPopup } from './hoverPopup';
+import type { OpenedBy } from './hoverPopup.types';
 import { BYTES_IN_MB } from './net';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
 
@@ -16,6 +18,18 @@ const MARK = 'data-amo-stickers';
  * `gif` не гарантирует: лимит — с запасом, чтобы не отсечь рабочую выдачу.
  */
 const MAX_REMOTE_GIF_BYTES = 8 * BYTES_IN_MB;
+
+/**
+ * Задержка открытия наведением: курсор, который прошёл кнопку по пути в другое место,
+ * попап не открывает.
+ */
+const HOVER_OPEN_DELAY_MS = 250;
+
+/**
+ * Задержка закрытия после ухода курсора: её хватает, чтобы перевести курсор с кнопки на
+ * попап через промежуток между ними.
+ */
+const HOVER_CLOSE_DELAY_MS = 500;
 
 /**
  * Классы повторяют обёртку кнопки эмодзи — tailwind-стили amo применяются без своего CSS.
@@ -82,31 +96,65 @@ export const start = (host: Host) => {
 
   const picker = createPicker(host, {
     onSend: send,
+    /**
+     * Пикер закрывается и изнутри (Escape, успешная отправка) — контроллер наведения
+     * узнаёт об этом здесь, иначе он считал бы попап открытым.
+     */
     onClose: () => {
       setIconOpen(activeButton, false);
       activeButton = null;
+      hoverPopup.dismiss();
+    },
+    onHoldRelease: () => {
+      hoverPopup.release();
     },
   });
 
   picker.setTheme(isDarkTheme());
 
-  const toggle = (button: HTMLElement) => {
-    if (picker.isOpen && activeButton === button) {
-      picker.close();
-
-      return;
-    }
-
-    if (picker.isOpen) picker.close();
+  const show = (button: HTMLElement, openedBy: OpenedBy) => {
     activeButton = button;
     /**
      * Хост попапа живёт внутри кнопки: position:fixed считается от ближайшего предка
-     * с transform — контейнера поля ввода, как у родного попапа эмодзи.
+     * с transform — контейнера поля ввода, как у родного попапа эмодзи. Поэтому и курсор
+     * над попапом остаётся внутри обёртки кнопки.
+     *
+     * Уже вставленный в эту кнопку хост не переставляется: перестановка узла сбросила бы
+     * переход уходящей панели, и возврат курсора во время ухода мигнул бы ею.
      */
-    button.append(picker.element);
+    if (picker.element.parentElement !== button) button.append(picker.element);
     setIconOpen(button, true);
-    picker.open();
+    picker.open(openedBy);
   };
+
+  /**
+   * У каждого поля ввода своя кнопка, а попап один: контроллер открывает его у той кнопки,
+   * что его вызвала.
+   */
+  const hoverPopup = createHoverPopup<HTMLElement>({
+    openDelay: HOVER_OPEN_DELAY_MS,
+    closeDelay: HOVER_CLOSE_DELAY_MS,
+    onOpen: (openedBy, button) => {
+      show(button, openedBy);
+    },
+    onClose: () => {
+      picker.close();
+    },
+    /**
+     * Фокус в поле попапа, диалог файла, импорт или конвертация — уход курсора попап не
+     * закрывает, клик вне него и Escape закрывают всегда.
+     */
+    isHeld: () => {
+      return picker.isHeld();
+    },
+    /**
+     * Сразу открывается только панель, уходящая у той же кнопки: у другого поля ввода
+     * попап открывается с обычной задержкой.
+     */
+    isLeaving: (button) => {
+      return picker.isClosing && picker.element.parentElement === button;
+    },
+  });
 
   const mount = ({ emojiWrap }: Composer) => {
     const wrap = document.createElement('div');
@@ -122,7 +170,13 @@ export const start = (host: Host) => {
     inner.title = 'Стикеры и GIF';
     inner.innerHTML = stickerIcon(ICON_CLASS);
     inner.addEventListener('click', () => {
-      return toggle(wrap);
+      hoverPopup.click(wrap);
+    });
+    wrap.addEventListener('mouseenter', () => {
+      hoverPopup.enter(wrap);
+    });
+    wrap.addEventListener('mouseleave', () => {
+      hoverPopup.leave();
     });
     wrap.append(inner);
     emojiWrap.after(wrap);
@@ -148,8 +202,16 @@ export const start = (host: Host) => {
   };
 
   const handleDocumentMouseDown = (event: MouseEvent) => {
-    if (!picker.isOpen || !activeButton) return;
-    if (!event.composedPath().includes(activeButton)) picker.close();
+    if (!hoverPopup.isOpen || !activeButton) return;
+    if (!event.composedPath().includes(activeButton)) hoverPopup.dismiss();
+  };
+
+  /**
+   * `mouseout` без `relatedTarget` — курсор ушёл за окно: `mouseleave` обёртки при быстром
+   * уходе с края страницы может не прийти, и попап, открытый наведением, остался бы висеть.
+   */
+  const handleDocumentMouseOut = (event: MouseEvent) => {
+    if (!event.relatedTarget) hoverPopup.leave();
   };
 
   new MutationObserver(scheduleScan).observe(document.body, {
@@ -164,6 +226,7 @@ export const start = (host: Host) => {
   });
 
   document.addEventListener('mousedown', handleDocumentMouseDown, true);
+  document.addEventListener('mouseout', handleDocumentMouseOut);
 
   scan();
   console.info(`[amo-stickers] started (${host.name})`);
