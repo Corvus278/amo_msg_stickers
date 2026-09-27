@@ -19,3 +19,12 @@ readAmoLocale читает глобальные localStorage/navigator; t(key, .
 setLocale(readAmoLocale()) — первая строка start(); ключ picker.title (подсказка кнопки) заведён в G1.
 Аудит: ok с первого круга.
 Долг: тест t/LocalizedError с непустыми params — когда появится ключ с подстановкой (G2+); picker.title занял префикс picker. из K2 (G2 учесть); стенд 2.3 аудитором не гонялся (исполнитель прогнал в headless Chrome).
+
+### G2 · Каркас пикера и формы
+
+renderMessage разделён на чистую renderTemplate (тест на синтетике) и renderMessage(key, nodes) с шаблоном текущего языка; подсказки со ссылками — одна строка с {link}.
+t() зовётся в рендере, не в константах модуля: модуль вычисляется до setLocale в start().
+Ключи: aria-label панели = picker.title; «GIF» → footer.gifs ('GIFs'); settings.title отдельно от footer.settings; подписи «GIPHY/KLIPY API key» — литералы без кириллицы.
+Долг G1 закрыт: tests/translate.test.ts — t и LocalizedError с непустыми params (файл вне списка G2, только тесты).
+Аудит: ok с первого круга.
+Долг: renderMessage.ts держит свою таблицу {ru, en} + getLocale() вместо доступа к шаблону из translate.ts — второй источник выбора языка (кандидат для G8); стенд 3.2/3.5 аудитором не гонялся (исполнитель прогнал ru/en).

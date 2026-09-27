@@ -2,6 +2,7 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC, TargetedDragEvent, TargetedEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
+import { t } from '../../../../../i18n/translate';
 import { usePicker } from '../../../PickerProvider/usePicker';
 
 import type { DropZoneProps } from './DropZone.types';
@@ -93,7 +94,7 @@ export const DropZone: FC<DropZoneProps> = (props) => {
       onDragLeave={handleZoneDragLeave}
       onDrop={handleZoneDrop}
     >
-      <span>{fileName || 'Картинка, GIF, видео или .tgs — перетащите или кликните'}</span>
+      <span>{fileName || t('add.custom.dropZone')}</span>
 
       <input
         type="file"

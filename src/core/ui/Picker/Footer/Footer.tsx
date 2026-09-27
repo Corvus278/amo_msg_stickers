@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../i18n/translate';
 import { usePickerView } from '../usePickerView/usePickerView';
 
 import { ModeTab } from './ModeTab/ModeTab';
@@ -31,6 +32,7 @@ const SETTINGS_BUTTON_CLASS = [
 export const Footer: FC = () => {
   const { screen, openScreen, closeScreen } = usePickerView();
   const isSettingsOpen = screen === 'settings';
+  const settingsLabel = t('footer.settings');
 
   const handleSettingsClick = () => {
     if (isSettingsOpen) {
@@ -44,16 +46,20 @@ export const Footer: FC = () => {
 
   return (
     <div className={FOOTER_CLASS}>
-      <div role="tablist" aria-label="Режимы" className="flex items-center gap-0.5">
-        <ModeTab mode="stickers" title="Стикеры" />
+      <div
+        role="tablist"
+        aria-label={t('footer.modes')}
+        className="flex items-center gap-0.5"
+      >
+        <ModeTab mode="stickers" title={t('footer.stickers')} />
 
-        <ModeTab mode="gifs" title="GIF" />
+        <ModeTab mode="gifs" title={t('footer.gifs')} />
       </div>
 
       <button
         type="button"
-        title="Настройки"
-        aria-label="Настройки"
+        title={settingsLabel}
+        aria-label={settingsLabel}
         aria-pressed={isSettingsOpen}
         className={SETTINGS_BUTTON_CLASS}
         onClick={handleSettingsClick}

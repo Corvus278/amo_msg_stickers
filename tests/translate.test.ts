@@ -60,6 +60,16 @@ describe('язык модуля', () => {
     expect(t('picker.title')).toBe(EN['picker.title']);
     expect(t('picker.title')).not.toBe(RU['picker.title']);
   });
+
+  it('подставляет параметры в строку текущего языка', () => {
+    expect(t('settings.giphy.hint', { link: 'giphy.com' })).toBe(
+      'Бесплатно на giphy.com'
+    );
+
+    setLocale('en');
+
+    expect(t('settings.giphy.hint', { link: 'giphy.com' })).toBe('Free at giphy.com');
+  });
 });
 
 describe('LocalizedError', () => {
@@ -71,6 +81,15 @@ describe('LocalizedError', () => {
     expect(error.key).toBe('picker.title');
     expect(error.params).toBeUndefined();
     expect(error.message).toBe(EN['picker.title']);
+  });
+
+  it('сохраняет непустые параметры и подставляет их в текст', () => {
+    setLocale('en');
+    const error = new LocalizedError('settings.giphy.hint', { link: 'giphy.com' });
+
+    expect(error.key).toBe('settings.giphy.hint');
+    expect(error.params).toEqual({ link: 'giphy.com' });
+    expect(error.message).toBe('Free at giphy.com');
   });
 
   it('текст фиксируется при создании', () => {

@@ -1,5 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../i18n/translate';
+import { renderMessage } from '../../renderMessage/renderMessage';
 import { Button } from '../Button/Button';
 import type { View } from '../usePickerView/usePickerView.types';
 import { ViewBody } from '../ViewBody/ViewBody';
@@ -39,7 +41,7 @@ export const SettingsView: FC = () => {
   return (
     <>
       <ViewHeader>
-        <ViewTitle title="Настройки" />
+        <ViewTitle title={t('settings.title')} />
       </ViewHeader>
 
       <ViewBody view={SETTINGS_VIEW}>
@@ -50,10 +52,13 @@ export const SettingsView: FC = () => {
             value={giphyKey}
             onInput={handleGiphyKeyInput}
           >
-            Бесплатно на{' '}
-            <ExternalLink href="https://developers.giphy.com/dashboard/">
-              developers.giphy.com
-            </ExternalLink>
+            {renderMessage('settings.giphy.hint', {
+              link: (
+                <ExternalLink href="https://developers.giphy.com/dashboard/">
+                  developers.giphy.com
+                </ExternalLink>
+              ),
+            })}
           </SecretField>
 
           <SecretField
@@ -62,24 +67,27 @@ export const SettingsView: FC = () => {
             value={klipyKey}
             onInput={handleKlipyKeyInput}
           >
-            Тестовый ключ в Partner Panel:{' '}
-            <ExternalLink href="https://klipy.com/migrate">klipy.com</ExternalLink>
+            {renderMessage('settings.klipy.hint', {
+              link: (
+                <ExternalLink href="https://klipy.com/migrate">klipy.com</ExternalLink>
+              ),
+            })}
           </SecretField>
 
           <SecretField
             id="settings-telegram-token"
-            label="Токен Telegram-бота (для импорта)"
+            label={t('settings.telegram.label')}
             value={telegramToken}
             onInput={handleTelegramTokenInput}
           >
-            Создайте любого бота в{' '}
-            <ExternalLink href="https://t.me/BotFather">@BotFather</ExternalLink>. Токен
-            хранится локально.
+            {renderMessage('settings.telegram.hint', {
+              link: <ExternalLink href="https://t.me/BotFather">@BotFather</ExternalLink>,
+            })}
           </SecretField>
 
           <div className="flex items-center gap-1.5">
             <Button variant="primary" onClick={handleSaveClick}>
-              Сохранить
+              {t('settings.save')}
             </Button>
           </div>
         </div>
