@@ -3,18 +3,30 @@ import { render } from 'preact';
 import css from './picker.css';
 
 import type { Host } from '../host.types';
+import type { OpenedBy } from '../hoverPopup.types';
+import { createPopupHolds } from '../hoverPopupHolds';
+import { createPanelPhase } from '../hoverPopupPhase';
 
 import { Picker } from './Picker/Picker';
 import { PickerProvider } from './Picker/PickerProvider/PickerProvider';
 import type { PickerCallbacks, PickerHandle } from './createPicker.types';
 
 /**
+ * Длительность ухода панели, мс — как у перехода `duration-lg` панели и у попапа эмодзи.
+ */
+const CLOSE_ANIMATION_MS = 200;
+
+/**
  * Пикер в shadow root за императивным фасадом: `app.ts` живёт в DOM amo без Preact и
  * управляет попапом вызовами методов.
  *
- * Дерево перерисовывается `render()` на каждое изменение `isOpen`/`isDark`: закрытый
+ * Дерево перерисовывается `render()` на каждое изменение фазы панели и темы: закрытый
  * пикер остаётся смонтированным, поэтому состояние компонентов (вкладка, запрос поиска)
  * переживает повторное открытие.
+ *
+ * Закрытие проходит фазу `closing`: панель уходит анимацией и только потом скрывается.
+ * Содержимое на это время считается открытым — повторное открытие во время ухода не
+ * перезагружает его и не пересоздаёт картинки.
  *
  * @param env — окружение: сеть и настройки
  * @param callbacks — отправка стикера и реакция на закрытие
@@ -32,13 +44,24 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
    */
   const shadowRoot = element.attachShadow({ mode: 'closed' });
 
-  let isOpen = false;
+  /**
+   * До первого открытия — наведение: оно ничего не делает с фокусом.
+   */
+  let openedBy: OpenedBy = 'hover';
   let isDark = false;
 
+  const holds = createPopupHolds();
+  const panel = createPanelPhase({
+    closeDuration: CLOSE_ANIMATION_MS,
+    onChange: () => {
+      update();
+    },
+  });
+
   const close = () => {
-    if (!isOpen) return;
-    isOpen = false;
-    update();
+    if (panel.phase !== 'open') return;
+    holds.releasePanel();
+    panel.hide();
     onClose();
   };
 
@@ -51,6 +74,8 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
    * первый `render()` Preact удаляет из контейнера узлы, которых нет в дереве.
    */
   const update = () => {
+    const { phase } = panel;
+
     render(
       <>
         <style>{css}</style>
@@ -59,19 +84,21 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
           env={env}
           onSend={onSend}
           onClose={handlePickerClose}
-          isOpen={isOpen}
+          isOpen={phase !== 'closed'}
+          openedBy={openedBy}
+          holds={holds}
         >
-          <Picker isOpen={isOpen} isDark={isDark} onClose={handlePickerClose} />
+          <Picker phase={phase} isDark={isDark} onClose={handlePickerClose} />
         </PickerProvider>
       </>,
       shadowRoot
     );
   };
 
-  const open = () => {
-    if (isOpen) return;
-    isOpen = true;
-    update();
+  const open = (nextOpenedBy: OpenedBy) => {
+    if (panel.phase === 'open') return;
+    openedBy = nextOpenedBy;
+    panel.show();
   };
 
   const setTheme = (nextIsDark: boolean) => {
@@ -85,8 +112,12 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
   return {
     element,
     get isOpen() {
-      return isOpen;
+      return panel.phase === 'open';
     },
+    get isClosing() {
+      return panel.phase === 'closing';
+    },
+    isHeld: holds.isHeld,
     open,
     close,
     setTheme,

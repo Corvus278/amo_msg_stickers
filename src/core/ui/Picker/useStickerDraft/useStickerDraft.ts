@@ -27,7 +27,7 @@ const BYTES_IN_KB = 1024;
  * @returns черновик, выбор файла, смена подписи и сохранение
  */
 export const useStickerDraft = (): StickerDraftState => {
-  const { refreshPacks, showStatus, showError } = usePicker();
+  const { refreshPacks, showStatus, showError, setHold } = usePicker();
   const { switchTo } = usePickerView();
   const [source, setSource] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
@@ -45,6 +45,18 @@ export const useStickerDraft = (): StickerDraftState => {
       clearTimeout(timer);
     };
   }, [caption]);
+
+  /**
+   * Идущая конвертация удерживает попап: закрытый уходом курсора пикер спрятал бы её
+   * результат. Форма размонтирована — результат отбрасывается, и удержание снимается.
+   */
+  useEffect(() => {
+    setHold('conversion', isConverting);
+
+    return () => {
+      setHold('conversion', false);
+    };
+  }, [isConverting, setHold]);
 
   useEffect(() => {
     if (!source) return;

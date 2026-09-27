@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import { listPacks } from '../../../db';
 import type { Pack, SendItem } from '../../../db.types';
@@ -25,7 +25,8 @@ const INITIAL_VIEW: View = { kind: 'recent' };
  * @returns значения обоих контекстов провайдера
  */
 export const usePickerState = (options: PickerStateOptions): PickerStateValue => {
-  const { env, onSend, onClose, isOpen } = options;
+  const { env, onSend, onClose, isOpen, openedBy, holds } = options;
+  const { set: setHold } = holds;
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [status, setStatus] = useState<PickerStatus | null>(null);
@@ -80,6 +81,11 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
     showError,
     switchTo,
   });
+  const { isImporting } = packImport;
+
+  useEffect(() => {
+    setHold('import', isImporting);
+  }, [isImporting, setHold]);
 
   return {
     picker: {
@@ -96,6 +102,8 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
       urlOf,
       dropUrl,
       packImport,
+      openedBy,
+      setHold,
     },
     view: { view, switchTo },
   };

@@ -2,6 +2,8 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC, TargetedDragEvent, TargetedEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
+import { usePicker } from '../../../PickerProvider/usePicker';
+
 import type { DropZoneProps } from './DropZone.types';
 
 /**
@@ -27,9 +29,24 @@ const zoneVariants = cva(
  */
 export const DropZone: FC<DropZoneProps> = (props) => {
   const { fileName, onPick } = props;
+  const { setHold } = usePicker();
   const [isDragOver, setIsDragOver] = useState(false);
 
+  /**
+   * Клик по полю открывает системный диалог, а курсор в это время уходит из окна: без
+   * удержания попап закрылся бы, пока пользователь выбирает файл. Диалог закрывается
+   * `change` (выбран новый файл) или `cancel` (отказ или тот же файл).
+   */
+  const handleFileClick = () => {
+    setHold('fileDialog', true);
+  };
+
+  const handleFileCancel = () => {
+    setHold('fileDialog', false);
+  };
+
   const handleFileChange = (event: TargetedEvent<HTMLInputElement>) => {
+    setHold('fileDialog', false);
     onPick(event.currentTarget.files?.[0]);
   };
 
@@ -69,7 +86,9 @@ export const DropZone: FC<DropZoneProps> = (props) => {
         type="file"
         accept="image/*,video/*,.tgs"
         className="absolute inset-0 cursor-pointer opacity-0"
+        onClick={handleFileClick}
         onChange={handleFileChange}
+        onCancel={handleFileCancel}
       />
     </label>
   );

@@ -1,9 +1,12 @@
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent as FC } from 'preact';
+import type { FunctionComponent as FC, TargetedFocusEvent } from 'preact';
+
+import type { PanelPhase } from '../../hoverPopup.types';
 
 import { AddView } from './AddView/AddView';
 import { GifView } from './GifView/GifView';
 import { PackView } from './PackView/PackView';
+import { usePicker } from './PickerProvider/usePicker';
 import { RecentView } from './RecentView/RecentView';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
@@ -45,15 +48,19 @@ const OPEN_ANIMATION_CLASS =
   'transition-[opacity,transform] duration-lg ease-linear [@starting-style]:translate-y-[5px] [@starting-style]:opacity-0';
 
 /**
- * `flex` — только у открытой панели: закрытая остаётся смонтированной и скрыта
+ * `flex` — только у видимой панели: скрытая остаётся смонтированной и скрыта
  * `display: none`, чтобы вкладка и запрос поиска пережили повторное открытие.
+ *
+ * Уходящая панель проигрывает переход открытия в обратную сторону тем же переходом и не
+ * принимает курсор: клик по ней в эти 200 мс ушёл бы в невидимую ячейку.
  */
 const panelVariants = cva([...PANEL_CLASS, OPEN_ANIMATION_CLASS], {
   variants: {
-    isOpen: {
-      true: 'flex',
-      false: 'hidden',
-    },
+    phase: {
+      open: 'flex',
+      closing: 'pointer-events-none flex translate-y-[5px] opacity-0',
+      closed: 'hidden',
+    } satisfies Record<PanelPhase, string>,
     isDark: {
       true: 'dark',
     },
@@ -90,9 +97,34 @@ const renderView = (view: View, isOpen: boolean) => {
   }
 };
 
+/**
+ * Типы `input`, в которые печатают: фокус в них удерживает попап, пока идёт ввод.
+ */
+const TEXT_INPUT_TYPES = new Set([
+  'text',
+  'search',
+  'password',
+  'url',
+  'email',
+  'tel',
+  'number',
+]);
+
+const isTextField = (target: EventTarget | null) => {
+  if (target instanceof HTMLTextAreaElement) return true;
+
+  return target instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(target.type);
+};
+
 export const Picker: FC<PickerProps> = (props) => {
-  const { isOpen, isDark, onClose } = props;
+  const { phase, isDark, onClose } = props;
+  const { setHold } = usePicker();
   const { view } = usePickerView();
+  /**
+   * Уходящая панель ещё видна: содержимое живёт как у открытой, и возврат курсора во время
+   * ухода ничего в нём не перезагружает.
+   */
+  const isOpen = phase !== 'closed';
 
   useOpenLoad(isOpen);
 
@@ -104,12 +136,26 @@ export const Picker: FC<PickerProps> = (props) => {
     event.stopPropagation();
   };
 
+  /**
+   * Фокус переходит между полями панели парой `focusout` → `focusin`, поэтому удержание
+   * между ними не прерывается.
+   */
+  const handlePanelFocusIn = (event: TargetedFocusEvent<HTMLDialogElement>) => {
+    if (isTextField(event.target)) setHold('field', true);
+  };
+
+  const handlePanelFocusOut = (event: TargetedFocusEvent<HTMLDialogElement>) => {
+    if (isTextField(event.target)) setHold('field', false);
+  };
+
   return (
     <dialog
       open={isOpen}
       aria-label="Стикеры и GIF"
-      className={panelVariants({ isOpen, isDark })}
+      className={panelVariants({ phase, isDark })}
       onKeyDown={handlePanelKeyDown}
+      onFocusIn={handlePanelFocusIn}
+      onFocusOut={handlePanelFocusOut}
     >
       {/**
        * Панель занимает место тела, а шапка и тело представления ложатся в неё так же,
