@@ -30,7 +30,7 @@ const SKELETON_CLASS = 'absolute rounded-lg bg-cadetGray-30/[.12] dark:bg-white-
  * `children` под её плитками.
  */
 export const MasonryGrid: FC<MasonryGridProps> = (props) => {
-  const { sections, resetKey, children, onScroll } = props;
+  const { sections, resetKey, children, onScroll, onRecentRemove, onRecentClear } = props;
   const { scrollRef, width, viewport, scrollTop, trackScroll } = useGridWindow(resetKey);
   const column = columnWidth(width);
 
@@ -47,10 +47,21 @@ export const MasonryGrid: FC<MasonryGridProps> = (props) => {
   }, [sections, column]);
 
   const tiles = layout ? visibleTiles(layout.tiles, scrollTop, viewport, viewport) : [];
+  const recentId = sections.find(({ isRecent }) => {
+    return isRecent;
+  })?.id;
 
   const handleGridScroll = (event: TargetedEvent<HTMLDivElement>) => {
     trackScroll();
     onScroll(event.currentTarget);
+  };
+
+  const handleRecentRemove = (gif: RemoteGif) => {
+    onRecentRemove(gif);
+  };
+
+  const handleRecentClear = () => {
+    onRecentClear();
   };
 
   const renderTile = (tile: MasonryTile<RemoteGif>) => {
@@ -65,6 +76,7 @@ export const MasonryGrid: FC<MasonryGridProps> = (props) => {
             key={`${sectionId}:${item.provider}:${item.id}`}
             gif={item}
             box={tileBox(tile, column)}
+            onRemove={sectionId === recentId ? handleRecentRemove : undefined}
           />
         );
       }
@@ -81,6 +93,7 @@ export const MasonryGrid: FC<MasonryGridProps> = (props) => {
             title={title}
             top={tile.top}
             height={tile.height}
+            onClear={sectionId === recentId ? handleRecentClear : undefined}
           />
         );
       }

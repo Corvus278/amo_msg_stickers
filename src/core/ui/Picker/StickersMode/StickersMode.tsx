@@ -16,7 +16,14 @@ import type { StickersModeProps } from './StickersMode.types';
  */
 export const StickersMode: FC<StickersModeProps> = (props) => {
   const { isOpen } = props;
-  const { sections, isCurrent, removeSticker, removeRecent } = useFeedSections(isOpen);
+  const {
+    sections,
+    isCurrent,
+    removeSticker,
+    removeRecent,
+    removePack,
+    clearRecentStickers,
+  } = useFeedSections(isOpen);
   const { scrollRef, layout, range, activeId, trackScroll } = useFeedWindow(
     sections,
     isCurrent
@@ -35,6 +42,14 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
     }
   };
 
+  const handlePackDelete = (packId: string) => {
+    void removePack(packId);
+  };
+
+  const handleRecentClear = () => {
+    void clearRecentStickers();
+  };
+
   return (
     <>
       <SectionTabs sections={sections || []} activeId={activeId} bitmaps={bitmaps} />
@@ -47,6 +62,8 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
         scrollRef={scrollRef}
         onScroll={handleFeedScroll}
         onCellDelete={handleCellDelete}
+        onPackDelete={handlePackDelete}
+        onRecentClear={handleRecentClear}
       />
     </>
   );

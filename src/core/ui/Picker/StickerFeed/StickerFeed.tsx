@@ -1,6 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import type { SendItem } from '../../../db.types';
+import { SectionHeader } from '../SectionHeader/SectionHeader';
 import { FEED_PANEL_ID, sectionTabId } from '../SectionTabs/sectionTabIds';
 import type { FeedSection } from '../StickersMode/feedSections/feedSections.types';
 
@@ -18,7 +19,17 @@ const FEED_CLASS = 'min-h-0 flex-1 overflow-y-auto px-2 [scrollbar-width:thin]';
  * ряды окна — остальные ряды в документ не попадают.
  */
 export const StickerFeed: FC<StickerFeedProps> = (props) => {
-  const { sections, layout, range, activeId, scrollRef, onScroll, onCellDelete } = props;
+  const {
+    sections,
+    layout,
+    range,
+    activeId,
+    scrollRef,
+    onScroll,
+    onCellDelete,
+    onPackDelete,
+    onRecentClear,
+  } = props;
   const [from, to] = range;
   const byId = new Map<string, FeedSection>();
 
@@ -32,22 +43,45 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
     if (!layout) return null;
 
     return layout.rows.slice(from, to).map((row, offset) => {
-      const { sectionId } = row;
+      const { kind, sectionId, top, height } = row;
       const { title = '', hint = '' } = byId.get(sectionId) || {};
 
       const handleCellDelete = (item: SendItem) => {
         onCellDelete(sectionId, item);
       };
 
-      return (
-        <FeedRow
-          key={from + offset}
-          row={row}
-          title={title}
-          hint={hint}
-          onCellDelete={handleCellDelete}
-        />
-      );
+      switch (kind) {
+        case 'header': {
+          return (
+            <SectionHeader
+              key={from + offset}
+              sectionId={sectionId}
+              title={title}
+              top={top}
+              height={height}
+              onPackDelete={onPackDelete}
+              onRecentClear={onRecentClear}
+            />
+          );
+        }
+
+        case 'cells': {
+          return (
+            <FeedRow
+              key={from + offset}
+              row={row}
+              hint={hint}
+              onCellDelete={handleCellDelete}
+            />
+          );
+        }
+
+        default: {
+          const unknownKind: never = kind;
+
+          throw new Error(`Unknown sticker row: ${String(unknownKind)}`);
+        }
+      }
     });
   };
 

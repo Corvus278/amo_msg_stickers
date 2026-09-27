@@ -42,4 +42,14 @@ export type StickerFeedProps = {
    * Колбэк на удаление элемента ячейки раздела.
    */
   onCellDelete: (sectionId: string, item: SendItem) => void;
+
+  /**
+   * Колбэк на подтверждённое удаление пака из заголовка его раздела.
+   */
+  onPackDelete: (packId: string) => void;
+
+  /**
+   * Колбэк на подтверждённую очистку недавних стикеров из заголовка раздела.
+   */
+  onRecentClear: () => void;
 };

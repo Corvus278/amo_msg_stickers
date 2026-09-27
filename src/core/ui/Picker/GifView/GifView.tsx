@@ -1,6 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
+import type { RemoteGif } from '../../../db.types';
 import type { GifFeed } from '../../../sources/gifs.types';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
@@ -48,7 +49,7 @@ export const GifView: FC<GifViewProps> = (props) => {
     query,
     isOpen
   );
-  const recent = useRecentGifs(isOpen);
+  const { recent, remove, clear } = useRecentGifs(isOpen);
   const searchRef = useSearchFocus(isOpen);
   const hasFeed = Boolean(feed);
 
@@ -72,12 +73,26 @@ export const GifView: FC<GifViewProps> = (props) => {
     checkScroll(element);
   };
 
+  const handleRecentRemove = (gif: RemoteGif) => {
+    void remove(gif);
+  };
+
+  const handleRecentClear = () => {
+    void clear();
+  };
+
   if (!feed) {
     return (
       <>
         <ViewHeader />
 
-        <MasonryGrid sections={sections} resetKey={resetId} onScroll={handleGridScroll}>
+        <MasonryGrid
+          sections={sections}
+          resetKey={resetId}
+          onScroll={handleGridScroll}
+          onRecentRemove={handleRecentRemove}
+          onRecentClear={handleRecentClear}
+        >
           <EmptyState>
             Для поиска GIF нужен API-ключ GIPHY или KLIPY.
             <br />
@@ -108,7 +123,13 @@ export const GifView: FC<GifViewProps> = (props) => {
         <FeedChips feeds={feeds} feed={feed} onSelect={handleFeedSelect} />
       </ViewHeader>
 
-      <MasonryGrid sections={sections} resetKey={resetId} onScroll={handleGridScroll}>
+      <MasonryGrid
+        sections={sections}
+        resetKey={resetId}
+        onScroll={handleGridScroll}
+        onRecentRemove={handleRecentRemove}
+        onRecentClear={handleRecentClear}
+      >
         {isNothingFound && <EmptyState>Ничего не нашлось</EmptyState>}
 
         <div className="px-0.5 pt-1 text-right text-xxs text-cadetGray-30 dark:text-gray-70">

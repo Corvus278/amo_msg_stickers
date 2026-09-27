@@ -37,8 +37,8 @@ describe('gifSections', () => {
     });
 
     expect(sections).toEqual([
-      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0 },
-      { id: 'feed', title: 'Тренды', items: TRENDS, skeletons: 0 },
+      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0, isRecent: true },
+      { id: 'feed', title: 'Тренды', items: TRENDS, skeletons: 0, isRecent: false },
     ]);
   });
 
@@ -51,7 +51,9 @@ describe('gifSections', () => {
       loading: null,
     });
 
-    expect(sections).toEqual([{ id: 'feed', title: '', items: TRENDS, skeletons: 0 }]);
+    expect(sections).toEqual([
+      { id: 'feed', title: '', items: TRENDS, skeletons: 0, isRecent: false },
+    ]);
   });
 
   it('при непустом запросе раздела недавних нет', () => {
@@ -63,7 +65,9 @@ describe('gifSections', () => {
       loading: null,
     });
 
-    expect(sections).toEqual([{ id: 'feed', title: '', items: TRENDS, skeletons: 0 }]);
+    expect(sections).toEqual([
+      { id: 'feed', title: '', items: TRENDS, skeletons: 0, isRecent: false },
+    ]);
   });
 
   it('без ключей оставляет только недавние', () => {
@@ -76,7 +80,7 @@ describe('gifSections', () => {
     });
 
     expect(sections).toEqual([
-      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0 },
+      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0, isRecent: true },
     ]);
   });
 
@@ -90,8 +94,8 @@ describe('gifSections', () => {
     });
 
     expect(sections).toEqual([
-      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0 },
-      { id: 'feed', title: 'Тренды', items: [], skeletons: 4 },
+      { id: 'recent', title: 'Недавние', items: RECENT, skeletons: 0, isRecent: true },
+      { id: 'feed', title: 'Тренды', items: [], skeletons: 4, isRecent: false },
     ]);
   });
 
@@ -104,7 +108,9 @@ describe('gifSections', () => {
       loading: 'more',
     });
 
-    expect(sections).toEqual([{ id: 'feed', title: '', items: TRENDS, skeletons: 1 }]);
+    expect(sections).toEqual([
+      { id: 'feed', title: '', items: TRENDS, skeletons: 1, isRecent: false },
+    ]);
   });
 
   it('без ключей и без недавних разделов нет', () => {

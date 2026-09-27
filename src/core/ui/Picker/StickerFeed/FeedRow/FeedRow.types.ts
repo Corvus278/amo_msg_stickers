@@ -4,14 +4,9 @@ import type { FeedSticker } from '../../StickersMode/feedSections/feedSections.t
 
 export type FeedRowProps = {
   /**
-   * Ряд раскладки с готовой геометрией.
+   * Ряд ячеек раскладки с готовой геометрией.
    */
   row: StickerRow<FeedSticker>;
-
-  /**
-   * Название раздела — текст ряда-заголовка.
-   */
-  title: string;
 
   /**
    * Подсказка пустого раздела — текст ряда ячеек без стикеров.
@@ -19,7 +14,8 @@ export type FeedRowProps = {
   hint: string;
 
   /**
-   * Колбэк на удаление элемента ячейки.
+   * Колбэк на удаление элемента ячейки: стикера из пака или элемента из недавних — по разделу
+   * ряда.
    */
   onCellDelete: (item: SendItem) => void;
 };

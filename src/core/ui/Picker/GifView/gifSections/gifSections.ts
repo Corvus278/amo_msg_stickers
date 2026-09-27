@@ -64,7 +64,13 @@ export const gifSections = (input: GifSectionsInput): GifSection[] => {
   const sections: GifSection[] = [];
 
   if (hasRecent)
-    sections.push({ id: 'recent', title: RECENT_TITLE, items: recent, skeletons: 0 });
+    sections.push({
+      id: 'recent',
+      title: RECENT_TITLE,
+      items: recent,
+      skeletons: 0,
+      isRecent: true,
+    });
 
   if (hasFeed) {
     sections.push({
@@ -72,6 +78,7 @@ export const gifSections = (input: GifSectionsInput): GifSection[] => {
       title: hasRecent ? TRENDS_TITLE : '',
       items: gifs,
       skeletons: skeletonsPerColumn(loading),
+      isRecent: false,
     });
   }
 

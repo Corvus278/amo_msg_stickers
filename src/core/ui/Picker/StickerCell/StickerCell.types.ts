@@ -1,4 +1,5 @@
 import type { SendItem } from '../../../db.types';
+import type { CellRemoveKind } from '../Menu/CellMenu/CellMenu.types';
 
 export type StickerCellProps = {
   /**
@@ -13,12 +14,17 @@ export type StickerCellProps = {
 
   /**
    * Что в ячейке, в винительном падеже («стикер 😀», «GIF «cat»»): из него собираются
-   * доступные имена кнопок отправки и удаления.
+   * доступные имена кнопки отправки и контекстного меню.
    */
   name: string;
 
   /**
-   * Колбэк на удаление элемента ячейки. Не задан — кнопки удаления нет.
+   * Что убирает пункт контекстного меню: стикер из библиотеки или элемент из недавних.
    */
-  onDelete?: (item: SendItem) => void;
+  removeKind: CellRemoveKind;
+
+  /**
+   * Колбэк на выбор пункта контекстного меню — элемент ячейки убирается.
+   */
+  onRemove: (item: SendItem) => void;
 };

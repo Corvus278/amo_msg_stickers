@@ -15,7 +15,7 @@ import type { RecentViewProps } from './RecentView.types';
 const RECENT_VIEW: View = { kind: 'recent' };
 
 /**
- * Недавние отправки сеткой: повторная отправка кликом, удаление из недавних — ×.
+ * Недавние отправки сеткой: повторная отправка кликом, удаление из недавних — контекстным меню.
  */
 export const RecentView: FC<RecentViewProps> = (props) => {
   const { isOpen } = props;
@@ -41,7 +41,8 @@ export const RecentView: FC<RecentViewProps> = (props) => {
               item={item}
               url={url}
               name={name}
-              onDelete={handleCellDelete}
+              removeKind="recent"
+              onRemove={handleCellDelete}
             />
           );
         })}

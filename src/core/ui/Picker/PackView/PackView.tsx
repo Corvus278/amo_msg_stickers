@@ -14,7 +14,7 @@ import { usePack } from './usePack/usePack';
 import type { PackViewProps } from './PackView.types';
 
 /**
- * Стикеры пака сеткой: отправка кликом, удаление стикера — ×, удаление пака целиком —
+ * Стикеры пака сеткой: отправка кликом, удаление стикера — контекстным меню, удаление пака целиком —
  * кнопкой в шапке, кроме «Моих стикеров».
  */
 export const PackView: FC<PackViewProps> = (props) => {
@@ -50,7 +50,8 @@ export const PackView: FC<PackViewProps> = (props) => {
               item={item}
               url={url}
               name={name}
-              onDelete={handleCellDelete}
+              removeKind="sticker"
+              onRemove={handleCellDelete}
             />
           );
         })}
