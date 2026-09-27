@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useRef, useState } from 'preact/hooks';
 
 import { importTelegramSet } from '../../../sources/telegram';
 import type { ImportProgress } from '../../../sources/telegram.types';
 
+import { finishImport } from './finishImport/finishImport';
 import { errorMessage } from './errorMessage';
 import type { PackImportOptions, PackImportState } from './PickerProvider.types';
 
@@ -12,15 +13,25 @@ import type { PackImportOptions, PackImportState } from './PickerProvider.types'
  * переживает уход и возврат, и второй импорт поверх идущего не запускается.
  *
  * Статус ««название»: N/M» виден на любой вкладке, вкладка пака появляется после первого
- * готового стикера, по завершении открывается пак.
+ * готового стикера. По завершении лента прокручивается к паку, только если экран «Добавить
+ * стикеры» всё ещё открыт.
  *
  * @param options — окружение, настройки и методы провайдера
  * @returns ход импорта и его запуск
  */
 export const usePackImport = (options: PackImportOptions): PackImportState => {
-  const { env, settings, refreshPacks, showStatus, showError, scrollToSection } = options;
+  const { env, settings, screen, refreshPacks, showStatus, showError, scrollToSection } =
+    options;
   const [isImporting, setIsImporting] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
+
+  /**
+   * Экран на момент завершения, а не запуска: импорт идёт долго, и пользователь успевает уйти с
+   * экрана «Добавить».
+   */
+  const screenRef = useRef(screen);
+
+  screenRef.current = screen;
 
   const importPack = useCallback(
     async (link: string) => {
@@ -49,12 +60,7 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
         );
 
         await refreshPacks();
-
-        /**
-         * Статус — после перехода: `scrollToSection` сбрасывает статус прошлого действия.
-         */
-        scrollToSection(pack.id);
-        showStatus(`Пак «${pack.title}» добавлен`);
+        finishImport({ screen: screenRef.current, pack, scrollToSection, showStatus });
       } catch (error) {
         /**
          * Вкладка пака могла появиться на первом шаге импорта, а упавший импорт пак убирает

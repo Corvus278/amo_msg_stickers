@@ -1,0 +1,40 @@
+import type { Pack, SendItem } from '../../../../db.types';
+import type { FeedSection } from '../feedSections/feedSections.types';
+
+export type FeedSections = {
+  /**
+   * Разделы ленты в порядке показа; `null` — библиотека ещё не прочитана.
+   */
+  sections: FeedSection[] | null;
+
+  /**
+   * Разделы прочитаны для текущего списка паков. Ложь — после `refreshPacks` лента ещё
+   * показывает прежнее чтение: место раздела в ней может сдвинуться после перечитывания.
+   */
+  isCurrent: boolean;
+
+  /**
+   * Удаляет стикер из библиотеки. Промис не отклоняется: ошибка уходит в статус.
+   */
+  removeSticker: (stickerId: string) => Promise<void>;
+
+  /**
+   * Убирает элемент из недавних. Промис не отклоняется: ошибка уходит в статус.
+   */
+  removeRecent: (item: SendItem) => Promise<void>;
+};
+
+/**
+ * Одно чтение библиотеки.
+ */
+export type FeedRead = {
+  /**
+   * Разделы ленты в порядке показа.
+   */
+  sections: FeedSection[];
+
+  /**
+   * Список паков, для которого прочитаны разделы.
+   */
+  packs: Pack[];
+};

@@ -66,11 +66,12 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
   );
 
   const view = usePickerViewState(isOpen, clearStatus);
-  const { scrollToSection } = view;
+  const { screen, scrollToSection } = view;
 
   const packImport = usePackImport({
     env,
     settings,
+    screen,
     refreshPacks,
     showStatus,
     showError,

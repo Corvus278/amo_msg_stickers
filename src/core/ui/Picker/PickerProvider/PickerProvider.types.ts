@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import type { Pack, SendItem } from '../../../db.types';
 import type { Host, Settings } from '../../../host.types';
 import type { HoldReason, OpenedBy, PopupHolds } from '../../../hoverPopup.types';
-import type { PickerViewValue } from '../usePickerView/usePickerView.types';
+import type { PickerScreen, PickerViewValue } from '../usePickerView/usePickerView.types';
 
 export type PickerStatus = {
   /**
@@ -126,6 +126,12 @@ export type PackImportOptions = {
    * Настройки с токеном Telegram-бота.
    */
   settings: Settings;
+
+  /**
+   * Открытый экран поверх режима: к паку лента прокручивается, только если по завершении
+   * открыт экран «Добавить стикеры».
+   */
+  screen: PickerScreen | null;
 
   /**
    * Перечитывает паки: вкладка пака появляется после первого стикера и по завершении.

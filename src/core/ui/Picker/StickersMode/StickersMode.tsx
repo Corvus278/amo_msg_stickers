@@ -1,41 +1,53 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import { PackView } from '../PackView/PackView';
-import { usePicker } from '../PickerProvider/usePicker';
-import { RecentView } from '../RecentView/RecentView';
-import { TAB_PANEL_ID, tabId } from '../tabIds/tabIds';
-import { Tabs } from '../Tabs/Tabs';
-import { usePickerView } from '../usePickerView/usePickerView';
+import type { SendItem } from '../../../db.types';
+import { useCoverBitmaps } from '../PackCover/useCoverBitmaps/useCoverBitmaps';
+import { SectionTabs } from '../SectionTabs/SectionTabs';
+import { StickerFeed } from '../StickerFeed/StickerFeed';
+import { RECENT_SECTION_ID } from '../usePickerView/sectionIds';
 
-import { sectionView } from './sectionView';
+import { useFeedSections } from './useFeedSections/useFeedSections';
+import { useFeedWindow } from './useFeedWindow/useFeedWindow';
 import type { StickersModeProps } from './StickersMode.types';
 
 /**
- * Режим «Стикеры»: полоса вкладок разделов над открытым разделом — недавними или паком.
- * Раздел выбирает якорь `scrollToSection`.
+ * Режим «Стикеры»: полоса вкладок разделов над лентой всех разделов — недавних, «Моих стикеров» и
+ * паков. Вкладки и лента делят окно ленты: выбранная вкладка — раздел в верху видимой области.
  */
 export const StickersMode: FC<StickersModeProps> = (props) => {
   const { isOpen } = props;
-  const { packs } = usePicker();
-  const { anchor } = usePickerView();
-  const view = sectionView(anchor, packs);
+  const { sections, isCurrent, removeSticker, removeRecent } = useFeedSections(isOpen);
+  const { scrollRef, layout, range, activeId, trackScroll } = useFeedWindow(
+    sections,
+    isCurrent
+  );
+  const bitmaps = useCoverBitmaps(isOpen);
+
+  const handleFeedScroll = () => {
+    trackScroll();
+  };
+
+  const handleCellDelete = (sectionId: string, item: SendItem) => {
+    if (sectionId === RECENT_SECTION_ID) {
+      void removeRecent(item);
+    } else if (item.kind === 'local') {
+      void removeSticker(item.stickerId);
+    }
+  };
 
   return (
     <>
-      <Tabs />
+      <SectionTabs sections={sections || []} activeId={activeId} bitmaps={bitmaps} />
 
-      <div
-        role="tabpanel"
-        id={TAB_PANEL_ID}
-        aria-labelledby={tabId(view)}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        {view.kind === 'pack' ? (
-          <PackView packId={view.packId} />
-        ) : (
-          <RecentView isOpen={isOpen} />
-        )}
-      </div>
+      <StickerFeed
+        sections={sections || []}
+        layout={layout}
+        range={range}
+        activeId={activeId}
+        scrollRef={scrollRef}
+        onScroll={handleFeedScroll}
+        onCellDelete={handleCellDelete}
+      />
     </>
   );
 };
