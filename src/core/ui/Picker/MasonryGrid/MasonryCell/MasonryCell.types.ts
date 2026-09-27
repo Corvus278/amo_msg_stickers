@@ -3,6 +3,12 @@ import type { TileRect } from '../tileBox/tileBox.types';
 
 export type MasonryCellProps = {
   /**
+   * id кнопки ячейки: по нему фокус находит ячейку после удаления соседней. Не задан — ячейку
+   * фокус после удаления не ищет.
+   */
+  id?: string | undefined;
+
+  /**
    * GIF из поиска: превью в ячейке, по нажатию отправляется полноразмерная.
    */
   gif: RemoteGif;

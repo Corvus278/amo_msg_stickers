@@ -1,15 +1,16 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { useCoverBitmaps } from '../PackCover/useCoverBitmaps/useCoverBitmaps';
+import { cellRemovalTargets, sectionRemovalTargets } from '../removalFocus/removalFocus';
 import { SectionTabs } from '../SectionTabs/SectionTabs';
 import { StickerFeed } from '../StickerFeed/StickerFeed';
+import { useFeedEntry } from '../useFeedEntry/useFeedEntry';
 import { RECENT_SECTION_ID } from '../usePickerView/sectionIds';
 
 import type { FeedSticker } from './feedSections/feedSections.types';
-import { cellRemovalTargets, sectionRemovalTargets } from './removalFocus/removalFocus';
 import { useFeedSections } from './useFeedSections/useFeedSections';
 import { useFeedWindow } from './useFeedWindow/useFeedWindow';
-import { useRemovalFocus } from './useRemovalFocus/useRemovalFocus';
+import { useStickerRemovalFocus } from './useStickerRemovalFocus/useStickerRemovalFocus';
 import type { StickersModeProps } from './StickersMode.types';
 
 /**
@@ -31,8 +32,10 @@ export const StickersMode: FC<StickersModeProps> = (props) => {
     isCurrent
   );
   const bitmaps = useCoverBitmaps(isOpen);
-  const expectRemoval = useRemovalFocus(sections, scrollRef, isOpen);
+  const expectRemoval = useStickerRemovalFocus(sections, scrollRef, isOpen);
   const feed = sections || [];
+
+  useFeedEntry(scrollRef);
 
   const handleFeedScroll = () => {
     trackScroll();

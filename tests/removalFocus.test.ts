@@ -4,8 +4,8 @@ import {
   cellRemovalTargets,
   resolveFocusTarget,
   sectionRemovalTargets,
-} from '../src/core/ui/Picker/StickersMode/removalFocus/removalFocus';
-import type { FocusSection } from '../src/core/ui/Picker/StickersMode/removalFocus/removalFocus.types';
+} from '../src/core/ui/Picker/removalFocus/removalFocus';
+import type { FocusSection } from '../src/core/ui/Picker/removalFocus/removalFocus.types';
 
 /**
  * Раздел с ячейками по ключам.

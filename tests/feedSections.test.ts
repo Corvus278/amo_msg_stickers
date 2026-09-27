@@ -86,6 +86,13 @@ describe('feedSections', () => {
     ]);
   });
 
+  it('имя своего стикера содержит его подпись', () => {
+    const captioned: StickerRec = { ...sticker('c1', 'custom'), caption: 'Привет' };
+    const [custom] = feedSections(PACKS, new Map([['custom', [captioned]]]), []);
+
+    expect(custom?.items[0]?.name).toBe('стикер «Привет»');
+  });
+
   it('недавние — первым разделом в порядке записей, удалённые стикеры и GIF пропускаются', () => {
     const gif: RecentRec = {
       key: 'r:giphy:1',

@@ -19,13 +19,13 @@ const PACK_HINT = 'Пак пуст';
  * @returns стикер ленты
  */
 const feedSticker = (key: string, sticker: StickerRec): FeedSticker => {
-  const { id, emoji } = sticker;
+  const { id } = sticker;
 
   return {
     key,
     item: { kind: 'local', stickerId: id },
     sticker,
-    name: stickerCellName(emoji),
+    name: stickerCellName(sticker),
   };
 };
 

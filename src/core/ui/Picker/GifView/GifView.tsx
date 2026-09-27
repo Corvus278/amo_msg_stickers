@@ -14,6 +14,7 @@ import { ViewHeader } from '../ViewHeader/ViewHeader';
 import { FeedChips } from './FeedChips/FeedChips';
 import { gifSections } from './gifSections/gifSections';
 import { useFeedChoice } from './useFeedChoice/useFeedChoice';
+import { useGifRemovalFocus } from './useGifRemovalFocus/useGifRemovalFocus';
 import { useRecentGifs } from './useRecentGifs/useRecentGifs';
 import { useSearchFocus } from './useSearchFocus/useSearchFocus';
 import type { GifViewProps } from './GifView.types';
@@ -51,6 +52,11 @@ export const GifView: FC<GifViewProps> = (props) => {
   );
   const { recent, remove, clear } = useRecentGifs(isOpen);
   const searchRef = useSearchFocus(isOpen);
+  const { settingsRef, expectGifRemoval, expectRecentClear } = useGifRemovalFocus(
+    recent,
+    isOpen,
+    searchRef
+  );
   const hasFeed = Boolean(feed);
 
   const sections = useMemo(() => {
@@ -74,10 +80,12 @@ export const GifView: FC<GifViewProps> = (props) => {
   };
 
   const handleRecentRemove = (gif: RemoteGif) => {
+    expectGifRemoval(gif);
     void remove(gif);
   };
 
   const handleRecentClear = () => {
+    expectRecentClear();
     void clear();
   };
 
@@ -94,9 +102,10 @@ export const GifView: FC<GifViewProps> = (props) => {
           onRecentClear={handleRecentClear}
         >
           <EmptyState>
-            Для поиска GIF нужен API-ключ GIPHY или KLIPY.
+            Для поиска GIF нужен API-ключ GIPHY или KLIPY
             <br />
             <button
+              ref={settingsRef}
               type="button"
               className={SETTINGS_LINK_CLASS}
               onClick={handleSettingsClick}

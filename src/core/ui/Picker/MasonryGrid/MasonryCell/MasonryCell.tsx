@@ -38,7 +38,7 @@ const HOVER_CLASS =
  * «Убрать из недавних» — только у недавних: найденные GIF не хранятся.
  */
 export const MasonryCell: FC<MasonryCellProps> = (props) => {
-  const { gif, box, onRemove } = props;
+  const { id, gif, box, onRemove } = props;
   const { previewUrl } = gif;
   const item: SendItem = { kind: 'remote', gif };
   const name = gifCellName(gif);
@@ -77,6 +77,7 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
     <>
       <button
         type="button"
+        id={id}
         aria-label={`Отправить ${name}`}
         aria-haspopup={onRemove ? 'menu' : undefined}
         aria-busy={isBusy}

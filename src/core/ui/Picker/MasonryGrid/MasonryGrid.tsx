@@ -2,6 +2,7 @@ import type { FunctionComponent as FC, TargetedEvent } from 'preact';
 import { useMemo } from 'preact/hooks';
 
 import type { RemoteGif } from '../../../db.types';
+import { useFeedEntry } from '../useFeedEntry/useFeedEntry';
 
 import { GridHeader } from './GridHeader/GridHeader';
 import { MasonryCell } from './MasonryCell/MasonryCell';
@@ -9,6 +10,7 @@ import { splitColumns, visibleTiles } from './splitColumns/splitColumns';
 import type { MasonrySection, MasonryTile } from './splitColumns/splitColumns.types';
 import { COLUMN_COUNT, columnWidth, GRID_GAP, tileBox } from './tileBox/tileBox';
 import { useGridWindow } from './useGridWindow/useGridWindow';
+import { gifCellId, gifKey } from './gifCellId';
 import type { MasonryGridProps } from './MasonryGrid.types';
 
 /**
@@ -33,6 +35,8 @@ export const MasonryGrid: FC<MasonryGridProps> = (props) => {
   const { sections, resetKey, children, onScroll, onRecentRemove, onRecentClear } = props;
   const { scrollRef, width, viewport, scrollTop, trackScroll } = useGridWindow(resetKey);
   const column = columnWidth(width);
+
+  useFeedEntry(scrollRef);
 
   const layout = useMemo(() => {
     if (!column) return null;
@@ -70,13 +74,16 @@ export const MasonryGrid: FC<MasonryGridProps> = (props) => {
     switch (kind) {
       case 'item': {
         const { item } = tile;
+        const key = gifKey(item);
+        const isRecent = sectionId === recentId;
 
         return (
           <MasonryCell
-            key={`${sectionId}:${item.provider}:${item.id}`}
+            key={`${sectionId}:${key}`}
+            id={isRecent ? gifCellId(key) : undefined}
             gif={item}
             box={tileBox(tile, column)}
-            onRemove={sectionId === recentId ? handleRecentRemove : undefined}
+            onRemove={isRecent ? handleRecentRemove : undefined}
           />
         );
       }
