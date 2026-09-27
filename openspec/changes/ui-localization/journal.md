@@ -28,3 +28,12 @@ t() зовётся в рендере, не в константах модуля:
 Долг G1 закрыт: tests/translate.test.ts — t и LocalizedError с непустыми params (файл вне списка G2, только тесты).
 Аудит: ok с первого круга.
 Долг: renderMessage.ts держит свою таблицу {ru, en} + getLocale() вместо доступа к шаблону из translate.ts — второй источник выбора языка (кандидат для G8); стенд 3.2/3.5 аудитором не гонялся (исполнитель прогнал ru/en).
+
+### G7 · Метаданные сборок и стенд
+
+_locales/{ru,en}/messages.json, manifest — __MSG_extDescription__ и default_locale ru; userscript — @description и @description:en, @name один.
+Тексты описаний литералом и в messages.json, и в баннере build.mjs: тест баннера читает build.mjs как текст.
+Стенд: select «язык amo» пишет i18nextLng и перезагружает; без ключа ничего не выбрано (пикер берёт язык браузера).
+Отступление: немецкий Chrome напрямую не проверен (macOS не меняет язык интерфейса флагами); фолбэк на ru проверен сборкой без _locales/en. Загрузка расширения в Chrome — Extensions.loadUnpacked ok у исполнителя.
+Аудит: ok с первого круга.
+Долг: тест копирования _locales ищет cpSync в исходнике build.mjs, а не результат сборки (по плану); cpSync в pnpm watch — только при старте, правка messages.json не перекопируется.

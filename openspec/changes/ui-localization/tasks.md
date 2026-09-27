@@ -31,12 +31,12 @@
 
 ## 6. Метаданные сборок
 
-- [ ] 6.1 `src/extension/_locales/{ru,en}/messages.json` с `extDescription`; `manifest.json` — `default_locale: "ru"`, `description: "__MSG_extDescription__"`; `build.mjs` копирует `_locales` в `dist/extension/`; проверка — после `pnpm build` в `dist/extension/_locales/{ru,en}/messages.json` есть, `dist/extension/manifest.json` ссылается на `__MSG_extDescription__`; распакованное расширение загружается в Chrome без ошибки manifest
-- [ ] 6.2 `USERSCRIPT_BANNER`: `@description` (ru) и `@description:en`; проверка — `tests/userscriptBanner.test.ts` проверяет обе строки и что `@name` один
+- [x] 6.1 `src/extension/_locales/{ru,en}/messages.json` с `extDescription`; `manifest.json` — `default_locale: "ru"`, `description: "__MSG_extDescription__"`; `build.mjs` копирует `_locales` в `dist/extension/`; проверка — после `pnpm build` в `dist/extension/_locales/{ru,en}/messages.json` есть, `dist/extension/manifest.json` ссылается на `__MSG_extDescription__`; распакованное расширение загружается в Chrome без ошибки manifest
+- [x] 6.2 `USERSCRIPT_BANNER`: `@description` (ru) и `@description:en`; проверка — `tests/userscriptBanner.test.ts` проверяет обе строки и что `@name` один
 
 ## 7. Стенд, документация, проверка
 
-- [ ] 7.1 `dev/harness.html`: переключатель «язык amo: ru / en» пишет `localStorage.i18nextLng` и перезагружает стенд; проверка — после переключения на `en` пикер английский, обратно — русский
+- [x] 7.1 `dev/harness.html`: переключатель «язык amo: ru / en» пишет `localStorage.i18nextLng` и перезагружает стенд; проверка — после переключения на `en` пикер английский, обратно — русский
 - [ ] 7.2 Стенд в английском, светлая и тёмная тема: чипы источников, кнопки футера, «Save to “My stickers”», подтверждения «Really clear?» / «Really delete?», строка статуса не переносятся и не обрезаются там, где русские строки помещаются; проверка — скриншоты обоих языков и тем
 - [ ] 7.3 Живой amo (`web.dev.amo.tm`, `local/dev-amo-creds.md`): Chrome с `--lang=en-US` — amo и пикер на английском, `localStorage.i18nextLng` = `en-US`; отправленный стикер у получателя с русским amo — стикер без пузыря; поиск GIF уходит с `lang=en`; ошибка лимита в расширении — на английском; то же с `--lang=ru-RU` — всё на русском
 - [ ] 7.4 `CLAUDE.md`: модуль `core/i18n/` в «Структуре», раздел «Язык интерфейса» в «Как работает» (источник языка, словари, ошибки через SW, `packTitle`), правило «строки интерфейса — только через словарь»; проверка — `pnpm lint` и `pnpm test` зелёные
