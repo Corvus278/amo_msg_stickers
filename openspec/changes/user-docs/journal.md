@@ -49,3 +49,12 @@ K6 — фраза пути к ссылке на пак в telegram.md шаг 4 (
 Явные якоря {#pack-link} {#limits} {#archive}: авто-слаг VitePress для кириллицы хрупкий. Переустановка userscript — без номера версии. В privacy добавлен GitHub (скачивание, проверка обновлений).
 Не сверено (вопросы автору в финале): панель GIPHY («Create an API Key», API/SDK); Tampermonkey — обновление скрипта без @namespace поверх старого с сохранением ключей, русское название «Check for userscript updates», проверка раз в сутки.
 Аудит: ok с первого круга. Долг для G6 (фактические неточности): telegram.md:77 — признак ошибки «со словом Telegram» не совпадает с кодом (фактически HTTP 401/400 с Unauthorized/STICKERSET_INVALID, net.ts:98); telegram.md:65 — пример прогресса должен быть «Имя пака»: 12/40 (status.importProgress); privacy.md:22 — «настройки вместе с расширением или скриптом» неверно для userscript без менеджера (localStorage amo).
+
+### G3 · Подсказки в интерфейсе
+
+userDocs.ts: USER_DOCS_URL, USER_DOCS_PAGE {gifKeys, telegram}, userDocsUrl(page); тест — docs/<страница>.md существует (import ?raw) и база = base из config.mts.
+Ссылки на доку — подстановка {docs} (settings.docs, gifs.docs, add.telegram.docs; en — «(in Russian)»), без якорей.
+K6: ru-фраза add.telegram.hint дословно из telegram.md:49; en «Copy Link» — предположение, автор сверит.
+Отступление: правлены tests/translate.test.ts и tests/renderMessage.test.ts (вне файлов G3) — сверяют реальные строки словаря.
+Стенд headless Chrome: ru/en, обе темы, порядок полей, 7 ссылок target=_blank. Эстафета нарушена: 3.5 отдан тому же исполнителю после 71 вызова (сообщение ушло до уведомления).
+Аудит: ok с первого круга. Долг: *_DOCS_URL и jsdoc повторены в трёх компонентах — можно отдавать адреса из userDocs.ts; цикл типов userDocs.types.ts ↔ userDocs.ts.

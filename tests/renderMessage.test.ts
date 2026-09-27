@@ -10,6 +10,7 @@ import {
 } from '../src/core/ui/renderMessage/renderMessage';
 
 const LINK = h('a', { href: 'https://giphy.com' }, 'GIPHY');
+const DOCS = h('a', { href: 'https://example.com/setup/telegram' }, 'docs');
 
 afterEach(() => {
   setLocale('ru');
@@ -60,19 +61,21 @@ describe('renderMessage', () => {
     expect(renderMessage('picker.title', {})).toEqual([EN['picker.title']]);
   });
 
-  it('ставит узел ссылки на место подстановки в строке каждого языка', () => {
-    expect(renderMessage('settings.telegram.hint', { link: LINK })).toEqual([
+  it('ставит узлы ссылок на места подстановок в строке каждого языка', () => {
+    expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
       'Создайте любого бота в ',
       LINK,
-      '. Токен хранится локально.',
+      '. Токен хранится локально. ',
+      DOCS,
     ]);
 
     setLocale('en');
 
-    expect(renderMessage('settings.telegram.hint', { link: LINK })).toEqual([
+    expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
       'Create any bot in ',
       LINK,
-      '. The token is stored locally.',
+      '. The token is stored locally. ',
+      DOCS,
     ]);
   });
 });

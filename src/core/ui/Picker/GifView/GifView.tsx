@@ -4,7 +4,9 @@ import { useMemo, useState } from 'preact/hooks';
 import type { RemoteGif } from '../../../db.types';
 import { t } from '../../../i18n/translate';
 import type { GifFeed } from '../../../sources/gifs.types';
+import { USER_DOCS_PAGE, userDocsUrl } from '../../../userDocs';
 import { EmptyState } from '../EmptyState/EmptyState';
+import { ExternalLink } from '../ExternalLink/ExternalLink';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
 import { usePicker } from '../PickerProvider/usePicker';
 import { TextInput } from '../TextInput/TextInput';
@@ -28,6 +30,11 @@ const FEED_ATTRIBUTION: Record<GifFeed, string> = {
   'giphy-stickers': 'Powered by GIPHY',
   klipy: 'Powered by KLIPY',
 };
+
+/**
+ * Дока одна, на русском, при любом языке интерфейса: английский текст ссылки говорит об этом сам.
+ */
+const GIF_KEYS_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.gifKeys);
 
 /**
  * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — открытие
@@ -115,6 +122,8 @@ export const GifView: FC<GifViewProps> = (props) => {
             >
               {t('gifs.openSettings')}
             </button>
+            <br />
+            <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('gifs.docs')}</ExternalLink>
           </EmptyState>
         </MasonryGrid>
       </>
