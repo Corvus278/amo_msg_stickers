@@ -42,16 +42,16 @@
 
 ## 4. Тексты доки
 
-- [ ] 4.1 `index.md` (что это, возможности, «Установить» на `install/`) и `install/index.md` (выбор окружения:
+- [x] 4.1 `index.md` (что это, возможности, «Установить» на `install/`) и `install/index.md` (выбор окружения:
   Chromium, Firefox, Safari, десктоп); проверка — с главной за два клика попадаешь на страницу своего браузера
-- [ ] 4.2 `install/chromium.md` — вкладки «Chrome Web Store» (до #51 — «на проверке», путь к двум другим), «Архив»
+- [x] 4.2 `install/chromium.md` — вкладки «Chrome Web Store» (до #51 — «на проверке», путь к двум другим), «Архив»
   (прямая ссылка на `amo-stickers.zip`, режим разработчика, обновление — очистить папку, распаковать туда же,
   «Обновить»; нет автообновления, другая папка — сброс ключей), «Userscript» (Tampermonkey и шаг «Разрешить
   пользовательские скрипты» в Chrome, установка в один клик, разрешения менеджера; Violentmonkey — «без гарантий»);
   общий фрагмент `_parts/userscript.md` для Firefox и Safari; сверить названия пунктов в текущих Chrome, Edge,
   Яндекс Браузере, Opera; проверка — в чистом профиле Chrome по тексту ставятся архив и userscript через Tampermonkey
   (окно установки открывается по ссылке из доки)
-- [ ] 4.3 `install/firefox.md` (Tampermonkey; Violentmonkey — «без гарантий»), `install/safari.md` (Userscripts —
+- [x] 4.3 `install/firefox.md` (Tampermonkey; Violentmonkey — «без гарантий»), `install/safari.md` (Userscripts —
   «без гарантий», настройки могут лежать в хранилище сайта amo), `install/desktop.md` («пока недоступно»); проверка —
   `pnpm docs:build`, на десктоп-странице нет инструкций, у способов без гарантий есть пометка и путь к проверенному
 - [ ] 4.4 `setup/telegram.md`: @BotFather → токен → «Настройки» → ссылка на пак (сверить путь в Telegram на

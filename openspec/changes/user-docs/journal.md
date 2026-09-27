@@ -27,3 +27,13 @@ release.yml: убран неиспользуемый VERSION из env gh release
 pages.yml: contents: read на уровне workflow, pages/id-token: write только у deploy; deploy needs build; upload-pages-artifact@v5, deploy-pages@v5; configure-pages не нужен (base жёсткий).
 Аудит: ok с первого круга. Долг: paths pages.yml без корневого package.json (скрипт docs:build) — так в design; старое имя архива в README/CLAUDE.md — задачи 5.1/7.2.
 Статусы PR, артефакт и деплой — проверка после push/мержа.
+
+## 2026-09-28
+
+### G4 · Тексты доки: главная и установка
+
+Внешние вкладки — ::::tabs: с :::tabs вложенный ::: warning закрывал вкладки.
+_parts/userscript.md — общие шаги любого менеджера; поведение Tampermonkey помечено как его; шаг «Разрешить пользовательские скрипты» — только в Chromium.
+Главная — layout: home; ссылка на install/ продублирована в тексте (frontmatter VitePress не проверяет на битость).
+Не сверено по источникам (проверка автора): кнопка «Загрузить распакованное» в Edge, переключатель в Opera, подписи Safari «Настройки → Расширения», автообновление в Userscripts (не обещаем).
+Аудит: ok с первого круга. Долг для G6: chromium.md:8 — прямо назвать Chrome Web Store рекомендуемым (спека); _parts/userscript.md:1-5 — формулировка двусмысленна для Safari (ссылка там открывается текстом).
