@@ -166,10 +166,10 @@ Userscripts синхронные `GM_getValue` / `GM_setValue`, при напи�
 
 - `ci.yml`: шестое задание `docs` — `pnpm docs:build`. Релиз гоняет `ci.yml` целиком, поэтому битая дока в `master`
   не даст и релиза — приемлемо: в `master` она попасть не может, её ловит PR.
-- `pages.yml`: `push` в `master` с `paths` (`docs/**`, `.github/actions/setup/**`, `.mise.toml`, сам workflow) и
-  `workflow_dispatch`; сборка через `./.github/actions/setup`, `actions/upload-pages-artifact`,
-  `actions/deploy-pages`; `permissions: pages: write, id-token: write`; `concurrency` группы `pages` без отмены
-  идущего. Не в `release.yml`: правка текста не должна ждать релиза и подъёма версии.
+- `pages.yml`: `push` в `master` с `paths` (`docs/**`, `.github/actions/setup/**`, `.mise.toml`, корневой
+  `package.json` — в нём скрипт `docs:build`, сам workflow) и `workflow_dispatch`; сборка через
+  `./.github/actions/setup`, `actions/upload-pages-artifact`, `actions/deploy-pages`;
+  `permissions: pages: write, id-token: write`; `concurrency` группы `pages` без отмены идущего. Не в `release.yml`: правка текста не должна ждать релиза и подъёма версии.
 - До мержа `pages.yml` не запустить: `workflow_dispatch` доступен только для workflow из default branch, а окружение
   `github-pages` по умолчанию принимает деплой только из `master`. Сборку, которую публикует `pages.yml`, в PR
   проверяет задание `docs` той же командой; деплой проверяется первым мержем («Migration Plan»). Отдельный

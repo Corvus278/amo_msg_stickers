@@ -9,6 +9,8 @@ on:
       - 'docs/**'
       - '.github/actions/setup/**'
       - '.mise.toml'
+      # Скрипт docs:build живёт в корневом package.json.
+      - 'package.json'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
