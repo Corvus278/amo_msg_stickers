@@ -129,7 +129,7 @@ export const useStickerDraft = (): StickerDraftState => {
         createdAt: Date.now(),
       });
       await refreshPacks();
-      scrollToSection(CUSTOM_PACK_ID);
+      scrollToSection(CUSTOM_PACK_ID, 'instant');
     } catch (error) {
       showError(errorMessage(error));
     } finally {

@@ -47,7 +47,7 @@ export const SectionTabs: FC<SectionTabsProps> = (props) => {
         const isSelected = id === activeId;
 
         const handleSectionSelect = () => {
-          scrollToSection(id);
+          scrollToSection(id, 'smooth');
         };
 
         return (

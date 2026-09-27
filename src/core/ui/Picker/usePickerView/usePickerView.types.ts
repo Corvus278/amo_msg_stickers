@@ -16,6 +16,13 @@ export type View = {
 export type PickerScreen = 'add' | 'settings';
 
 /**
+ * Способ перехода ленты к разделу. `'smooth'` — лента на виду и едет плавно (клик по вкладке);
+ * `'instant'` — лента была под экраном, и раздел ставится сразу, без проезда под исчезающим
+ * экраном.
+ */
+export type SectionMotion = 'smooth' | 'instant';
+
+/**
  * Запрос прокрутки ленты стикеров к разделу.
  */
 export type SectionAnchor = {
@@ -29,6 +36,11 @@ export type SectionAnchor = {
    * нему.
    */
   seq: number;
+
+  /**
+   * Способ перехода: плавно — только если в системе не включено уменьшение движения.
+   */
+  motion: SectionMotion;
 };
 
 export type PickerViewValue = {
@@ -66,5 +78,5 @@ export type PickerViewValue = {
   /**
    * Открывает режим «Стикеры» без экрана и прокручивает ленту к разделу.
    */
-  scrollToSection: (sectionId: string) => void;
+  scrollToSection: (sectionId: string, motion: SectionMotion) => void;
 };

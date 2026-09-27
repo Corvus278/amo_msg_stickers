@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { finishImport } from '../src/core/ui/Picker/PickerProvider/finishImport/finishImport';
+import type { SectionMotion } from '../src/core/ui/Picker/usePickerView/usePickerView.types';
 
 const PACK = { id: 'tg:cats', title: 'Коты' };
 
@@ -11,8 +12,8 @@ const PACK = { id: 'tg:cats', title: 'Коты' };
  */
 const callbacks = () => {
   const calls: string[] = [];
-  const scrollToSection = vi.fn((sectionId: string) => {
-    calls.push(`scroll ${sectionId}`);
+  const scrollToSection = vi.fn((sectionId: string, motion: SectionMotion) => {
+    calls.push(`scroll ${sectionId} ${motion}`);
   });
   const showStatus = vi.fn((text: string) => {
     calls.push(`status ${text}`);
@@ -22,12 +23,12 @@ const callbacks = () => {
 };
 
 describe('finishImport', () => {
-  it('экран «Добавить» открыт — переход к паку, затем статус', () => {
+  it('экран «Добавить» открыт — мгновенный переход к паку, затем статус', () => {
     const { calls, scrollToSection, showStatus } = callbacks();
 
     finishImport({ screen: 'add', pack: PACK, scrollToSection, showStatus });
 
-    expect(calls).toEqual(['scroll tg:cats', 'status Пак «Коты» добавлен']);
+    expect(calls).toEqual(['scroll tg:cats instant', 'status Пак «Коты» добавлен']);
   });
 
   it('экран «Добавить» закрыт — только статус, лента не двигается', () => {
