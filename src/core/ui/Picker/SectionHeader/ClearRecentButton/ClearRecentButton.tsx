@@ -1,6 +1,7 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { useConfirmPress } from '../../useConfirmPress/useConfirmPress';
 
 import type { ClearRecentButtonProps } from './ClearRecentButton.types';
@@ -42,7 +43,7 @@ export const ClearRecentButton: FC<ClearRecentButtonProps> = (props) => {
       className={clearVariants({ isArmed })}
       onClick={handleClearClick}
     >
-      {isArmed ? 'Точно очистить?' : 'Очистить'}
+      {isArmed ? t('menu.clearRecentConfirm') : t('menu.clearRecent')}
     </button>
   );
 };

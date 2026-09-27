@@ -81,7 +81,7 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
       <button
         type="button"
         id={id}
-        aria-label={`Отправить ${name}`}
+        aria-label={name.send}
         aria-busy={isBusy}
         disabled={isBusy}
         className={CELL_CLASS}
@@ -105,7 +105,7 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
       {opening && (
         <CellMenu
           key={opening.seq}
-          name={name}
+          label={name.menu}
           kind="recent"
           opening={opening}
           onClose={handleMenuClose}

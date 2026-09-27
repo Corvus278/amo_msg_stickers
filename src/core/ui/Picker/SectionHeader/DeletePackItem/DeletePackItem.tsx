@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { MenuItem } from '../../Menu/MenuItem/MenuItem';
 import { useMenuClose } from '../../Menu/useMenuClose/useMenuClose';
 import { useConfirmPress } from '../../useConfirmPress/useConfirmPress';
@@ -24,7 +25,7 @@ export const DeletePackItem: FC<DeletePackItemProps> = (props) => {
 
   return (
     <MenuItem variant="danger" onSelect={handleItemSelect}>
-      {isArmed ? 'Точно удалить?' : 'Удалить пак'}
+      {isArmed ? t('pack.deleteConfirm') : t('pack.delete')}
     </MenuItem>
   );
 };

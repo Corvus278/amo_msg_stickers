@@ -37,3 +37,12 @@ _locales/{ru,en}/messages.json, manifest — __MSG_extDescription__ и default_l
 Отступление: немецкий Chrome напрямую не проверен (macOS не меняет язык интерфейса флагами); фолбэк на ru проверен сборкой без _locales/en. Загрузка расширения в Chrome — Extensions.loadUnpacked ok у исполнителя.
 Аудит: ok с первого круга.
 Долг: тест копирования _locales ищет cpSync в исходнике build.mjs, а не результат сборки (по плану); cpSync в pnpm watch — только при старте, правка messages.json не перекопируется.
+
+### G3 · Режим «Стикеры»
+
+packTitle называет свой пак по id (pack.custom), через него — feedSections, PackCover, finishImport; ensureCustomPack пишет t('pack.custom'), миграции нет.
+cellName → { send, menu }, обе — целые фразы словаря; CellMenu получает готовый label; русские тексты не изменились.
+status.packAdded (статус finishImport) заведён в G3 — для G4 часть 3.6 про finishImport уже сделана.
+Отступление: translate.ts вне файлов группы — тип LocalizedError.params → MessageArgs<K>[0] (иначе TS2322 при ключах с разными подстановками); аудитор подтвердил мутацией, K3 не изменён.
+Отступление: проверка стендом «пак без обложки — буквы My stickers» недостижима: свой пак без стикеров показывает смайл; буквы — только у паков Telegram (формулировку 3.3 поправить в /opsx:update).
+Аудит: ok с первого круга. Долг: «Really delete?»/«Really clear?» юнит-тестами не покрыты (стенд — G8, 7.2).

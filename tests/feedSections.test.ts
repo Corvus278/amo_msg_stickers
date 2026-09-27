@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { Pack, RecentRec, StickerRec, StickersByPack } from '../src/core/db.types';
+import { setLocale } from '../src/core/i18n/translate';
 import { feedSections } from '../src/core/ui/Picker/StickersMode/feedSections/feedSections';
 
 /**
@@ -42,6 +43,10 @@ const BY_PACK: StickersByPack = new Map([
   ['tg:a', [sticker('a1', 'tg:a', '😀'), sticker('a2', 'tg:a')]],
   ['tg:b', [sticker('b1', 'tg:b')]],
 ]);
+
+afterEach(() => {
+  setLocale('ru');
+});
 
 describe('feedSections', () => {
   it('без недавних лента начинается с «Моих стикеров», паки — в порядке списка паков', () => {
@@ -96,13 +101,13 @@ describe('feedSections', () => {
         key: 'a1',
         item: { kind: 'local', stickerId: 'a1' },
         sticker: BY_PACK.get('tg:a')?.[0],
-        name: 'стикер 😀',
+        name: { send: 'Отправить стикер 😀', menu: 'Действия: стикер 😀' },
       },
       {
         key: 'a2',
         item: { kind: 'local', stickerId: 'a2' },
         sticker: BY_PACK.get('tg:a')?.[1],
-        name: 'стикер',
+        name: { send: 'Отправить стикер', menu: 'Действия: стикер' },
       },
     ]);
   });
@@ -111,7 +116,34 @@ describe('feedSections', () => {
     const captioned: StickerRec = { ...sticker('c1', 'custom'), caption: 'Привет' };
     const [custom] = feedSections(PACKS, new Map([['custom', [captioned]]]), []);
 
-    expect(custom?.items[0]?.name).toBe('стикер «Привет»');
+    expect(custom?.items[0]?.name.send).toBe('Отправить стикер «Привет»');
+  });
+
+  it('на английском — английские названия и подсказки, названия паков Telegram без перевода', () => {
+    setLocale('en');
+
+    const captioned: StickerRec = { ...sticker('c1', 'custom'), caption: 'hi' };
+    const sections = feedSections(
+      [...PACKS, pack('tg:c', 'Коты')],
+      new Map([
+        ['custom', [captioned]],
+        ['tg:a', [sticker('a1', 'tg:a')]],
+      ]),
+      [recent('a1')]
+    );
+
+    expect(
+      sections.map(({ id, title, hint }) => {
+        return [id, title, hint];
+      })
+    ).toEqual([
+      ['recent', 'Recent', ''],
+      ['custom', 'My stickers', ''],
+      ['tg:a', 'A', 'Pack is empty'],
+      ['tg:b', 'B', 'Pack is empty'],
+      ['tg:c', 'Коты', 'Pack is empty'],
+    ]);
+    expect(sections[1]?.items[0]?.name.send).toBe('Send sticker “hi”');
   });
 
   it('недавние — первым разделом в порядке записей, удалённые стикеры и GIF пропускаются', () => {

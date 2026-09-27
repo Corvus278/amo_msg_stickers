@@ -3,7 +3,6 @@ import type {
   MessageArgs,
   MessageKey,
   MessageParam,
-  MessageParams,
   Messages,
 } from './i18n.types';
 import { EN } from './messages.en';
@@ -66,9 +65,11 @@ export class LocalizedError<K extends MessageKey = MessageKey> extends Error {
   readonly key: K;
 
   /**
-   * Подстановки текста; `undefined` — у строки их нет
+   * Подстановки текста; `undefined` — у строки их нет. Тип — первый аргумент после ключа, а не
+   * `MessageParams<K> | undefined`: для обобщённого `K` компилятор не сводит одно к другому, когда у строк
+   * словаря разные имена подстановок.
    */
-  readonly params: MessageParams<K> | undefined;
+  readonly params: MessageArgs<K>[0];
 
   constructor(key: K, ...args: MessageArgs<K>) {
     super(t(key, ...args));

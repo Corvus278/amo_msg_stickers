@@ -10,11 +10,11 @@ import type { CellMenuProps } from './CellMenu.types';
  * ячейках заслоняли бы сетку.
  */
 export const CellMenu: FC<CellMenuProps> = (props) => {
-  const { name, kind, opening, onClose, onRemove } = props;
+  const { label, kind, opening, onClose, onRemove } = props;
   const { anchor, source } = opening;
 
   return (
-    <Menu label={`Действия: ${name}`} anchor={anchor} source={source} onClose={onClose}>
+    <Menu label={label} anchor={anchor} source={source} onClose={onClose}>
       <RemoveItem kind={kind} onRemove={onRemove} />
     </Menu>
   );
