@@ -78,3 +78,7 @@ pages.yml: добавить корневой package.json в paths — груп�
 
 Решение автора: корневой package.json в paths pages.yml ('package.json' без префикса — только корень; docs/package.json покрыт docs/**). design.md и CLAUDE.md синхронизированы.
 Аудит: ok с первого круга. Долг: design.md:172 — сбитый перенос строки. Запуск по правке package.json — видно после мержа.
+
+### Pages
+
+Автор включил Pages; gh api repos/.../pages: build_type=workflow, html_url https://corvus278.github.io/amo_msg_stickers/.
