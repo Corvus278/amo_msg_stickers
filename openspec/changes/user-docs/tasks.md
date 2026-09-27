@@ -18,10 +18,10 @@
 
 ## 2. Автообновление userscript и имя архива
 
-- [ ] 2.1 Добавить `@updateURL` и `@downloadURL` в `USERSCRIPT_BANNER` только для боевой сборки; тест в
+- [x] 2.1 Добавить `@updateURL` и `@downloadURL` в `USERSCRIPT_BANNER` только для боевой сборки; тест в
   `tests/userscriptBanner.test.ts` — обе директивы с адресом последнего релиза; проверка — `pnpm test`, в
   `dist/amo-stickers.user.js` после `pnpm build` директивы есть, после `pnpm watch` — нет
-- [ ] 2.2 Переименовать архив расширения в `amo-stickers.zip` в `ci.yml` и `release.yml`; проверка — артефакт `build`
+- [x] 2.2 Переименовать архив расширения в `amo-stickers.zip` в `ci.yml` и `release.yml`; проверка — артефакт `build`
   прогона PR содержит `amo-stickers.zip`
 
 ## 3. Подсказки в интерфейсе
@@ -79,8 +79,8 @@
 
 ## 6. CI и публикация
 
-- [ ] 6.1 Задание `docs` (`pnpm docs:build`) в `ci.yml`; проверка — в PR шесть отдельных статусов, `docs` зелёный
-- [ ] 6.2 `.github/workflows/pages.yml` по design.md; проверка — сборка в нём — та же команда, что в задании `docs`,
+- [x] 6.1 Задание `docs` (`pnpm docs:build`) в `ci.yml`; проверка — в PR шесть отдельных статусов, `docs` зелёный
+- [x] 6.2 `.github/workflows/pages.yml` по design.md; проверка — сборка в нём — та же команда, что в задании `docs`,
   триггеры и `permissions` совпадают с design.md; деплой проверяется после мержа («Migration Plan»)
 - [ ] 6.3 Попросить автора включить Pages в настройках репозитория (Source: GitHub Actions) до мержа; проверка —
   настройка включена

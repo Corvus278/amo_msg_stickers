@@ -19,3 +19,11 @@ export default в config.mts и theme/index.ts — требование VitePres
 Хук .claude/hooks/lint.sh гоняет tsc только по корневому tsconfig; docs/tsconfig проверяет pnpm typecheck.
 docs:dev в браузере не кликали: поиск, тема, навигация проверены по сборке.
 Аудит: ok с первого круга. Долг: override не описан в design.
+
+### G2 · Автообновление userscript и CI
+
+@updateURL/@downloadURL — только при !isWatch (как devMatches), адрес в LATEST_USERSCRIPT_URL; тест проверяет ветку и адрес по build.mjs.
+release.yml: убран неиспользуемый VERSION из env gh release create.
+pages.yml: contents: read на уровне workflow, pages/id-token: write только у deploy; deploy needs build; upload-pages-artifact@v5, deploy-pages@v5; configure-pages не нужен (base жёсткий).
+Аудит: ok с первого круга. Долг: paths pages.yml без корневого package.json (скрипт docs:build) — так в design; старое имя архива в README/CLAUDE.md — задачи 5.1/7.2.
+Статусы PR, артефакт и деплой — проверка после push/мержа.

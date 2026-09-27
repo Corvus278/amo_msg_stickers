@@ -15,6 +15,24 @@ const isWatch = process.argv.includes('--watch');
 const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
 const devMatches = isWatch ? DEV_MATCHES : [];
 
+/**
+ * Файл userscript последнего релиза: `latest` — всегда наибольшая версия, и менеджер
+ * находит по этому адресу каждое следующее обновление.
+ */
+const LATEST_USERSCRIPT_URL =
+  'https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+
+/**
+ * Автообновление — только у боевой сборки: userscript из `pnpm watch` менеджер
+ * заменил бы версией из релиза.
+ */
+const updateDirectives = isWatch
+  ? []
+  : [
+      `// @updateURL    ${LATEST_USERSCRIPT_URL}`,
+      `// @downloadURL  ${LATEST_USERSCRIPT_URL}`,
+    ];
+
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
@@ -45,6 +63,7 @@ const USERSCRIPT_BANNER = [
   '// @sandbox      DOM',
   '// @inject-into  content',
   '// @run-at       document-idle',
+  ...updateDirectives,
   '// ==/UserScript==',
 ].join('\n');
 

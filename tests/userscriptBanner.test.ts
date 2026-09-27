@@ -40,6 +40,29 @@ const SAFARI_PARAMS = '{GM_xmlhttpRequest,GM_getValue,GM_setValue}';
 const ESBUILD_PROLOGUE = '"use strict";(()=>{})();';
 
 /**
+ * Файл userscript последнего релиза: `latest` — наибольшая версия, поэтому менеджер
+ * находит по этому адресу каждое следующее обновление.
+ */
+const LATEST_USERSCRIPT_URL =
+  'https://github.com/Corvus278/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+
+/**
+ * Литерал адреса обновления в `build.mjs`.
+ */
+const UPDATE_URL_PATTERN = /const LATEST_USERSCRIPT_URL =\s*'([^']*)';/;
+
+/**
+ * Директивы автообновления в ветке боевой сборки: при `isWatch` — пустой список.
+ */
+const UPDATE_DIRECTIVES_PATTERN =
+  /const updateDirectives = isWatch\s*\?\s*\[\]\s*:\s*\[([\s\S]*?)\];/;
+
+/**
+ * Директива автообновления в любом месте `build.mjs`.
+ */
+const UPDATE_DIRECTIVE_PATTERN = /@(?:updateURL|downloadURL)\b/g;
+
+/**
  * Значение литерала обёртки из `build.mjs`.
  *
  * @param pattern — регулярка с литералом в первой группе
@@ -71,6 +94,17 @@ describe('заголовок userscript', () => {
       'banner: { js: `${USERSCRIPT_BANNER}\\n${USERSCRIPT_WRAP_START}` }'
     );
     expect(buildSource).toContain('footer: { js: USERSCRIPT_WRAP_END }');
+  });
+
+  it('автообновление с последнего релиза — только в боевой сборке', () => {
+    const [, updateUrl] = buildSource.match(UPDATE_URL_PATTERN) || [];
+    const [, directives] = buildSource.match(UPDATE_DIRECTIVES_PATTERN) || [];
+
+    expect(updateUrl).toBe(LATEST_USERSCRIPT_URL);
+    expect(directives).toContain('`// @updateURL    ${LATEST_USERSCRIPT_URL}`');
+    expect(directives).toContain('`// @downloadURL  ${LATEST_USERSCRIPT_URL}`');
+    expect(buildSource.match(UPDATE_DIRECTIVE_PATTERN)).toHaveLength(2);
+    expect(buildSource).toMatch(/'\/\/ @run-at[^']*',\s*\.\.\.updateDirectives,/);
   });
 
   it('код в обёртке разбирается как тело функции Userscripts для Safari', () => {
