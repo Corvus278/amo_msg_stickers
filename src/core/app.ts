@@ -60,11 +60,6 @@ export const start = (host: Host) => {
   injectMessageStyle();
 
   let activeButton: HTMLElement | null = null;
-  /**
-   * Кнопка, на которую пришло последнее наведение или клик: у каждого поля ввода своя, а
-   * попап один и открывается у той, что его вызвала.
-   */
-  let targetButton: HTMLElement | null = null;
 
   const toFile = async (item: SendItem) => {
     switch (item.kind) {
@@ -110,6 +105,9 @@ export const start = (host: Host) => {
       activeButton = null;
       hoverPopup.dismiss();
     },
+    onHoldRelease: () => {
+      hoverPopup.release();
+    },
   });
 
   picker.setTheme(isDarkTheme());
@@ -129,11 +127,15 @@ export const start = (host: Host) => {
     picker.open(openedBy);
   };
 
-  const hoverPopup = createHoverPopup({
+  /**
+   * У каждого поля ввода своя кнопка, а попап один: контроллер открывает его у той кнопки,
+   * что его вызвала.
+   */
+  const hoverPopup = createHoverPopup<HTMLElement>({
     openDelay: HOVER_OPEN_DELAY_MS,
     closeDelay: HOVER_CLOSE_DELAY_MS,
-    onOpen: (openedBy) => {
-      if (targetButton) show(targetButton, openedBy);
+    onOpen: (openedBy, button) => {
+      show(button, openedBy);
     },
     onClose: () => {
       picker.close();
@@ -149,20 +151,10 @@ export const start = (host: Host) => {
      * Сразу открывается только панель, уходящая у той же кнопки: у другого поля ввода
      * попап открывается с обычной задержкой.
      */
-    isLeaving: () => {
-      return picker.isClosing && picker.element.parentElement === targetButton;
+    isLeaving: (button) => {
+      return picker.isClosing && picker.element.parentElement === button;
     },
   });
-
-  /**
-   * Попап открыт у другого поля ввода — сначала закрывается там.
-   *
-   * @param button — обёртка кнопки, на которую пришло событие
-   */
-  const retarget = (button: HTMLElement) => {
-    if (hoverPopup.isOpen && activeButton !== button) hoverPopup.dismiss();
-    targetButton = button;
-  };
 
   const mount = ({ emojiWrap }: Composer) => {
     const wrap = document.createElement('div');
@@ -178,12 +170,10 @@ export const start = (host: Host) => {
     inner.title = 'Стикеры и GIF';
     inner.innerHTML = stickerIcon(ICON_CLASS);
     inner.addEventListener('click', () => {
-      retarget(wrap);
-      hoverPopup.click();
+      hoverPopup.click(wrap);
     });
     wrap.addEventListener('mouseenter', () => {
-      retarget(wrap);
-      hoverPopup.enter();
+      hoverPopup.enter(wrap);
     });
     wrap.addEventListener('mouseleave', () => {
       hoverPopup.leave();

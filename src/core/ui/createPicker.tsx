@@ -29,11 +29,11 @@ const CLOSE_ANIMATION_MS = 200;
  * перезагружает его и не пересоздаёт картинки.
  *
  * @param env — окружение: сеть и настройки
- * @param callbacks — отправка стикера и реакция на закрытие
+ * @param callbacks — отправка стикера, реакция на закрытие и на снятие удержания
  * @returns управление пикером
  */
 export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandle => {
-  const { onSend, onClose } = callbacks;
+  const { onSend, onClose, onHoldRelease } = callbacks;
   const element = document.createElement('div');
 
   element.setAttribute('data-amo-stickers-picker', '');
@@ -50,7 +50,7 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
   let openedBy: OpenedBy = 'hover';
   let isDark = false;
 
-  const holds = createPopupHolds();
+  const holds = createPopupHolds(onHoldRelease);
   const panel = createPanelPhase({
     closeDuration: CLOSE_ANIMATION_MS,
     onChange: () => {

@@ -13,6 +13,12 @@ const NOT_HELD = () => {
 };
 
 /**
+ * Кнопки стикеров двух полей ввода на одной странице.
+ */
+const A = 'a';
+const B = 'b';
+
+/**
  * Контроллер с задержками спеки и записью колбэков.
  *
  * @param isHeld — удержание попапа
@@ -20,12 +26,14 @@ const NOT_HELD = () => {
  */
 const setup = (isHeld: () => boolean = NOT_HELD) => {
   const opened: OpenedBy[] = [];
+  const openedAt: string[] = [];
   let closed = 0;
-  const popup = createHoverPopup({
+  const popup = createHoverPopup<string>({
     openDelay: 250,
     closeDelay: 500,
-    onOpen: (openedBy) => {
+    onOpen: (openedBy, target) => {
       opened.push(openedBy);
+      openedAt.push(target);
     },
     onClose: () => {
       closed += 1;
@@ -36,6 +44,7 @@ const setup = (isHeld: () => boolean = NOT_HELD) => {
   return {
     popup,
     opened,
+    openedAt,
     closedCount: () => {
       return closed;
     },
@@ -54,7 +63,7 @@ describe('createHoverPopup', () => {
   it('открывает наведением через 250 мс', () => {
     const { popup, opened } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(249);
     expect(opened).toEqual([]);
     expect(popup.isOpen).toBe(false);
@@ -66,7 +75,7 @@ describe('createHoverPopup', () => {
   it('курсор, прошедший кнопку быстрее 250 мс, попап не открывает', () => {
     const { popup, opened } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(200);
     popup.leave();
     vi.advanceTimersByTime(1000);
@@ -77,7 +86,7 @@ describe('createHoverPopup', () => {
   it('закрывает открытый наведением через 500 мс после ухода', () => {
     const { popup, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(499);
@@ -90,11 +99,11 @@ describe('createHoverPopup', () => {
   it('возврат до конца задержки отменяет закрытие', () => {
     const { popup, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(400);
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(1000);
     expect(closedCount()).toBe(0);
     expect(popup.isOpen).toBe(true);
@@ -103,7 +112,7 @@ describe('createHoverPopup', () => {
   it('повторный уход не продлевает задержку закрытия', () => {
     const { popup, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(300);
@@ -115,8 +124,8 @@ describe('createHoverPopup', () => {
   it('клик открывает закреплённым сразу, уход курсора его не закрывает', () => {
     const { popup, opened, closedCount } = setup();
 
-    popup.enter();
-    popup.click();
+    popup.enter(A);
+    popup.click(A);
     expect(opened).toEqual(['click']);
     popup.leave();
     vi.advanceTimersByTime(5000);
@@ -128,9 +137,9 @@ describe('createHoverPopup', () => {
   it('клик по открытому наведением закрепляет его', () => {
     const { popup, opened, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
-    popup.click();
+    popup.click(A);
     popup.leave();
     vi.advanceTimersByTime(5000);
     expect(opened).toEqual(['hover']);
@@ -140,11 +149,11 @@ describe('createHoverPopup', () => {
   it('клик по открытому наведением отменяет уже запущенное закрытие', () => {
     const { popup, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(100);
-    popup.click();
+    popup.click(A);
     vi.advanceTimersByTime(5000);
     expect(closedCount()).toBe(0);
   });
@@ -152,9 +161,9 @@ describe('createHoverPopup', () => {
   it('повторный клик закрывает закреплённый, курсор на кнопке его снова не открывает', () => {
     const { popup, opened, closedCount } = setup();
 
-    popup.enter();
-    popup.click();
-    popup.click();
+    popup.enter(A);
+    popup.click(A);
+    popup.click(A);
     vi.advanceTimersByTime(5000);
     expect(closedCount()).toBe(1);
     expect(opened).toEqual(['click']);
@@ -167,7 +176,7 @@ describe('createHoverPopup', () => {
       return isHeld;
     });
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(100);
@@ -183,15 +192,110 @@ describe('createHoverPopup', () => {
       return isHeld;
     });
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(1000);
     isHeld = false;
-    popup.enter();
+    popup.enter(A);
     popup.leave();
     vi.advanceTimersByTime(500);
     expect(closedCount()).toBe(1);
+  });
+
+  it('снятие удержания при курсоре снаружи закрывает открытый наведением через 500 мс', () => {
+    let isHeld = true;
+    const { popup, closedCount } = setup(() => {
+      return isHeld;
+    });
+
+    popup.enter(A);
+    vi.advanceTimersByTime(250);
+    popup.leave();
+    vi.advanceTimersByTime(1000);
+    isHeld = false;
+    popup.release();
+    vi.advanceTimersByTime(499);
+    expect(popup.isOpen).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(closedCount()).toBe(1);
+    expect(popup.isOpen).toBe(false);
+  });
+
+  it('снятие удержания при курсоре внутри попап не закрывает', () => {
+    let isHeld = true;
+    const { popup, closedCount } = setup(() => {
+      return isHeld;
+    });
+
+    popup.enter(A);
+    vi.advanceTimersByTime(250);
+    isHeld = false;
+    popup.release();
+    vi.advanceTimersByTime(1000);
+    expect(closedCount()).toBe(0);
+    expect(popup.isOpen).toBe(true);
+  });
+
+  it('снятие удержания у закреплённого попап не закрывает', () => {
+    let isHeld = true;
+    const { popup, closedCount } = setup(() => {
+      return isHeld;
+    });
+
+    popup.enter(A);
+    popup.click(A);
+    popup.leave();
+    isHeld = false;
+    popup.release();
+    vi.advanceTimersByTime(1000);
+    expect(closedCount()).toBe(0);
+    expect(popup.isOpen).toBe(true);
+  });
+
+  it('наведение на другую кнопку не закрывает закреплённый попап', () => {
+    const { popup, opened, closedCount } = setup();
+
+    popup.enter(A);
+    popup.click(A);
+    popup.leave();
+    popup.enter(B);
+    vi.advanceTimersByTime(1000);
+    popup.leave();
+    vi.advanceTimersByTime(1000);
+    expect(closedCount()).toBe(0);
+    expect(opened).toEqual(['click']);
+    expect(popup.isOpen).toBe(true);
+  });
+
+  it('клик по другой кнопке переносит закреплённый попап к ней', () => {
+    const { popup, opened, openedAt, closedCount } = setup();
+
+    popup.click(A);
+    popup.leave();
+    popup.enter(B);
+    popup.click(B);
+    expect(closedCount()).toBe(1);
+    expect(opened).toEqual(['click', 'click']);
+    expect(openedAt).toEqual([A, B]);
+    expect(popup.isOpen).toBe(true);
+    popup.leave();
+    vi.advanceTimersByTime(1000);
+    expect(popup.isOpen).toBe(true);
+  });
+
+  it('наведение на другую кнопку закрывает открытый наведением и открывает у неё', () => {
+    const { popup, openedAt, closedCount } = setup();
+
+    popup.enter(A);
+    vi.advanceTimersByTime(250);
+    popup.leave();
+    popup.enter(B);
+    expect(closedCount()).toBe(1);
+    expect(popup.isOpen).toBe(false);
+    vi.advanceTimersByTime(250);
+    expect(openedAt).toEqual([A, B]);
+    expect(popup.isOpen).toBe(true);
   });
 
   it('dismiss закрывает всегда: при удержании и у закреплённого', () => {
@@ -199,7 +303,7 @@ describe('createHoverPopup', () => {
       return true;
     });
 
-    popup.click();
+    popup.click(A);
     popup.dismiss();
     expect(closedCount()).toBe(1);
     expect(popup.isOpen).toBe(false);
@@ -208,7 +312,7 @@ describe('createHoverPopup', () => {
   it('dismiss отменяет ожидающее открытие, а у закрытого не зовёт onClose', () => {
     const { popup, opened, closedCount } = setup();
 
-    popup.enter();
+    popup.enter(A);
     popup.dismiss();
     vi.advanceTimersByTime(1000);
     expect(opened).toEqual([]);
@@ -230,7 +334,7 @@ describe('createHoverPopup', () => {
       },
     });
 
-    popup.click();
+    popup.click(A);
     popup.dismiss();
     expect(closed).toBe(1);
   });
@@ -253,18 +357,18 @@ describe('createHoverPopup', () => {
       },
     });
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     popup.leave();
     vi.advanceTimersByTime(500);
     expect(popup.isOpen).toBe(false);
-    popup.enter();
+    popup.enter(A);
     expect(popup.isOpen).toBe(true);
     expect(opened).toEqual(['hover', 'hover']);
 
     popup.dismiss();
     isLeaving = false;
-    popup.enter();
+    popup.enter(A);
     expect(popup.isOpen).toBe(false);
   });
 
@@ -288,7 +392,7 @@ describe('createHoverPopup', () => {
       },
     });
 
-    popup.enter();
+    popup.enter(A);
     expect(calls).toEqual([250]);
     fire();
     expect(popup.isOpen).toBe(true);
@@ -341,12 +445,35 @@ describe('createPopupHolds', () => {
     expect(holds.isHeld()).toBe(true);
   });
 
+  it('onRelease зовётся, когда снята последняя причина, и только тогда', () => {
+    let released = 0;
+    const holds = createPopupHolds(() => {
+      released += 1;
+    });
+
+    holds.set('field', false);
+    expect(released).toBe(0);
+
+    holds.set('field', true);
+    holds.set('conversion', true);
+    holds.set('field', false);
+    expect(released).toBe(0);
+    holds.set('conversion', false);
+    expect(released).toBe(1);
+
+    holds.set('fileDialog', true);
+    holds.releasePanel();
+    expect(released).toBe(2);
+    holds.releasePanel();
+    expect(released).toBe(2);
+  });
+
   it('удержание не даёт уходу курсора закрыть попап, а dismiss закрывает', () => {
     vi.useFakeTimers();
     const holds = createPopupHolds();
     const { popup, closedCount } = setup(holds.isHeld);
 
-    popup.enter();
+    popup.enter(A);
     vi.advanceTimersByTime(250);
     holds.set('field', true);
     popup.leave();

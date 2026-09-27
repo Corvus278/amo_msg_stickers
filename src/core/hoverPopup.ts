@@ -29,22 +29,35 @@ const NOT_LEAVING = () => {
 
 /**
  * Контроллер открытия попапа наведением и кликом без DOM: вызывающая сторона переводит события
- * курсора в `enter` / `leave` / `click` / `dismiss`, контроллер решает, когда звать `onOpen` и
- * `onClose`. Таймеры — через `schedule`, поэтому контроллер проверяется на фейковых таймерах.
+ * курсора в `enter` / `leave` / `click` / `dismiss`, а снятие удержания — в `release`;
+ * контроллер решает, когда и у какой кнопки звать `onOpen` и когда `onClose`. Таймеры — через
+ * `schedule`, поэтому контроллер проверяется на фейковых таймерах.
  *
  * `isHeld` спрашивается в момент срабатывания таймера закрытия, а не при уходе: удержание
  * (фокус в поле ввода, диалог файла) может начаться уже после ухода курсора. Удержанный
- * попап остаётся открытым наведением — следующий уход курсора снова запустит закрытие.
+ * попап остаётся открытым наведением: его закроет следующий уход курсора или снятие
+ * удержания, пока курсор снаружи.
+ *
+ * Закреплённый попап не закрывается движением курсора — и наведением на кнопку другого поля
+ * ввода тоже: у другой кнопки его переносит только клик.
  *
  * @param options — задержки, колбэки и планировщик таймеров
  * @returns обработчики событий и признак открытого попапа
  */
-export const createHoverPopup = (options: HoverPopupOptions): HoverPopup => {
+export const createHoverPopup = <T>(options: HoverPopupOptions<T>): HoverPopup<T> => {
   const { openDelay, closeDelay, onOpen, onClose, isHeld } = options;
   const schedule = options.schedule || scheduleTimeout;
   const isLeaving = options.isLeaving || NOT_LEAVING;
 
   let state: PopupState = 'closed';
+  /**
+   * Кнопка, у которой открыт попап или ждёт открытия.
+   */
+  let current: T | null = null;
+  /**
+   * Курсор над кнопкой или попапом: снятие удержания при курсоре внутри закрытия не запускает.
+   */
+  let isInside = false;
   let cancelOpen: (() => void) | null = null;
   let cancelClose: (() => void) | null = null;
 
@@ -58,11 +71,12 @@ export const createHoverPopup = (options: HoverPopupOptions): HoverPopup => {
     cancelClose = null;
   };
 
-  const open = (nextState: 'hover' | 'pinned') => {
+  const open = (nextState: 'hover' | 'pinned', target: T) => {
     clearOpen();
     clearClose();
     state = nextState;
-    onOpen(nextState === 'pinned' ? 'click' : 'hover');
+    current = target;
+    onOpen(nextState === 'pinned' ? 'click' : 'hover', target);
   };
 
   const dismiss = () => {
@@ -78,29 +92,10 @@ export const createHoverPopup = (options: HoverPopupOptions): HoverPopup => {
     onClose();
   };
 
-  const enter = () => {
-    clearClose();
-
-    if (state !== 'closed' || cancelOpen) return;
-
-    if (isLeaving()) {
-      open('hover');
-
-      return;
-    }
-
-    cancelOpen = schedule(() => {
-      cancelOpen = null;
-      open('hover');
-    }, openDelay);
-  };
-
-  const leave = () => {
-    clearOpen();
-
-    /**
-     * Уже идущая задержка не продлевается: уход за окно приходит вдогонку уходу с кнопки.
-     */
+  /**
+   * Уже идущая задержка не продлевается: уход за окно приходит вдогонку уходу с кнопки.
+   */
+  const scheduleClose = () => {
     if (state !== 'hover' || cancelClose) return;
     cancelClose = schedule(() => {
       cancelClose = null;
@@ -109,10 +104,46 @@ export const createHoverPopup = (options: HoverPopupOptions): HoverPopup => {
     }, closeDelay);
   };
 
-  const click = () => {
+  const enter = (target: T) => {
+    if (target !== current) {
+      if (state === 'pinned') return;
+      dismiss();
+    }
+
+    isInside = true;
+    clearClose();
+
+    if (state !== 'closed' || cancelOpen) return;
+    current = target;
+
+    if (isLeaving(target)) {
+      open('hover', target);
+
+      return;
+    }
+
+    cancelOpen = schedule(() => {
+      cancelOpen = null;
+      open('hover', target);
+    }, openDelay);
+  };
+
+  const leave = () => {
+    isInside = false;
+    clearOpen();
+    scheduleClose();
+  };
+
+  const release = () => {
+    if (!isInside) scheduleClose();
+  };
+
+  const click = (target: T) => {
+    if (target !== current) dismiss();
+
     switch (state) {
       case 'closed': {
-        open('pinned');
+        open('pinned', target);
 
         return;
       }
@@ -145,6 +176,7 @@ export const createHoverPopup = (options: HoverPopupOptions): HoverPopup => {
     enter,
     leave,
     click,
+    release,
     dismiss,
     get isOpen() {
       return state !== 'closed';
