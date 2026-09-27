@@ -7,6 +7,7 @@ const statusVariants = cva(
   [
     'border-t border-cadetGray-30/[.28] px-2.5 py-1.5 text-xs dark:border-white-0/10',
     'bg-white-0 dark:bg-gray-10',
+    'motion-safe:transition-opacity motion-safe:duration-base [@starting-style]:opacity-0',
   ],
   {
     variants: {
@@ -27,6 +28,9 @@ const statusVariants = cva(
  * и не занимает высоты. Скринридер объявляет изменение содержимого существующей области,
  * а область, появившуюся вместе с текстом или из `display: none`, обычно пропускает.
  * Строка с рамкой рендерится только со статусом: пустая перекрывала бы низ ленты.
+ *
+ * Строка появляется переходом из `@starting-style` при монтировании; переход и длительность —
+ * под `motion-safe:`, как у панели режима. Смена текста в уже показанной строке не мигает.
  */
 export const StatusBar: FC = () => {
   const { status } = usePicker();

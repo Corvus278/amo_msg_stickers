@@ -5,6 +5,12 @@ export type TelegramImportState = {
   link: string;
 
   /**
+   * В поле есть непробельный символ. Без него «Импорт» недоступен: пустой ввод — не
+   * ошибка, а ещё не начатый.
+   */
+  hasLink: boolean;
+
+  /**
    * Меняет введённую ссылку.
    */
   changeLink: (link: string) => void;

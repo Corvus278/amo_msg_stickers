@@ -34,3 +34,15 @@ CreateTile лежит в StickerFeed/CreateTile/; переход motion-safe:tra
 Стенд (исполнитель, headless Chrome): пустой раздел, 3 и 5 стикеров, обе темы, hover/focus, Tab, Enter → «Добавить стикеры», без контекстного меню, новый стикер встаёт перед плиткой.
 Аудит: ok с первого круга.
 Долг: CreateTile в FeedRow без явного key после ячеек с ключами.
+
+### Уточнение K8
+
+motion-safe:transition-* несёт длительность по умолчанию (175ms) в @media-блоке, который идёт после простого duration-* и перебивает его. Поэтому длительность пишется тоже под motion-safe: (motion-safe:duration-base / motion-safe:duration-lg). Для duration-base безвредно (= 175ms), для duration-lg — нет. Касается G5 (SectionTabs, Footer) и CreateTile из G3 (duration-base — безвредно, привести при случае).
+
+### G6 · Появление и наведение
+
+Появление ModePanel (opacity), Screen (opacity + сдвиг 8px, duration-lg), меню (переход только после замера, isPlaced), строки статуса; всё под motion-safe:, длительность тоже под motion-safe: (уточнение K8).
+Наведение: Button primary/danger через enabled:hover, FeedChip — подложка только у aria-pressed=false (специфичность), DropZone — hover: (это <label>, :enabled неприменим), «Открыть настройки» — без transition (text-decoration не анимируется). «Импорт» disabled при пустой/пробельной ссылке (hasLink).
+Стенд (исполнители, headless Chrome): первые кадры op=0, reduce → 0s; прокрутка переживает переключение режима; меню без кадра в углу; ошибка черновика в ту же плашку; hover в обеих темах.
+Эстафета: 5.x — один исполнитель, 6.x — новый (63 вызова у первого). Аудит: ok с первого круга.
+Долг: нет юнит-теста на hasLink (testing.md просит тесты хуков с логикой); Button danger нигде не используется — наведение проверено только по собранному CSS.

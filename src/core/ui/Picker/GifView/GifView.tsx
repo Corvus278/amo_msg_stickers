@@ -32,8 +32,10 @@ const FEED_ATTRIBUTION: Record<GifFeed, string> = {
  * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — открытие
  * экрана, а не навигация.
  */
-const SETTINGS_LINK_CLASS =
-  'cursor-pointer border-0 bg-transparent p-0 text-blue-50 underline dark:text-beige-70';
+const SETTINGS_LINK_CLASS = [
+  'cursor-pointer border-0 bg-transparent p-0 text-blue-50 underline dark:text-beige-70',
+  'enabled:hover:no-underline',
+].join(' ');
 
 /**
  * Поиск GIF и трендовая выдача выбранного источника, при пустом запросе над ней — недавние GIF.

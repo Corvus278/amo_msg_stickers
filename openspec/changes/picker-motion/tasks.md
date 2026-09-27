@@ -25,17 +25,17 @@
 
 ## 5. Анимации появления
 
-- [ ] 5.1 `ModePanel`: у активной панели `motion-safe:transition-opacity duration-base [@starting-style]:opacity-0`; проверка — на стенде переключение «Стикеры» ↔ «GIF» проявляет режим, прокрутка режима восстановлена, фокус в поиске GIF ставится сразу при переключении кликом
-- [ ] 5.2 `Screen`: `motion-safe:transition-[opacity,transform] duration-lg [@starting-style]:opacity-0 [@starting-style]:translate-x-2`, в `Picker.tsx` — `key={screen}`; проверка — на стенде «+» и «Настройки» открывают экран плавно, «Назад» закрывает сразу, смена «Добавить» → «Настройки» тоже проигрывает появление
-- [ ] 5.3 `Menu`: вариант `isPlaced` — `invisible opacity-0` → `opacity-100` с `motion-safe:transition-opacity duration-base`; проверка — на стенде контекстное меню ячейки и меню пака проявляются, не мигают в левом верхнем углу до замера, Escape закрывает сразу с возвратом фокуса
-- [ ] 5.4 `StatusBar`: плашка статуса с `motion-safe:transition-opacity duration-base [@starting-style]:opacity-0`; проверка — на стенде «Отправляю…» и ошибка проявляются поверх низа ленты, лента не сдвигается
+- [x] 5.1 `ModePanel`: у активной панели `motion-safe:transition-opacity duration-base [@starting-style]:opacity-0`; проверка — на стенде переключение «Стикеры» ↔ «GIF» проявляет режим, прокрутка режима восстановлена, фокус в поиске GIF ставится сразу при переключении кликом
+- [x] 5.2 `Screen`: `motion-safe:transition-[opacity,transform] duration-lg [@starting-style]:opacity-0 [@starting-style]:translate-x-2`, в `Picker.tsx` — `key={screen}`; проверка — на стенде «+» и «Настройки» открывают экран плавно, «Назад» закрывает сразу, смена «Добавить» → «Настройки» тоже проигрывает появление
+- [x] 5.3 `Menu`: вариант `isPlaced` — `invisible opacity-0` → `opacity-100` с `motion-safe:transition-opacity duration-base`; проверка — на стенде контекстное меню ячейки и меню пака проявляются, не мигают в левом верхнем углу до замера, Escape закрывает сразу с возвратом фокуса
+- [x] 5.4 `StatusBar`: плашка статуса с `motion-safe:transition-opacity duration-base [@starting-style]:opacity-0`; проверка — на стенде «Отправляю…» и ошибка проявляются поверх низа ленты, лента не сдвигается
 - [ ] 5.5 `transition-colors duration-base` у `ModeTab`, кнопки «Настройки» в футере и кнопки «+»; проверка — `rg -n "transition-colors" src/core/ui/Picker/Footer src/core/ui/Picker/SectionTabs` находит их, на стенде наведение меняет подложку плавно
 - [ ] 5.6 Уменьшение движения: проверка — на стенде с эмуляцией `prefers-reduced-motion: reduce` (DevTools → Rendering) переход к далёкому паку мгновенный, полоса и индикатор встают без анимации, режим, экран, меню и статус появляются сразу, спиннер отправки крутится
 
 ## 6. Кнопки
 
-- [ ] 6.1 Наведение по таблице design («Наведение кнопок»): `Button` `primary` и `danger`, `FeedChip`, ссылка «Открыть настройки», `DropZone` — через вариант `enabled:`, с `motion-safe:transition-[color,background-color,border-color,filter] duration-base`; проверка — на стенде в светлой и тёмной теме каждый элемент заметно меняет вид при наведении; недоступная «Сохранить в «Мои стикеры»» не меняет вид, курсор обычный; `rg -n "enabled:hover" src/core/ui/Picker` находит `Button` и `FeedChip`
-- [ ] 6.2 «Импорт» недоступна при пустом поле: `hasLink` в `useTelegramImport`, `isDisabled={isImporting || !hasLink}` в `TelegramImport`; проверка — на стенде с пустым полем и с пробелами «Импорт» полупрозрачна и не нажимается, ошибки нет; после первого символа — доступна; `привет мир` по-прежнему даёт «Не понял ссылку»
+- [x] 6.1 Наведение по таблице design («Наведение кнопок»): `Button` `primary` и `danger`, `FeedChip`, ссылка «Открыть настройки», `DropZone` — через вариант `enabled:`, с `motion-safe:transition-[color,background-color,border-color,filter] duration-base`; проверка — на стенде в светлой и тёмной теме каждый элемент заметно меняет вид при наведении; недоступная «Сохранить в «Мои стикеры»» не меняет вид, курсор обычный; `rg -n "enabled:hover" src/core/ui/Picker` находит `Button` и `FeedChip`
+- [x] 6.2 «Импорт» недоступна при пустом поле: `hasLink` в `useTelegramImport`, `isDisabled={isImporting || !hasLink}` в `TelegramImport`; проверка — на стенде с пустым полем и с пробелами «Импорт» полупрозрачна и не нажимается, ошибки нет; после первого символа — доступна; `привет мир` по-прежнему даёт «Не понял ссылку»
 
 ## 7. Документация и версия
 

@@ -8,8 +8,19 @@ import type { ScreenProps } from './Screen.types';
 /**
  * `z-10` — над содержимым режима: позиционированные элементы ленты идут в DOM раньше
  * экрана, но с `z-index` перекрыли бы его.
+ *
+ * Появление — переход из `@starting-style` при монтировании; закрытие размонтирует экран, и
+ * он уходит сразу. Переход только под `motion-safe:`: без него стартовое состояние
+ * сменяется мгновенно.
+ *
+ * Длительность — тоже под `motion-safe:`: `motion-safe:transition-*` несёт длительность по
+ * умолчанию в блоке `@media`, который в CSS идёт после простого `duration-lg` и перебил бы его.
  */
-const SCREEN_CLASS = 'absolute inset-0 z-10 flex flex-col bg-white-0 dark:bg-gray-10';
+const SCREEN_CLASS = [
+  'absolute inset-0 z-10 flex flex-col bg-white-0 dark:bg-gray-10',
+  'motion-safe:transition-[opacity,transform] motion-safe:duration-lg',
+  '[@starting-style]:translate-x-2 [@starting-style]:opacity-0',
+].join(' ');
 
 const BACK_BUTTON_CLASS = [
   'flex h-7 cursor-pointer items-center gap-1 rounded-lg bg-transparent py-0 pl-0.5 pr-2',

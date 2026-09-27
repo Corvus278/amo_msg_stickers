@@ -9,15 +9,28 @@ import type { DropZoneProps } from './DropZone.types';
 /**
  * Цвета обычной и подсвеченной зоны — взаимоисключающие наборы: конфликтующих утилит
  * на одном элементе быть не должно (`tailwind-merge` не берём).
+ *
+ * Наведение — простым `hover:`, а не `enabled:hover:`, как у кнопок: зона — `<label>`, у
+ * него нет состояния доступности, и `:enabled` к нему не применяется. Наведение есть
+ * только вне перетаскивания: подсветка перетаскивания и так заметнее.
+ *
+ * Длительность — под `motion-safe:`, как и переход: длительность по умолчанию из
+ * `motion-safe:transition-*` перебила бы простую `duration-base`.
  */
 const zoneVariants = cva(
-  'relative block cursor-pointer rounded-lgx border-[1.5px] border-dashed p-4 text-center',
+  [
+    'relative block cursor-pointer rounded-lgx border-[1.5px] border-dashed p-4 text-center',
+    'motion-safe:transition-[color,background-color,border-color,filter] motion-safe:duration-base',
+  ].join(' '),
   {
     variants: {
       isDragOver: {
         true: 'border-blue-50 text-blue-50 dark:border-beige-70 dark:text-beige-70',
-        false:
+        false: [
           'border-cadetGray-30/[.28] text-cadetGray-30 dark:border-white-0/[.1] dark:text-gray-70',
+          'hover:border-cadetGray-30/[.5] hover:bg-cadetGray-30/[.06] hover:text-cadetGray-10',
+          'dark:hover:border-white-0/[.2] dark:hover:bg-white-0/[.04] dark:hover:text-gray-90',
+        ].join(' '),
       },
     },
   }

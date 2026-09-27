@@ -5,10 +5,20 @@ import { useScrollRestore } from './useScrollRestore/useScrollRestore';
 import { modePanelId, modeTabId } from './modeIds';
 import type { ModePanelProps } from './ModePanel.types';
 
+/**
+ * Появление — переход из `@starting-style`: панель не размонтируется, а переход срабатывает
+ * на каждый показ после `display: none`. Переход только под `motion-safe:` — без него
+ * стартовая прозрачность сменяется мгновенно, и уменьшение движения выключает его одним
+ * вариантом. Длительность под тем же вариантом, что и переход: иначе её перебила бы
+ * длительность по умолчанию из `motion-safe:transition-opacity`.
+ */
+const APPEAR_CLASS =
+  'motion-safe:transition-opacity motion-safe:duration-base [@starting-style]:opacity-0';
+
 const panelVariants = cva('', {
   variants: {
     isActive: {
-      true: 'flex min-h-0 flex-1 flex-col',
+      true: ['flex min-h-0 flex-1 flex-col', APPEAR_CLASS],
       false: 'hidden',
     },
   },

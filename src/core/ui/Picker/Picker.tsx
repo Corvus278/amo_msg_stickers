@@ -161,7 +161,10 @@ export const Picker: FC<PickerProps> = (props) => {
           <GifView isOpen={isOpen} />
         </ModePanel>
 
-        {screen && <Screen>{renderScreen(screen)}</Screen>}
+        {/*
+         * `key` — смена экрана на экран монтирует новый, и появление проигрывается снова.
+         */}
+        {screen && <Screen key={screen}>{renderScreen(screen)}</Screen>}
 
         <StatusBar />
       </div>
