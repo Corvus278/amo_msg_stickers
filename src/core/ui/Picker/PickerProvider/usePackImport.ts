@@ -18,7 +18,7 @@ import type { PackImportOptions, PackImportState } from './PickerProvider.types'
  * @returns ход импорта и его запуск
  */
 export const usePackImport = (options: PackImportOptions): PackImportState => {
-  const { env, settings, refreshPacks, showStatus, showError, switchTo } = options;
+  const { env, settings, refreshPacks, showStatus, showError, scrollToSection } = options;
   const [isImporting, setIsImporting] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
 
@@ -51,9 +51,9 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
         await refreshPacks();
 
         /**
-         * Статус — после переключения: `switchTo` сбрасывает статус прошлого представления.
+         * Статус — после перехода: `scrollToSection` сбрасывает статус прошлого действия.
          */
-        switchTo({ kind: 'pack', packId: pack.id });
+        scrollToSection(pack.id);
         showStatus(`Пак «${pack.title}» добавлен`);
       } catch (error) {
         /**
@@ -67,7 +67,7 @@ export const usePackImport = (options: PackImportOptions): PackImportState => {
         setPercent(null);
       }
     },
-    [isImporting, env, settings, refreshPacks, showStatus, showError, switchTo]
+    [isImporting, env, settings, refreshPacks, showStatus, showError, scrollToSection]
   );
 
   return { isImporting, percent, importPack };

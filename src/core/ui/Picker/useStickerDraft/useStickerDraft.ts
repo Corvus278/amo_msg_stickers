@@ -28,7 +28,7 @@ const BYTES_IN_KB = 1024;
  */
 export const useStickerDraft = (): StickerDraftState => {
   const { refreshPacks, showStatus, showError, setHold } = usePicker();
-  const { switchTo } = usePickerView();
+  const { scrollToSection } = usePickerView();
   const [source, setSource] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [captionText, setCaptionText] = useState('');
@@ -129,13 +129,13 @@ export const useStickerDraft = (): StickerDraftState => {
         createdAt: Date.now(),
       });
       await refreshPacks();
-      switchTo({ kind: 'pack', packId: CUSTOM_PACK_ID });
+      scrollToSection(CUSTOM_PACK_ID);
     } catch (error) {
       showError(errorMessage(error));
     } finally {
       setIsSaving(false);
     }
-  }, [draft, isConverting, isSaving, refreshPacks, switchTo, showError]);
+  }, [draft, isConverting, isSaving, refreshPacks, scrollToSection, showError]);
 
   return {
     fileName: source?.name || null,

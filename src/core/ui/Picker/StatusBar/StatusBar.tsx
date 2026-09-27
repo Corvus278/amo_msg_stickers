@@ -4,7 +4,10 @@ import type { FunctionComponent as FC } from 'preact';
 import { usePicker } from '../PickerProvider/usePicker';
 
 const statusVariants = cva(
-  'border-t border-cadetGray-30/[.28] px-2.5 py-1.5 text-xs dark:border-white-0/10',
+  [
+    'border-t border-cadetGray-30/[.28] px-2.5 py-1.5 text-xs dark:border-white-0/10',
+    'bg-white-0 dark:bg-gray-10',
+  ],
   {
     variants: {
       isError: {
@@ -16,18 +19,20 @@ const statusVariants = cva(
 );
 
 /**
- * Строка статуса над вкладками.
+ * Строка статуса — слой поверх низа ленты над футером: лента не меняет высоту, и
+ * прокрученные стикеры не сдвигаются, когда статус появляется или пропадает. `z-20` —
+ * над экраном: прогресс импорта виден и на экране «Добавить стикеры».
  *
  * Live region — обёртка без отступов: она смонтирована и видна всегда, а без статуса пуста
  * и не занимает высоты. Скринридер объявляет изменение содержимого существующей области,
  * а область, появившуюся вместе с текстом или из `display: none`, обычно пропускает.
- * Строка с рамкой рендерится только со статусом: пустая отъедала бы высоту у тела панели.
+ * Строка с рамкой рендерится только со статусом: пустая перекрывала бы низ ленты.
  */
 export const StatusBar: FC = () => {
   const { status } = usePicker();
 
   return (
-    <div role="status" className="shrink-0">
+    <div role="status" className="absolute inset-x-0 bottom-0 z-20">
       {status && (
         <div className={statusVariants({ isError: status.isError })}>{status.text}</div>
       )}

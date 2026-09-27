@@ -4,17 +4,17 @@ import type { FunctionComponent as FC, TargetedFocusEvent } from 'preact';
 import type { PanelPhase } from '../../hoverPopup.types';
 
 import { AddView } from './AddView/AddView';
+import { Footer } from './Footer/Footer';
 import { GifView } from './GifView/GifView';
-import { PackView } from './PackView/PackView';
+import { ModePanel } from './ModePanel/ModePanel';
 import { usePicker } from './PickerProvider/usePicker';
-import { RecentView } from './RecentView/RecentView';
+import { Screen } from './Screen/Screen';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
-import { TAB_PANEL_ID, tabId } from './tabIds/tabIds';
-import { Tabs } from './Tabs/Tabs';
+import { StickersMode } from './StickersMode/StickersMode';
 import { useOpenLoad } from './useOpenLoad/useOpenLoad';
 import { usePickerView } from './usePickerView/usePickerView';
-import type { View } from './usePickerView/usePickerView.types';
+import type { PickerScreen } from './usePickerView/usePickerView.types';
 import type { PickerProps } from './Picker.types';
 
 /**
@@ -67,20 +67,14 @@ const panelVariants = cva([...PANEL_CLASS, OPEN_ANIMATION_CLASS], {
   },
 });
 
-const renderView = (view: View, isOpen: boolean) => {
-  switch (view.kind) {
-    case 'recent': {
-      return <RecentView isOpen={isOpen} />;
-    }
+/**
+ * Область над футером. Экран и строка статуса лежат в ней слоями поверх режима, а не в
+ * потоке: лента не меняет высоту, и её прокрутка не сдвигается.
+ */
+const BODY_CLASS = 'relative flex min-h-0 flex-1 flex-col';
 
-    case 'gifs': {
-      return <GifView isOpen={isOpen} />;
-    }
-
-    case 'pack': {
-      return <PackView packId={view.packId} />;
-    }
-
+const renderScreen = (screen: PickerScreen) => {
+  switch (screen) {
     case 'add': {
       return <AddView />;
     }
@@ -90,9 +84,9 @@ const renderView = (view: View, isOpen: boolean) => {
     }
 
     default: {
-      const unknownView: never = view;
+      const unknownScreen: never = screen;
 
-      throw new Error(`Unknown picker view: ${JSON.stringify(unknownView)}`);
+      throw new Error(`Unknown picker screen: ${String(unknownScreen)}`);
     }
   }
 };
@@ -119,12 +113,13 @@ const isTextField = (target: EventTarget | null) => {
 export const Picker: FC<PickerProps> = (props) => {
   const { phase, isDark, onClose } = props;
   const { setHold } = usePicker();
-  const { view } = usePickerView();
+  const { mode, screen } = usePickerView();
   /**
    * Уходящая панель ещё видна: содержимое живёт как у открытой, и возврат курсора во время
    * ухода ничего в нём не перезагружает.
    */
   const isOpen = phase !== 'closed';
+  const isCovered = screen !== null;
 
   useOpenLoad(isOpen);
 
@@ -157,22 +152,21 @@ export const Picker: FC<PickerProps> = (props) => {
       onFocusIn={handlePanelFocusIn}
       onFocusOut={handlePanelFocusOut}
     >
-      {/**
-       * Панель занимает место тела, а шапка и тело представления ложатся в неё так же,
-       * как лежали бы прямо в колонке диалога.
-       */}
-      <div
-        role="tabpanel"
-        id={TAB_PANEL_ID}
-        aria-labelledby={tabId(view)}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        {renderView(view, isOpen)}
+      <div className={BODY_CLASS}>
+        <ModePanel mode="stickers" isActive={mode === 'stickers'} isInert={isCovered}>
+          <StickersMode isOpen={isOpen} />
+        </ModePanel>
+
+        <ModePanel mode="gifs" isActive={mode === 'gifs'} isInert={isCovered}>
+          <GifView isOpen={isOpen} />
+        </ModePanel>
+
+        {screen && <Screen>{renderScreen(screen)}</Screen>}
+
+        <StatusBar />
       </div>
 
-      <StatusBar />
-
-      <Tabs />
+      <Footer />
     </dialog>
   );
 };

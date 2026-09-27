@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import type { Pack, SendItem } from '../../../db.types';
 import type { Host, Settings } from '../../../host.types';
 import type { HoldReason, OpenedBy, PopupHolds } from '../../../hoverPopup.types';
-import type { PickerViewValue, View } from '../usePickerView/usePickerView.types';
+import type { PickerViewValue } from '../usePickerView/usePickerView.types';
 
 export type PickerStatus = {
   /**
@@ -143,9 +143,9 @@ export type PackImportOptions = {
   showError: (text: string) => void;
 
   /**
-   * Открывает вкладку импортированного пака.
+   * Открывает раздел импортированного пака в ленте стикеров.
    */
-  switchTo: (view: View) => void;
+  scrollToSection: (sectionId: string) => void;
 };
 
 export type PickerProviderProps = {

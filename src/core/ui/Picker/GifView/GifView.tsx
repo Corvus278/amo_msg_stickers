@@ -29,8 +29,8 @@ const FEED_ATTRIBUTION: Record<GifFeed, string> = {
 const GIFS_VIEW: View = { kind: 'gifs' };
 
 /**
- * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — переход во
- * вкладку, а не навигация.
+ * Кнопка в виде ссылки: `href="#"` у `<a>` запрещён jsx-a11y, а действие — открытие
+ * экрана, а не навигация.
  */
 const SETTINGS_LINK_CLASS =
   'cursor-pointer border-0 bg-transparent p-0 text-blue-50 underline dark:text-beige-70';
@@ -42,14 +42,14 @@ const SETTINGS_LINK_CLASS =
 export const GifView: FC<GifViewProps> = (props) => {
   const { isOpen } = props;
   const { settings } = usePicker();
-  const { switchTo } = usePickerView();
+  const { openScreen } = usePickerView();
   const { feeds, feed, selectFeed } = useFeedChoice(settings);
   const [query, setQuery] = useState('');
   const { gifs, isNothingFound, checkScroll } = useGifFeed(feed, query, isOpen);
   const searchRef = useSearchFocus(isOpen);
 
   const handleSettingsClick = () => {
-    switchTo({ kind: 'settings' });
+    openScreen('settings');
   };
 
   const handleSearchInput = (value: string) => {

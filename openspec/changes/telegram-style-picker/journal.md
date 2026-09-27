@@ -61,3 +61,11 @@ K5 — splitColumns(sections, {count, width, gap}) → {tiles, total}, visibleTi
 Отступление: сигнатура контроллера расходится с design.md (там без кнопки) — нужно для п.1; onHoldRelease добавлен в PickerCallbacks (createPicker.types.ts).
 Аудит: ok с первого круга; стенд с одним полем — достаточно юнит-тестов (критерий F1).
 Долг: createPicker.tsx:63 — при закрытии изнутри release ставит таймер, который тут же снимает dismiss (порядок держится на синхронном onClose).
+
+### G4 · Каркас панели
+
+Решения: K7 usePickerView (mode/screen/anchor), setMode закрывает экран; startMode(storage, countStickers), сбой count → «GIF»; оба режима смонтированы в ModePanel с памятью прокрутки; экран — absolute поверх режима, режим inert; статус — absolute над футером (z выше экрана, виден прогресс импорта); GifView получает isOpen пикера (тренды грузятся на каждое открытие и в «Стикерах» — цена за сохранность выдачи).
+Временное K8: в «Стикерах» прежняя полоса Tabs над RecentView/PackView до G5.
+Отступления: moveTabFocus → Picker/moveTabFocus/, SettingsIcon → Footer/SettingsIcon/ (переживут 9.1); фокус на «Назад» и возврат фокуса после «Назад» не сделаны — спека молчит.
+Аудит: ok с первого круга; readMode/writeMode/countStickers подключены (долг G1 по ним снят).
+Долг: usePickerViewState.ts:39,47 — при пустой библиотеке без сохранённого режима возможен кадр «Стикеры» до «GIF»; Footer.tsx:36 — «Настройки» без признака открытого экрана (G8); listAllStickers/clearRecent без потребителей — G5/G7.

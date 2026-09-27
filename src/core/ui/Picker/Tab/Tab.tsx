@@ -1,10 +1,13 @@
 import type { FunctionComponent as FC, TargetedKeyboardEvent } from 'preact';
 
+import { moveTabFocus } from '../moveTabFocus/moveTabFocus';
+import { usePicker } from '../PickerProvider/usePicker';
 import { TAB_PANEL_ID, tabId } from '../tabIds/tabIds';
+import { RECENT_SECTION_ID } from '../usePickerView/sectionIds';
 import { usePickerView } from '../usePickerView/usePickerView';
 
+import { currentView } from './currentView';
 import { isSameView } from './isSameView';
-import { moveTabFocus } from './moveTabFocus';
 import type { TabProps } from './Tab.types';
 
 /**
@@ -25,11 +28,41 @@ const TAB_CLASS = [
  */
 export const Tab: FC<TabProps> = (props) => {
   const { title, view, children } = props;
-  const { view: currentView, switchTo } = usePickerView();
-  const isSelected = isSameView(view, currentView);
+  const { packs } = usePicker();
+  const pickerView = usePickerView();
+  const { setMode, openScreen, scrollToSection } = pickerView;
+  const isSelected = isSameView(view, currentView(pickerView, packs));
 
   const handleTabClick = () => {
-    switchTo(view);
+    switch (view.kind) {
+      case 'recent': {
+        scrollToSection(RECENT_SECTION_ID);
+        break;
+      }
+
+      case 'pack': {
+        scrollToSection(view.packId);
+        break;
+      }
+
+      case 'gifs': {
+        setMode('gifs');
+        break;
+      }
+
+      case 'add':
+
+      case 'settings': {
+        openScreen(view.kind);
+        break;
+      }
+
+      default: {
+        const unknownView: never = view;
+
+        throw new Error(`Unknown picker view: ${JSON.stringify(unknownView)}`);
+      }
+    }
   };
 
   const handleTabKeyDown = (event: TargetedKeyboardEvent<HTMLButtonElement>) => {

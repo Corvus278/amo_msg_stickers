@@ -5,7 +5,7 @@ import type { Pack, SendItem } from '../../../db.types';
 import { DEFAULT_SETTINGS } from '../../../host';
 import type { Settings } from '../../../host.types';
 import { useObjectUrls } from '../useObjectUrls/useObjectUrls';
-import type { View } from '../usePickerView/usePickerView.types';
+import { usePickerViewState } from '../usePickerView/usePickerViewState';
 
 import { errorMessage } from './errorMessage';
 import type {
@@ -14,8 +14,6 @@ import type {
   PickerStatus,
 } from './PickerProvider.types';
 import { usePackImport } from './usePackImport';
-
-const INITIAL_VIEW: View = { kind: 'recent' };
 
 /**
  * Состояние `PickerProvider`. Методы стабильны между рендерами: потребители кладут их в
@@ -30,7 +28,6 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [status, setStatus] = useState<PickerStatus | null>(null);
-  const [view, setView] = useState<View>(INITIAL_VIEW);
   const { urlOf, dropUrl } = useObjectUrls(isOpen);
 
   const refreshSettings = useCallback(async () => {
@@ -68,10 +65,8 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
     [onSend, onClose, showStatus, showError, clearStatus]
   );
 
-  const switchTo = useCallback((nextView: View) => {
-    setView(nextView);
-    setStatus(null);
-  }, []);
+  const view = usePickerViewState(isOpen, clearStatus);
+  const { scrollToSection } = view;
 
   const packImport = usePackImport({
     env,
@@ -79,7 +74,7 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
     refreshPacks,
     showStatus,
     showError,
-    switchTo,
+    scrollToSection,
   });
   const { isImporting } = packImport;
 
@@ -105,6 +100,6 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
       openedBy,
       setHold,
     },
-    view: { view, switchTo },
+    view,
   };
 };

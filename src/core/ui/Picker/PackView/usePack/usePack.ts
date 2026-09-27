@@ -4,6 +4,7 @@ import { deletePack, deleteSticker, listStickers } from '../../../../db';
 import { stickerCellName } from '../../cellName/cellName';
 import { errorMessage } from '../../PickerProvider/errorMessage';
 import { usePicker } from '../../PickerProvider/usePicker';
+import { RECENT_SECTION_ID } from '../../usePickerView/sectionIds';
 import { usePickerView } from '../../usePickerView/usePickerView';
 
 import type { PackState, PackSticker, PackStickers } from './usePack.types';
@@ -21,23 +22,13 @@ import type { PackState, PackSticker, PackStickers } from './usePack.types';
  */
 export const usePack = (packId: string): PackState => {
   const { packs, refreshPacks, urlOf, dropUrl, showError } = usePicker();
-  const { switchTo } = usePickerView();
+  const { scrollToSection } = usePickerView();
   const [loaded, setLoaded] = useState<PackStickers | null>(null);
 
   const pack =
     packs.find(({ id }) => {
       return id === packId;
     }) || null;
-
-  const hasPack = !!pack;
-
-  /**
-   * Пак удалён — здесь или в другой вкладке браузера (паки перечитываются на каждое
-   * открытие пикера): показывать нечего, открываются недавние.
-   */
-  useEffect(() => {
-    if (!hasPack) switchTo({ kind: 'recent' });
-  }, [hasPack, switchTo]);
 
   useEffect(() => {
     let isStale = false;
@@ -88,11 +79,11 @@ export const usePack = (packId: string): PackState => {
 
       for (const { id } of stickers || []) dropUrl(id);
       await refreshPacks();
-      switchTo({ kind: 'recent' });
+      scrollToSection(RECENT_SECTION_ID);
     } catch (error) {
       showError(errorMessage(error));
     }
-  }, [packId, stickers, dropUrl, refreshPacks, switchTo, showError]);
+  }, [packId, stickers, dropUrl, refreshPacks, scrollToSection, showError]);
 
   return { pack, stickers, removeSticker, removePack };
 };
