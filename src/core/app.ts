@@ -4,22 +4,18 @@ import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
 import { composerOf, findComposers, injectMessageStyle, isDarkTheme } from './amoDom';
 import type { Composer } from './amoDom.types';
+import { toStickerGif } from './convert';
 import { getSticker, pushRecent } from './db';
 import type { SendItem } from './db.types';
 import { sendFileName } from './fileName';
 import type { Host } from './host.types';
 import { createHoverPopup } from './hoverPopup';
 import type { OpenedBy } from './hoverPopup.types';
-import { BYTES_IN_MB } from './net';
+import { MAX_REMOTE_GIF_BYTES } from './net';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
+import { MAX_GIF_BYTES } from './sidePick';
 
 const MARK = 'data-amo-stickers';
-
-/**
- * Спека ждёт на отправку вариант около 2 МБ (downsized у GIPHY), но KLIPY размер своего
- * `gif` не гарантирует: лимит — с запасом, чтобы не отсечь рабочую выдачу.
- */
-const MAX_REMOTE_GIF_BYTES = 8 * BYTES_IN_MB;
 
 /**
  * Задержка открытия наведением: курсор, который прошёл кнопку по пути в другое место,
@@ -76,8 +72,19 @@ export const start = (host: Host) => {
 
       case 'remote': {
         const blob = await host.fetchBlob(item.gif.url, MAX_REMOTE_GIF_BYTES);
+        const file = await toCheckedGifFile(blob, sendFileName(item));
 
-        return toCheckedGifFile(blob, sendFileName(item));
+        if (file.size <= MAX_GIF_BYTES) return file;
+
+        /**
+         * Решение — по весу скачанного файла, а не по весу из выдачи: так пережимается и
+         * GIF из выдачи без весов, и недавняя GIF со ссылкой на тяжёлую версию. Проверка
+         * GIF идёт до конвертации — страница ошибки получит «Файл не похож на GIF», а не
+         * ошибку декодера.
+         */
+        const { blob: gif } = await toStickerGif(file, 'image');
+
+        return toGifFile(gif, file.name);
       }
 
       default: {

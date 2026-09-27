@@ -7,6 +7,13 @@ import { LocalizedError } from './i18n/translate';
 
 export const BYTES_IN_MB = 1024 * 1024;
 
+/**
+ * Лимит скачивания GIF из поиска. Версию для отправки выбирают по весу из выдачи
+ * (`sources/gifs.ts`), но вес бывает неизвестен или расходится с фактом: лимит обрывает
+ * скачивание независимо от ответа API.
+ */
+export const MAX_REMOTE_GIF_BYTES = 8 * BYTES_IN_MB;
+
 const ALLOWED_PROTOCOL = 'https:';
 
 /**
