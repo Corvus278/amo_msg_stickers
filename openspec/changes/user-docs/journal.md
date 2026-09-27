@@ -82,3 +82,12 @@ pages.yml: добавить корневой package.json в paths — груп�
 ### Pages
 
 Автор включил Pages; gh api repos/.../pages: build_type=workflow, html_url https://corvus278.github.io/amo_msg_stickers/.
+
+### Итог
+
+Гейт: pnpm lint && pnpm test && pnpm build && pnpm docs:build — ok. openspec validate --strict — ok.
+Покрытие (итоговый аудит): 16 требований, 36 сценариев, без проверки 0. Задачи 25/25.
+Группы G1–G6, F1 — ok с первого круга, доработок по critical нет.
+До мержа у автора: сверка Tampermonkey (обновление без @namespace, «Check for userscript updates», раз в сутки); пункты Edge/Opera/«Подробнее»/Safari/GIPHY/KLIPY; путь к ссылке на пак в Telegram (ru и en «Copy Link»); установка в чистом профиле Chrome.
+После push/мержа: 6 статусов PR и артефакт amo-stickers.zip; деплой Pages; ссылки README на latest.
+Скрины для описания PR — в записи G6.
