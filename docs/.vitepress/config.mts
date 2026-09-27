@@ -21,6 +21,18 @@ export default defineConfig({
   description: 'Стикеры и GIF для мессенджера amo',
   base: BASE,
   /**
+   * Страницы — в `content/`, отдельно от пакета и конфига: в корне `docs/` лежат
+   * `package.json`, lockfile и `node_modules`, и тексты среди них терялись бы.
+   */
+  srcDir: 'content',
+  /**
+   * `public/` — рядом с `content/`, а не внутри: там статика сайта (логотип), не страницы.
+   * Vite считает путь от корня проекта, а корнем VitePress делает `srcDir`.
+   */
+  vite: {
+    publicDir: '../public',
+  },
+  /**
    * Иконка вкладки — под тему системы: у браузера нет темы сайта, переключатель VitePress
    * до вкладки не доходит.
    */

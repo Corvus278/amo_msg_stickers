@@ -67,7 +67,8 @@ TypeScript в проекте двух версий: `typescript-native` (7.x, н
 VitePress и плагина): зависимости сайта не попадают в lockfile расширения. Корневые `docs:*` — это `pnpm -C docs …`.
 После клона и перед первым коммитом нужен `pnpm -C docs i`: pre-commit гоняет `pnpm typecheck`, а он проверяет и
 `docs/tsconfig.json`. Конфиг — `docs/.vitepress/config.mts`: `base: '/amo_msg_stickers/'`, `cleanUrls` (адрес
-страницы — база и путь исходника без `.md`), фрагменты `docs/_parts/` подключаются `<!--@include: …-->` и сами
+страницы — база и путь исходника без `.md`), страницы — в `docs/content/` (`srcDir`), статика — в
+`docs/public/` (`vite.publicDir`); фрагменты `docs/content/_parts/` подключаются `<!--@include: …-->` и сами
 страницами не собираются (`srcExclude`). Цвета и шрифт — как у пикера: `docs/.vitepress/theme/style.css`
 переопределяет переменные VitePress значениями токенов `tailwind.config.ts` (синий акцент в светлой теме, бежевый —
 в тёмной). Логотип — `docs/public/logo-{light,dark}.svg` (шапка и иконка вкладки по теме системы) и
@@ -161,8 +162,9 @@ dev/harness.html  стенд: разметка инпута и сообщени�
                   вставка и «Отправить» замоканы — «Отправить» кладёт в ленту сообщение с картинкой, `alt` которой —
                   имя файла; переключатели «входящее» и «с именем автора», кнопки «картинка без метки» и «ответ с
                   цитатой», выбор «язык amo» — пишет `i18nextLng` и перезагружает стенд
-docs/             дока пользователя — отдельный пакет VitePress: .vitepress/ (config.mts, theme/), страницы
-                  index, install/, setup/, update, faq, privacy; _parts/ — общие фрагменты страниц
+docs/             дока пользователя — отдельный пакет VitePress: .vitepress/ (config.mts, theme/); content/ —
+                  страницы index, install/, setup/, update, faq, privacy и _parts/ — общие фрагменты страниц;
+                  public/ — логотип
 scripts/          скрипты CI: version.ts — чистая логика проверки версии (типы — version.types.ts);
                   check-version.mjs — её запуск в CI
 tests/            юнит-тесты, helpers/

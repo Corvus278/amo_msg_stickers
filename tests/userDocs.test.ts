@@ -4,9 +4,10 @@ import docsConfigSource from '../docs/.vitepress/config.mts?raw';
 import { USER_DOCS_PAGE, USER_DOCS_URL, userDocsUrl } from '../src/core/userDocs';
 
 /**
- * Литерал `base` в конфиге VitePress: адрес сайта на Pages — хост плюс эта база.
+ * База сайта в конфиге VitePress: адрес сайта на Pages — хост плюс эта база. Литерал
+ * лежит в константе `BASE`: её берут и `base`, и ссылки `head`.
  */
-const BASE_PATTERN = /\bbase:\s*'([^']+)'/;
+const BASE_PATTERN = /\bconst BASE\s*=\s*'([^']+)'/;
 
 const PAGES = Object.values(USER_DOCS_PAGE);
 
@@ -15,6 +16,7 @@ describe('userDocs', () => {
     const base = BASE_PATTERN.exec(docsConfigSource)?.[1];
 
     expect(base).toBeDefined();
+    expect(docsConfigSource).toMatch(/\bbase:\s*BASE\b/);
     expect(new URL(USER_DOCS_URL).pathname).toBe(base);
   });
 
@@ -29,7 +31,7 @@ describe('userDocs', () => {
     expect(PAGES.length).toBeGreaterThan(0);
   });
 
-  it.each(PAGES)('у страницы %s есть исходник в docs/', async (page) => {
+  it.each(PAGES)('у страницы %s есть исходник в docs/content/', async (page) => {
     /**
      * Импорт с `?raw` падает, если файла нет: переименование страницы доки без правки
      * ядра ломает тест, а не ссылку у пользователя.
@@ -38,7 +40,7 @@ describe('userDocs', () => {
      * разбирает статически и разрешает переменную только на один уровень каталога, а
      * страницы лежат глубже.
      */
-    const specifier = `../docs/${page}.md?raw`;
+    const specifier = `../docs/content/${page}.md?raw`;
     const { default: source } = await import(/* @vite-ignore */ specifier);
 
     expect(source.length).toBeGreaterThan(0);
