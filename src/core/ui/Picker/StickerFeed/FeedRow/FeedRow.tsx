@@ -65,6 +65,7 @@ export const FeedRow: FC<FeedRowProps> = (props) => {
           />
         );
       })}
+
       {hasCreateTile && <CreateTile />}
     </div>
   );
