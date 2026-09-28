@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  coverBitmapKey,
   coverSize,
   createCoverBitmaps,
 } from '../src/core/ui/Picker/PackCover/coverBitmaps/coverBitmaps';
@@ -88,6 +89,29 @@ describe('createCoverBitmaps', () => {
 
     expect(await cache.get('a', load)).toBeNull();
     expect(await cache.get('a', load)).toBe(bitmap);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('coverBitmapKey', () => {
+  it('различает стороны холста одного стикера и разные стикеры', () => {
+    expect(coverBitmapKey('a', 26)).not.toBe(coverBitmapKey('a', 52));
+    expect(coverBitmapKey('a', 26)).not.toBe(coverBitmapKey('b', 26));
+    expect(coverBitmapKey('a', 26)).toBe(coverBitmapKey('a', 26));
+  });
+
+  it('холст другой стороны получает свой кадр, той же — кадр из кэша', async () => {
+    const cache = createCoverBitmaps<ReturnType<typeof fakeBitmap>>();
+    const retina = fakeBitmap('52');
+    const plain = fakeBitmap('26');
+    const load = vi
+      .fn<() => Promise<ReturnType<typeof fakeBitmap>>>()
+      .mockResolvedValueOnce(retina)
+      .mockResolvedValueOnce(plain);
+
+    expect(await cache.get(coverBitmapKey('a', 52), load)).toBe(retina);
+    expect(await cache.get(coverBitmapKey('a', 26), load)).toBe(plain);
+    expect(await cache.get(coverBitmapKey('a', 26), load)).toBe(plain);
     expect(load).toHaveBeenCalledTimes(2);
   });
 });

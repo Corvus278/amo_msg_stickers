@@ -1,7 +1,7 @@
 import type { Closable, CoverBitmaps, CoverSize } from './coverBitmaps.types';
 
 /**
- * Кэш битмапов обложек. Сбой декодирования в кэше не остаётся: следующий запрос того же id
+ * Кэш битмапов обложек. Сбой декодирования в кэше не остаётся: следующий запрос того же ключа
  * декодирует заново. Битмап, который декодировался после `close`, закрывается сразу — иначе память
  * кадра висела бы до сборки мусора.
  *
@@ -16,8 +16,8 @@ export const createCoverBitmaps = <B extends Closable>(): CoverBitmaps<B> => {
   const ready = new Set<B>();
   let isClosed = false;
 
-  const get = (id: string, load: () => Promise<B>): Promise<B | null> => {
-    const cached = entries.get(id);
+  const get = (key: string, load: () => Promise<B>): Promise<B | null> => {
+    const cached = entries.get(key);
 
     if (cached) return cached;
 
@@ -35,7 +35,7 @@ export const createCoverBitmaps = <B extends Closable>(): CoverBitmaps<B> => {
 
         return bitmap;
       } catch {
-        entries.delete(id);
+        entries.delete(key);
 
         return null;
       }
@@ -43,7 +43,7 @@ export const createCoverBitmaps = <B extends Closable>(): CoverBitmaps<B> => {
 
     const entry = decode();
 
-    entries.set(id, entry);
+    entries.set(key, entry);
 
     return entry;
   };
@@ -58,6 +58,20 @@ export const createCoverBitmaps = <B extends Closable>(): CoverBitmaps<B> => {
   };
 
   return { get, close };
+};
+
+/**
+ * Ключ кадра обложки в кэше. Кадр декодируется под сторону холста, а она меняется вместе с
+ * `devicePixelRatio` и при открытом попапе — окно переехало на другой монитор, сменился масштаб
+ * страницы. С ключом только по стикеру холст новой стороны получил бы кадр прежней: крупнее
+ * квадрата и обрезанный или мельче него.
+ *
+ * @param id — id стикера-обложки
+ * @param side — сторона холста обложки в пикселях
+ * @returns ключ кадра
+ */
+export const coverBitmapKey = (id: string, side: number): string => {
+  return `${id}:${side}`;
 };
 
 /**
