@@ -11,7 +11,7 @@
 
 ## 2. Перевод страниц
 
-- [ ] 2.1 `docs/content/en/index.md` (hero, features, «What it is», видео с теми же файлами `../img/home/demo.*` и
+- [x] 2.1 `docs/content/en/index.md` (hero, features, «What it is», видео с теми же файлами `../img/home/demo.*` и
   английским `aria-label`, фраза о том, что скрины сняты с русским интерфейсом) и
   `docs/content/en/install/{index,chromium,firefox,safari,desktop}.md`, фрагмент `docs/content/_parts/en/userscript.md`
   с картинками `../../img/...`, подключённый из английских страниц установки; `::::tabs` и `<CopyCode>` — как в

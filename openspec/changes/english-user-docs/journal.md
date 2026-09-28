@@ -14,3 +14,11 @@
 CopyCode.vue: язык по useData().lang, /^en(?:-|$)/i, таблица подписей ru/en.
 Аудит: ok с первого круга. docs:build проходит, переключатель на /install/firefox ведёт на /en/install/firefox.
 Долг: skipToContentLabel не задан ни в одной локали (на русских страницах «Skip to content») — поправить в G5.
+
+### G2 · Перевод: главная и установка
+
+Английские главная, установка (index, chromium, firefox, safari, desktop) и фрагмент _parts/en/userscript.md; include из en/install — ../../_parts/en/userscript.md (в плане ошибочно ../).
+typograf en-US прогнан по тексту скриптом с защитой разметки: целиком по файлу typograf ломает markdown (- theme → — theme, ::::tabs, ../).
+Оговорка про Edge «Загрузить распакованное» опущена: в английском Edge кнопка тоже Load unpacked.
+Аудит: круг 1 critical — обычный пробел перед «—» (25 мест), круг 2 ok.
+Долг: «No guarantees» без nbsp (safari.md:5, firefox.md:12) — поправить в G5.
