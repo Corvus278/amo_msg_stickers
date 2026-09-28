@@ -1,7 +1,10 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { t } from '../../../../i18n/translate';
+import { TELEGRAM_DOCS_URL } from '../../../../userDocs';
+import { renderMessage } from '../../../renderMessage/renderMessage';
 import { Button } from '../../Button/Button';
+import { ExternalLink } from '../../ExternalLink/ExternalLink';
 import { TextInput } from '../../TextInput/TextInput';
 import { useTelegramImport } from '../../useTelegramImport/useTelegramImport';
 
@@ -28,7 +31,11 @@ export const TelegramImport: FC = () => {
       <h3 className="mt-1.5 text-xsm font-bold">{t('add.telegram.title')}</h3>
 
       <p className="text-xs leading-[1.4] text-cadetGray-30 dark:text-gray-70">
-        {t('add.telegram.hint')}
+        {renderMessage('add.telegram.hint', {
+          docs: (
+            <ExternalLink href={TELEGRAM_DOCS_URL}>{t('add.telegram.docs')}</ExternalLink>
+          ),
+        })}
       </p>
 
       <div className="flex items-center gap-1.5">

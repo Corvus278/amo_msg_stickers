@@ -1,22 +1,24 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { t } from '../../../i18n/translate';
+import { GIF_KEYS_DOCS_URL, TELEGRAM_DOCS_URL } from '../../../userDocs';
 import { renderMessage } from '../../renderMessage/renderMessage';
 import { Button } from '../Button/Button';
+import { ExternalLink } from '../ExternalLink/ExternalLink';
 import type { View } from '../usePickerView/usePickerView.types';
 import { ViewBody } from '../ViewBody/ViewBody';
 import { ViewHeader } from '../ViewHeader/ViewHeader';
 import { ViewTitle } from '../ViewHeader/ViewTitle/ViewTitle';
 
-import { ExternalLink } from './ExternalLink/ExternalLink';
 import { SecretField } from './SecretField/SecretField';
 import { useSettingsDraft } from './useSettingsDraft/useSettingsDraft';
 
 const SETTINGS_VIEW: View = { kind: 'settings' };
 
 /**
- * Ключи GIPHY и KLIPY и токен Telegram-бота. Сохранённые значения сразу применяются в
- * ленте GIF и импорте, без перезагрузки страницы.
+ * Ключи KLIPY и GIPHY и токен Telegram-бота. KLIPY первым: с него дока советует начинать, если
+ * ключ нужен один. Сохранённые значения сразу применяются в ленте GIF и импорте, без
+ * перезагрузки страницы.
  */
 export const SettingsView: FC = () => {
   const { draft, changeField, save } = useSettingsDraft();
@@ -47,6 +49,24 @@ export const SettingsView: FC = () => {
       <ViewBody view={SETTINGS_VIEW}>
         <div className="flex flex-col gap-2 px-0.5 pb-3 pt-1">
           <SecretField
+            id="settings-klipy-key"
+            label="KLIPY API key"
+            value={klipyKey}
+            onInput={handleKlipyKeyInput}
+          >
+            {renderMessage('settings.klipy.hint', {
+              link: (
+                <ExternalLink href="https://partner.klipy.com/api-keys">
+                  partner.klipy.com
+                </ExternalLink>
+              ),
+              docs: (
+                <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('settings.docs')}</ExternalLink>
+              ),
+            })}
+          </SecretField>
+
+          <SecretField
             id="settings-giphy-key"
             label="GIPHY API key"
             value={giphyKey}
@@ -58,18 +78,8 @@ export const SettingsView: FC = () => {
                   developers.giphy.com
                 </ExternalLink>
               ),
-            })}
-          </SecretField>
-
-          <SecretField
-            id="settings-klipy-key"
-            label="KLIPY API key"
-            value={klipyKey}
-            onInput={handleKlipyKeyInput}
-          >
-            {renderMessage('settings.klipy.hint', {
-              link: (
-                <ExternalLink href="https://klipy.com/migrate">klipy.com</ExternalLink>
+              docs: (
+                <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('settings.docs')}</ExternalLink>
               ),
             })}
           </SecretField>
@@ -82,6 +92,9 @@ export const SettingsView: FC = () => {
           >
             {renderMessage('settings.telegram.hint', {
               link: <ExternalLink href="https://t.me/BotFather">@BotFather</ExternalLink>,
+              docs: (
+                <ExternalLink href={TELEGRAM_DOCS_URL}>{t('settings.docs')}</ExternalLink>
+              ),
             })}
           </SecretField>
 

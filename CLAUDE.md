@@ -12,6 +12,10 @@ KLIPY и недавние GIF. Стикер отправляется клико�
 Публичного API для отправки сообщений у amo нет, поэтому код живёт внутри чужой страницы и отправляет стикер штатным
 путём пользователя: вставкой файла в поле ввода и кликом «Отправить».
 
+Дока пользователя — сайт VitePress из `docs/` на GitHub Pages, `https://mcar2107.github.io/amo_msg_stickers/`:
+установка по браузерам, ключи GIF, импорт из Telegram, обновление, частые вопросы, политика конфиденциальности.
+README — вход в неё: сверху описание и «Установить», разработка ниже.
+
 ## Стек и сборка
 
 TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSource: 'preact'`, классы по варианту и состоянию
@@ -24,12 +28,14 @@ TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSour
 pnpm i
 pnpm build             # dist/extension/* и dist/amo-stickers.user.js
 pnpm watch             # пересборка при изменениях, с inline-sourcemap и адресами localhost:3000
-pnpm typecheck         # только проверка типов (TS 7)
+pnpm typecheck         # только проверка типов (TS 7): корень и конфиг доки (docs/tsconfig.json)
 pnpm lint              # eslint + typecheck + prettier --check параллельно
 pnpm lint:fix          # eslint --fix
 pnpm format            # prettier --write
 pnpm test              # vitest, проект `unit`
 pnpm skills:update     # openspec update: перегенерация .claude/skills/openspec-* и .claude/commands/opsx
+pnpm -C docs i         # зависимости доки — отдельный пакет со своим lockfile
+pnpm docs:dev          # сайт доки локально; docs:build — сборка (падает на битой ссылке), docs:preview — её показ
 ```
 
 Одно ядро (`src/core`) собирается в две цели (`build.mjs`, формат IIFE, `target: chrome120`):
@@ -48,11 +54,31 @@ pnpm skills:update     # openspec update: перегенерация .claude/ski
 `@connect` к хостам сетевой политики и изолированный мир (`@sandbox DOM`, `@inject-into content`).
 
 Боевая сборка запускается только на `https://*.amo.tm/*`; `http://localhost:3000/*` и `http://127.0.0.1:3000/*`
-`build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`.
+`build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`. Заголовок боевой сборки несёт
+`@updateURL` и `@downloadURL` на userscript последнего релиза (`releases/latest/download/amo-stickers.user.js`) —
+менеджер обновляет скрипт сам; в `pnpm watch` их нет, иначе менеджер заменил бы dev-сборку версией из релиза.
 
 TypeScript в проекте двух версий: `typescript-native` (7.x, нативный tsgo) проверяет типы, `typescript` (6.x) нужен
 только typescript-eslint, который TS 7 пока не поддерживает. `node_modules/.bin/tsc` занят одной из них — проверку
 типов запускай через `pnpm typecheck`.
+
+Дока — отдельный пакет pnpm в `docs/` со своим `package.json` и `pnpm-lock.yaml` (`vitepress` и
+`vitepress-plugin-tabs` точными версиями; override `@types/markdown-it` в `docs/pnpm-workspace.yaml` сводит типы
+VitePress и плагина): зависимости сайта не попадают в lockfile расширения. Корневые `docs:*` — это `pnpm -C docs …`.
+После клона и перед первым коммитом нужен `pnpm -C docs i`: pre-commit гоняет `pnpm typecheck`, а он проверяет и
+`docs/tsconfig.json`. Конфиг — `docs/.vitepress/config.mts`: `base: '/amo_msg_stickers/'`, `cleanUrls` (адрес
+страницы — база и путь исходника без `.md`), страницы — в `docs/content/` (`srcDir`), статика — в
+`docs/public/` (`vite.publicDir`); фрагменты `docs/content/_parts/` подключаются `<!--@include: …-->` и сами
+страницами не собираются (`srcExclude`). Цвета и шрифт — как у пикера: `docs/.vitepress/theme/style.css`
+переопределяет переменные VitePress значениями токенов `tailwind.config.ts` (синий акцент в светлой теме, бежевый —
+в тёмной). Логотип — `docs/public/logo-{light,dark}.svg` (шапка и иконка вкладки по теме системы) и
+`logo-hero-{light,dark}.svg` (главная). Способы установки — вкладки `::::tabs`. Скрины и демо — в
+`docs/content/img/<раздел>/` (PNG через `pngquant`, личные данные размыты; узкий кадр — `<img>` с `width`), видео на
+главной — WebM и MP4, в README — GIF. Место под скрин, которого ещё нет, — комментарий
+`<!-- скрин: img/<раздел>/<имя>.png — что на нём -->`, а не картинка на несуществующий файл: её Vite не соберёт.
+Адрес `chrome://extensions` и подобные — компонент темы `<CopyCode>` (`theme/CopyCode.vue`): браузер не пускает на
+такие адреса по ссылке, и адрес копируется по клику.
+Тексты доки и строк словаря проходят typograf символами Unicode (неразрывный пробел, «», —), без HTML-сущностей.
 
 ## Структура
 
@@ -88,6 +114,8 @@ src/
     gif.ts           проверка GIF по блочной структуре (`inspectGif`)
     tgs.ts           распаковка `.tgs` с лимитом и проверкой Lottie
     guards.ts        общий первый шаг гардов ответов API (`isObject`)
+    userDocs*.ts     адрес доки `USER_DOCS_URL` и страницы, на которые ведёт интерфейс (`USER_DOCS_PAGE`,
+                     `userDocsUrl`); путь совпадает с `base` доки — их сверяет тест
     i18n/            язык интерфейса: locale.ts — выбор языка по языку amo (`readAmoLocale`, ключ `i18nextLng`);
                      translate.ts — `setLocale`/`getLocale`, перевод `t` и `LocalizedError`; словари messages.ru.ts
                      (эталон ключей и подстановок) и messages.en.ts; i18n.types.ts — типы языка, ключей и подстановок
@@ -123,11 +151,13 @@ src/
                         и ViewBody/ — их шапка и тело;
                         StickerCell/, CellSpinner/ — ячейка стикера и индикатор отправки, cellName/ — имена ячеек для
                         скринридера, useCellSend/ — отправка из ячейки; Button/, TextInput/, EmptyState/, StatusBar/,
-                        TabSvg/ — примитивы, moveTabFocus/ — фокус стрелками во вкладках; use*/ — прочие хуки
-  extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
+                        TabSvg/ — примитивы, ExternalLink/ — ссылка подсказки в новой вкладке, moveTabFocus/ —
+                        фокус стрелками во вкладках; use*/ — прочие хуки
+  extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS, иконка кнопки
+                  по теме), actionIcon.ts (иконки кнопки по теме и гард сообщения о теме),
                   fetchResponse.ts (отказ SW с ключом словаря и его разбор в content script),
                   messages.types.ts (протокол content ↔ background), manifest.json, _locales/ — описание расширения
-                  на русском и английском
+                  на русском и английском, icons/ — иконки расширения 16/32/48/128 (48 — ещё и `@icon` userscript)
   userscript/     index.ts — выбор режима по GM API и сборка Host; адаптеры: gmNetwork.ts (сеть через
                   `GM_xmlhttpRequest`), fetchNetwork.ts (прямой `fetch`), settings.ts (хранилище менеджера с переносом
                   из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API,
@@ -137,10 +167,14 @@ dev/harness.html  стенд: разметка инпута и сообщени�
                   вставка и «Отправить» замоканы — «Отправить» кладёт в ленту сообщение с картинкой, `alt` которой —
                   имя файла; переключатели «входящее» и «с именем автора», кнопки «картинка без метки» и «ответ с
                   цитатой», выбор «язык amo» — пишет `i18nextLng` и перезагружает стенд
+docs/             дока пользователя — отдельный пакет VitePress: .vitepress/ (config.mts, theme/ — style.css,
+                  CopyCode.vue); content/ — страницы index, install/, setup/, update, faq, privacy, _parts/ — общие
+                  фрагменты страниц, img/ — скрины и демо; public/ — логотип
 scripts/          скрипты CI: version.ts — чистая логика проверки версии (типы — version.types.ts);
                   check-version.mjs — её запуск в CI
 tests/            юнит-тесты, helpers/
-.github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; actions/setup — окружение
+.github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; workflows/pages.yml —
+                  публикация доки; actions/setup — окружение
 openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
                   changes/archive/ — закрытые
 local/            локальные заготовки под конкретное окружение; в .gitignore, eslint его не трогает
@@ -352,7 +386,12 @@ GIF. Технические тексты без перевода — `HTTP <ко
 `src/extension/_locales/{ru,en}/messages.json`, `default_locale` — `ru`: браузер с языком без перевода показывает
 русское описание. `build.mjs` копирует `_locales` в `dist/extension/` при старте сборки — в `pnpm watch` правка
 `messages.json` не перекопируется до перезапуска. Заголовок userscript несёт `@description` на русском и
-`@description:en`; название «amo stickers» одно на оба языка.
+`@description:en`; название «amo stickers» одно на оба языка. Иконки — `src/extension/icons/` (`icons` в
+`manifest.json`, `build.mjs` копирует их так же, как `_locales`); у userscript `@icon` — та же иконка 48 px, встроенная
+data URI: менеджеру не нужно ходить за ней в сеть. Кнопка расширения (`action`) меняет иконку по теме браузера
+(`actionIcon.ts`): тему видит только страница (`prefers-color-scheme`), поэтому content script шлёт service worker-у
+сообщение `amo-stickers:icon-theme` при старте и при смене темы, а тот зовёт `chrome.action.setIcon` — тёмные иконки
+лежат в `icons/dark/`. До первого сообщения, в том числе без открытой вкладки amo, стоит светлая `default_icon`.
 
 **Правило: строки интерфейса — только через словарь.** Любой текст, который пользователь видит или слышит, — подпись,
 плейсхолдер, `aria-label`, `title`, статус, текст ошибки — заводится ключом парой в `RU` и `EN` и показывается через
@@ -562,16 +601,24 @@ eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + s
 
 GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-action`) — те же версии, что локально.
 
+Окружение ставит `.github/actions/setup`: зависимости корня и доки (`pnpm -C docs install --frozen-lockfile`) — во
+всех заданиях, eslint и typecheck без зависимостей доки упали бы на импорте vitepress.
+
 - **PR в `master`** (`ci.yml`): отдельные статусы `lint` (eslint + prettier), `typecheck`, `test` (полный прогон, а
-  не `--changed`), `build`, `version`. Новый коммит в PR отменяет прогон старого. Сборка PR лежит артефактом `build`
-  прогона: `amo-stickers-<версия>.zip` и `amo-stickers.user.js` — для ручной проверки до мержа.
+  не `--changed`), `build`, `docs` (`pnpm docs:build`: битая ссылка ловится до публикации), `version`. Новый коммит
+  в PR отменяет прогон старого. Сборка PR лежит артефактом `build` прогона: `amo-stickers.zip` и
+  `amo-stickers.user.js` — для ручной проверки до мержа.
 - **`version`** падает, если версия в трёх местах расходится, а в PR, который меняет файлы продукта, — ещё и если
   она не выше версии `package.json` в `master` (`scripts/check-version.mjs --base origin/master`, сравнение по
   числам). Файлы продукта — `src/`, `build.mjs`, `tailwind.config.ts`, `tsconfig.json`, `package.json`,
   `pnpm-lock.yaml` (`PRODUCT_PATHS` в `scripts/version.ts`).
-- **Мерж в `master`** (`release.yml`): те же проверки, затем тег `v<версия>` и GitHub Release с zip расширения
-  (`manifest.json` в корне) и userscript-ом, заметки — автогенерация по PR. Если тег уже есть, релиз пропускается с
+- **Мерж в `master`** (`release.yml`): те же проверки, затем тег `v<версия>` и GitHub Release с `amo-stickers.zip`
+  (`manifest.json` в корне) и `amo-stickers.user.js`, заметки — автогенерация по PR. Имена файлов без версии: дока,
+  README и `@updateURL` ссылаются на `releases/latest/download/<файл>`, и ссылка не меняется от версии к версии. Если тег уже есть, релиз пропускается с
   предупреждением, прогон зелёный: PR без подъёма версии релиза не даёт.
+- **Дока** (`pages.yml`): пуш в `master`, меняющий `docs/**` (или окружение, корневой `package.json` со скриптом
+  `docs:build` и сам workflow), собирает сайт и публикует его на GitHub Pages без релиза и подъёма версии; упавшая
+  сборка до деплоя не доходит. Идущая публикация не отменяется.
 
 ## Воркфлоу задачи
 

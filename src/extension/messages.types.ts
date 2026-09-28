@@ -80,3 +80,15 @@ export type FetchFailure = {
 };
 
 export type FetchResponse = FetchSuccess | FetchFailure;
+
+export type IconThemeMessage = {
+  /**
+   * Метка сообщения: service worker меняет иконку кнопки только по нему.
+   */
+  type: 'amo-stickers:icon-theme';
+
+  /**
+   * Тёмная ли тема браузера: кнопка расширения стоит на панели браузера, а не на странице amo.
+   */
+  isDark: boolean;
+};

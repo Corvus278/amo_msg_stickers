@@ -48,18 +48,28 @@ jobs:
       - run: pnpm build
       # manifest.json — в корне архива: так его принимают «Загрузить распакованное»
       # после распаковки и Chrome Web Store.
+      # Имя без версии: ссылка доки на архив последнего релиза не меняется от версии
+      # к версии, а версия видна в теге релиза и в chrome://extensions.
       - name: Архив расширения
         run: |
-          version=$(node -p "require('./package.json').version")
           cd dist/extension
-          zip -r "../amo-stickers-${version}.zip" .
+          zip -r ../amo-stickers.zip .
       - uses: actions/upload-artifact@v7
         with:
           name: build
           path: |
-            dist/amo-stickers-*.zip
+            dist/amo-stickers.zip
             dist/amo-stickers.user.js
           if-no-files-found: error
+
+  # Та же команда, что собирает сайт в pages.yml: битая ссылка ловится в PR, до
+  # публикации.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm docs:build
 
   version:
     runs-on: ubuntu-latest

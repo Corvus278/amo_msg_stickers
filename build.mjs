@@ -15,6 +15,30 @@ const isWatch = process.argv.includes('--watch');
 const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
 const devMatches = isWatch ? DEV_MATCHES : [];
 
+/**
+ * Файл userscript последнего релиза: `latest` — всегда наибольшая версия, и менеджер
+ * находит по этому адресу каждое следующее обновление.
+ */
+const LATEST_USERSCRIPT_URL =
+  'https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+
+/**
+ * Автообновление — только у боевой сборки: userscript из `pnpm watch` менеджер
+ * заменил бы версией из релиза.
+ */
+const updateDirectives = isWatch
+  ? []
+  : [
+      `// @updateURL    ${LATEST_USERSCRIPT_URL}`,
+      `// @downloadURL  ${LATEST_USERSCRIPT_URL}`,
+    ];
+
+/**
+ * Иконка userscript в менеджере — та же, что у расширения, встроенная data URI: адрес файла
+ * в репозитории зависел бы от ветки и пути, а менеджер ходил бы за ним в сеть.
+ */
+const USERSCRIPT_ICON = `data:image/png;base64,${readFileSync('src/extension/icons/icon48.png').toString('base64')}`;
+
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
@@ -24,7 +48,8 @@ const USERSCRIPT_BANNER = [
    */
   '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
   '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
-  '// @version      0.12.0',
+  '// @version      0.13.0',
+  `// @icon         ${USERSCRIPT_ICON}`,
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -45,6 +70,7 @@ const USERSCRIPT_BANNER = [
   '// @sandbox      DOM',
   '// @inject-into  content',
   '// @run-at       document-idle',
+  ...updateDirectives,
   '// ==/UserScript==',
 ].join('\n');
 
@@ -225,6 +251,10 @@ writeFileSync('dist/extension/manifest.json', `${JSON.stringify(manifest, null, 
  * каталога Chrome не загрузит расширение.
  */
 cpSync('src/extension/_locales', 'dist/extension/_locales', { recursive: true });
+/**
+ * Иконки из `icons` manifest: без файла по пути Chrome не загрузит расширение.
+ */
+cpSync('src/extension/icons', 'dist/extension/icons', { recursive: true });
 
 if (isWatch) {
   for (const config of configs) {

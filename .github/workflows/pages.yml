@@ -1,0 +1,49 @@
+name: Pages
+
+# Публикация доки не ждёт релиза: правка текста не требует подъёма версии. Сборку
+# в PR проверяет задание docs в ci.yml той же командой.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - '.github/actions/setup/**'
+      - '.mise.toml'
+      # Скрипт docs:build живёт в корневом package.json.
+      - 'package.json'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Идущая публикация не отменяется: оборванный деплой оставил бы сайт в неизвестном
+# состоянии, а следующий прогон всё равно опубликует свежую сборку.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm docs:build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/.vitepress/dist
+
+  # Упавшая сборка до деплоя не доходит — на Pages остаётся прежний сайт.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

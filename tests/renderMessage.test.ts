@@ -10,6 +10,7 @@ import {
 } from '../src/core/ui/renderMessage/renderMessage';
 
 const LINK = h('a', { href: 'https://giphy.com' }, 'GIPHY');
+const DOCS = h('a', { href: 'https://example.com/setup/telegram' }, 'docs');
 
 afterEach(() => {
   setLocale('ru');
@@ -60,19 +61,21 @@ describe('renderMessage', () => {
     expect(renderMessage('picker.title', {})).toEqual([EN['picker.title']]);
   });
 
-  it('ставит узел ссылки на место подстановки в строке каждого языка', () => {
-    expect(renderMessage('settings.telegram.hint', { link: LINK })).toEqual([
-      'Создайте любого бота в ',
+  it('ставит узлы ссылок на места подстановок в строке каждого языка', () => {
+    expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
+      'Создайте любого бота в\u00a0',
       LINK,
-      '. Токен хранится локально.',
+      '. Токен хранится локально. ',
+      DOCS,
     ]);
 
     setLocale('en');
 
-    expect(renderMessage('settings.telegram.hint', { link: LINK })).toEqual([
-      'Create any bot in ',
+    expect(renderMessage('settings.telegram.hint', { link: LINK, docs: DOCS })).toEqual([
+      'Create any bot in\u00a0',
       LINK,
-      '. The token is stored locally.',
+      '. The\u00a0token is\u00a0stored locally. ',
+      DOCS,
     ]);
   });
 });

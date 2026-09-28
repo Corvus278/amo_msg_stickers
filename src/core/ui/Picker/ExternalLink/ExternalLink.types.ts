@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 
 export type ExternalLinkProps = {
   /**
-   * Адрес страницы, где берут ключ или токен.
+   * Адрес внешней страницы: где берут ключ или токен, страница доки.
    */
   href: string;
 

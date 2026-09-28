@@ -4,7 +4,9 @@ import { useMemo, useState } from 'preact/hooks';
 import type { RemoteGif } from '../../../db.types';
 import { t } from '../../../i18n/translate';
 import type { GifFeed } from '../../../sources/gifs.types';
+import { GIF_KEYS_DOCS_URL } from '../../../userDocs';
 import { EmptyState } from '../EmptyState/EmptyState';
+import { ExternalLink } from '../ExternalLink/ExternalLink';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
 import { usePicker } from '../PickerProvider/usePicker';
 import { TextInput } from '../TextInput/TextInput';
@@ -115,6 +117,10 @@ export const GifView: FC<GifViewProps> = (props) => {
             >
               {t('gifs.openSettings')}
             </button>
+
+            <br />
+
+            <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('gifs.docs')}</ExternalLink>
           </EmptyState>
         </MasonryGrid>
       </>

@@ -1,0 +1,10 @@
+# Свой файл workspace делает docs/ корнем отдельного проекта: корневой pnpm-lock.yaml
+# (файл продукта) не получает зависимостей доки.
+allowBuilds:
+  esbuild: true
+
+# VitePress 1.x несёт в своих типах копию типов markdown-it 14.1, а плагин вкладок берёт
+# @types/markdown-it: с 14.2 они расходятся (`utils.isPunctCharCode`), и `md.use` плагина
+# не проходит проверку типов конфига.
+overrides:
+  '@types/markdown-it': 14.1.2
