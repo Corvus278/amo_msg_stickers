@@ -2,7 +2,7 @@ import type { RefObject } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 
 import type { StickerRec } from '../../../../db.types';
-import { coverSize } from '../coverBitmaps/coverBitmaps';
+import { coverBitmapKey, coverSize } from '../coverBitmaps/coverBitmaps';
 import type { CoverBitmaps } from '../coverBitmaps/coverBitmaps.types';
 
 /**
@@ -30,9 +30,10 @@ export const useCoverCanvas = (
     const canvas = canvasRef.current;
 
     /**
-     * Смена стороны холста стирает его содержимое — тот же стикер рисуется заново.
+     * Смена стороны холста стирает его содержимое — тот же стикер рисуется заново, кадром
+     * новой стороны.
      */
-    const drawnKey = `${id}:${side}`;
+    const drawnKey = coverBitmapKey(id, side);
 
     if (!bitmaps || !canvas || drawnRef.current === drawnKey) return;
 
@@ -48,7 +49,7 @@ export const useCoverCanvas = (
     };
 
     const draw = async () => {
-      const bitmap = await bitmaps.get(id, load);
+      const bitmap = await bitmaps.get(drawnKey, load);
       const context = canvas.getContext('2d');
 
       if (isStale || !bitmap || !context) return;
