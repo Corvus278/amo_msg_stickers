@@ -56,13 +56,119 @@ export default defineConfig({
    */
   srcExclude: ['_parts/**'],
   /**
-   * Русский — корень: второй язык встанет каталогом `/en/`, и адреса русских страниц
-   * не поменяются.
+   * Русский — корень, английский — каталог `/en/` с теми же путями страниц: адреса русских
+   * страниц от второго языка не меняются, а переключатель языка ведёт на ту же страницу
+   * другой локали. Всё, что на языке, — меню и служебные подписи темы — живёт в локали,
+   * общее — в `themeConfig` ниже.
    */
   locales: {
     root: {
       label: 'Русский',
       lang: 'ru-RU',
+      themeConfig: {
+        nav: [
+          { text: 'Установка', link: '/install/' },
+          { text: 'Настройка', link: '/setup/gif-keys' },
+          { text: 'Частые вопросы', link: '/faq' },
+        ],
+        sidebar: [
+          {
+            text: 'Установка',
+            link: '/install/',
+            items: [
+              { text: 'Chrome, Edge, Яндекс Браузер, Opera', link: '/install/chromium' },
+              { text: 'Firefox', link: '/install/firefox' },
+              { text: 'Safari', link: '/install/safari' },
+              { text: 'Приложение amo', link: '/install/desktop' },
+            ],
+          },
+          {
+            text: 'Настройка',
+            items: [
+              { text: 'Ключи GIF', link: '/setup/gif-keys' },
+              { text: 'Импорт из Telegram', link: '/setup/telegram' },
+            ],
+          },
+          {
+            text: 'Помощь',
+            items: [
+              { text: 'Обновление', link: '/update' },
+              { text: 'Частые вопросы', link: '/faq' },
+              { text: 'Политика конфиденциальности', link: '/privacy' },
+            ],
+          },
+        ],
+        outline: { label: 'На странице' },
+        docFooter: { prev: 'Назад', next: 'Дальше' },
+        darkModeSwitchLabel: 'Тема',
+        lightModeSwitchTitle: 'Светлая тема',
+        darkModeSwitchTitle: 'Тёмная тема',
+        sidebarMenuLabel: 'Меню',
+        returnToTopLabel: 'Наверх',
+        langMenuLabel: 'Язык',
+        notFound: {
+          title: 'Страница не найдена',
+          quote: 'Такой страницы в доке нет — возможно, её переименовали.',
+          linkText: 'На главную',
+        },
+      },
+    },
+    en: {
+      label: 'English',
+      lang: 'en-US',
+      link: '/en/',
+      title: 'amo stickers',
+      description: 'Stickers and GIFs for the amo messenger',
+      themeConfig: {
+        nav: [
+          { text: 'Installation', link: '/en/install/' },
+          { text: 'Setup', link: '/en/setup/gif-keys' },
+          { text: 'FAQ', link: '/en/faq' },
+        ],
+        sidebar: [
+          {
+            text: 'Installation',
+            link: '/en/install/',
+            items: [
+              {
+                text: 'Chrome, Edge, Yandex Browser, Opera',
+                link: '/en/install/chromium',
+              },
+              { text: 'Firefox', link: '/en/install/firefox' },
+              { text: 'Safari', link: '/en/install/safari' },
+              { text: 'amo app', link: '/en/install/desktop' },
+            ],
+          },
+          {
+            text: 'Setup',
+            items: [
+              { text: 'GIF keys', link: '/en/setup/gif-keys' },
+              { text: 'Import from Telegram', link: '/en/setup/telegram' },
+            ],
+          },
+          {
+            text: 'Help',
+            items: [
+              { text: 'Updating', link: '/en/update' },
+              { text: 'FAQ', link: '/en/faq' },
+              { text: 'Privacy policy', link: '/en/privacy' },
+            ],
+          },
+        ],
+        outline: { label: 'On this page' },
+        docFooter: { prev: 'Previous', next: 'Next' },
+        darkModeSwitchLabel: 'Theme',
+        lightModeSwitchTitle: 'Light theme',
+        darkModeSwitchTitle: 'Dark theme',
+        sidebarMenuLabel: 'Menu',
+        returnToTopLabel: 'Back to top',
+        langMenuLabel: 'Language',
+        notFound: {
+          title: 'Page not found',
+          quote: 'There’s no such page in the docs — it may have been renamed.',
+          linkText: 'Back to home',
+        },
+      },
     },
   },
   markdown: {
@@ -72,73 +178,55 @@ export default defineConfig({
   },
   themeConfig: {
     logo: { light: '/logo-light.svg', dark: '/logo-dark.svg', alt: '' },
-    nav: [
-      { text: 'Установка', link: '/install/' },
-      { text: 'Настройка', link: '/setup/gif-keys' },
-      { text: 'Частые вопросы', link: '/faq' },
-    ],
-    sidebar: [
-      {
-        text: 'Установка',
-        link: '/install/',
-        items: [
-          { text: 'Chrome, Edge, Яндекс Браузер, Opera', link: '/install/chromium' },
-          { text: 'Firefox', link: '/install/firefox' },
-          { text: 'Safari', link: '/install/safari' },
-          { text: 'Приложение amo', link: '/install/desktop' },
-        ],
-      },
-      {
-        text: 'Настройка',
-        items: [
-          { text: 'Ключи GIF', link: '/setup/gif-keys' },
-          { text: 'Импорт из Telegram', link: '/setup/telegram' },
-        ],
-      },
-      {
-        text: 'Помощь',
-        items: [
-          { text: 'Обновление', link: '/update' },
-          { text: 'Частые вопросы', link: '/faq' },
-          { text: 'Политика конфиденциальности', link: '/privacy' },
-        ],
-      },
-    ],
     socialLinks: [{ icon: 'github', link: REPO_URL }],
+    /**
+     * Локальный поиск строит индекс на локаль: страницы одного языка не попадают в выдачу
+     * другого. Подписи окна поиска — тоже на языке страницы.
+     */
     search: {
       provider: 'local',
       options: {
-        translations: {
-          button: {
-            buttonText: 'Поиск',
-            buttonAriaLabel: 'Поиск',
+        locales: {
+          root: {
+            translations: {
+              button: {
+                buttonText: 'Поиск',
+                buttonAriaLabel: 'Поиск',
+              },
+              modal: {
+                displayDetails: 'Подробный список',
+                resetButtonTitle: 'Сбросить поиск',
+                backButtonTitle: 'Закрыть поиск',
+                noResultsText: 'Ничего не нашлось',
+                footer: {
+                  selectText: 'выбрать',
+                  navigateText: 'перейти',
+                  closeText: 'закрыть',
+                },
+              },
+            },
           },
-          modal: {
-            displayDetails: 'Подробный список',
-            resetButtonTitle: 'Сбросить поиск',
-            backButtonTitle: 'Закрыть поиск',
-            noResultsText: 'Ничего не нашлось',
-            footer: {
-              selectText: 'выбрать',
-              navigateText: 'перейти',
-              closeText: 'закрыть',
+          en: {
+            translations: {
+              button: {
+                buttonText: 'Search',
+                buttonAriaLabel: 'Search',
+              },
+              modal: {
+                displayDetails: 'Detailed list',
+                resetButtonTitle: 'Reset search',
+                backButtonTitle: 'Close search',
+                noResultsText: 'Nothing found',
+                footer: {
+                  selectText: 'to select',
+                  navigateText: 'to navigate',
+                  closeText: 'to close',
+                },
+              },
             },
           },
         },
       },
-    },
-    outline: { label: 'На странице' },
-    docFooter: { prev: 'Назад', next: 'Дальше' },
-    darkModeSwitchLabel: 'Тема',
-    lightModeSwitchTitle: 'Светлая тема',
-    darkModeSwitchTitle: 'Тёмная тема',
-    sidebarMenuLabel: 'Меню',
-    returnToTopLabel: 'Наверх',
-    langMenuLabel: 'Язык',
-    notFound: {
-      title: 'Страница не найдена',
-      quote: 'Такой страницы в доке нет — возможно, её переименовали.',
-      linkText: 'На главную',
     },
   },
 });

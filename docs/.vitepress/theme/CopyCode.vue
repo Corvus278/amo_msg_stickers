@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useData } from 'vitepress';
+import { computed, ref } from 'vue';
 
 /**
  * Адрес, который страница сайта открыть не может, — `chrome://`, `edge://` и т. п.:
@@ -17,6 +18,25 @@ const props = defineProps<{
  * Сколько держится отметка «Скопировано» после клика.
  */
 const COPIED_MS = 1500;
+
+/**
+ * Подписи на языке страницы. Английский — по началу тега `en`, любой другой язык —
+ * русский, как выбирает язык интерфейс amo stickers.
+ */
+const LABELS = {
+  ru: { copy: 'Скопировать', copied: 'Скопировано' },
+  en: { copy: 'Copy', copied: 'Copied' },
+};
+
+/**
+ * Основной тег `en` без учёта регистра и региона: `en`, `en-US`, `en-GB`.
+ */
+const EN_TAG = /^en(?:-|$)/i;
+
+const { lang } = useData();
+const labels = computed(() => {
+  return EN_TAG.test(lang.value) ? LABELS.en : LABELS.ru;
+});
 
 const isCopied = ref(false);
 let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -44,12 +64,12 @@ const handleClick = async () => {
   <button
     type="button"
     class="copy-code"
-    :title="`Скопировать ${text}`"
+    :title="`${labels.copy} ${text}`"
     @click="handleClick"
   >
     <code>{{ text }}</code>
     <span class="copy-code__status" aria-live="polite">{{
-      isCopied ? 'Скопировано' : ''
+      isCopied ? labels.copied : ''
     }}</span>
   </button>
 </template>

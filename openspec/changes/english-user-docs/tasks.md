@@ -1,11 +1,11 @@
 ## 1. Каркас английской локали сайта
 
-- [ ] 1.1 В `docs/.vitepress/config.mts` вынести русские `nav`, `sidebar` и служебные подписи темы в
+- [x] 1.1 В `docs/.vitepress/config.mts` вынести русские `nav`, `sidebar` и служебные подписи темы в
   `locales.root.themeConfig`, добавить локаль `en` (`lang: 'en-US'`, `label: 'English'`, `link: '/en/'`, свои
   `title`/`description`, английские `nav`, `sidebar` с путями `/en/...`, `outline`, `docFooter`, подписи темы,
   `langMenuLabel`, `notFound`), переводы локального поиска — через `search.options.locales` (`root`, `en`); обновить
   комментарий про второй язык; проверить `pnpm docs:build` после появления английских страниц (группа 2)
-- [ ] 1.2 `docs/.vitepress/theme/CopyCode.vue`: `title` и отметка по `useData().lang` — «Copy …»/«Copied» на
+- [x] 1.2 `docs/.vitepress/theme/CopyCode.vue`: `title` и отметка по `useData().lang` — «Copy …»/«Copied» на
   английской странице, «Скопировать …»/«Скопировано» на остальных; проверить `pnpm typecheck` (проверяет
   `docs/tsconfig.json`)
 
