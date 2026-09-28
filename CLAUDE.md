@@ -149,10 +149,11 @@ src/
                         скринридера, useCellSend/ — отправка из ячейки; Button/, TextInput/, EmptyState/, StatusBar/,
                         TabSvg/ — примитивы, ExternalLink/ — ссылка подсказки в новой вкладке, moveTabFocus/ —
                         фокус стрелками во вкладках; use*/ — прочие хуки
-  extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS),
+  extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS, иконка кнопки
+                  по теме), actionIcon.ts (иконки кнопки по теме и гард сообщения о теме),
                   fetchResponse.ts (отказ SW с ключом словаря и его разбор в content script),
                   messages.types.ts (протокол content ↔ background), manifest.json, _locales/ — описание расширения
-                  на русском и английском
+                  на русском и английском, icons/ — иконки расширения 16/32/48/128 (48 — ещё и `@icon` userscript)
   userscript/     index.ts — выбор режима по GM API и сборка Host; адаптеры: gmNetwork.ts (сеть через
                   `GM_xmlhttpRequest`), fetchNetwork.ts (прямой `fetch`), settings.ts (хранилище менеджера с переносом
                   из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API,
@@ -381,7 +382,12 @@ GIF. Технические тексты без перевода — `HTTP <ко
 `src/extension/_locales/{ru,en}/messages.json`, `default_locale` — `ru`: браузер с языком без перевода показывает
 русское описание. `build.mjs` копирует `_locales` в `dist/extension/` при старте сборки — в `pnpm watch` правка
 `messages.json` не перекопируется до перезапуска. Заголовок userscript несёт `@description` на русском и
-`@description:en`; название «amo stickers» одно на оба языка.
+`@description:en`; название «amo stickers» одно на оба языка. Иконки — `src/extension/icons/` (`icons` в
+`manifest.json`, `build.mjs` копирует их так же, как `_locales`); у userscript `@icon` — та же иконка 48 px, встроенная
+data URI: менеджеру не нужно ходить за ней в сеть. Кнопка расширения (`action`) меняет иконку по теме браузера
+(`actionIcon.ts`): тему видит только страница (`prefers-color-scheme`), поэтому content script шлёт service worker-у
+сообщение `amo-stickers:icon-theme` при старте и при смене темы, а тот зовёт `chrome.action.setIcon` — тёмные иконки
+лежат в `icons/dark/`. До первого сообщения, в том числе без открытой вкладки amo, стоит светлая `default_icon`.
 
 **Правило: строки интерфейса — только через словарь.** Любой текст, который пользователь видит или слышит, — подпись,
 плейсхолдер, `aria-label`, `title`, статус, текст ошибки — заводится ключом парой в `RU` и `EN` и показывается через

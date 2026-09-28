@@ -33,6 +33,12 @@ const updateDirectives = isWatch
       `// @downloadURL  ${LATEST_USERSCRIPT_URL}`,
     ];
 
+/**
+ * Иконка userscript в менеджере — та же, что у расширения, встроенная data URI: адрес файла
+ * в репозитории зависел бы от ветки и пути, а менеджер ходил бы за ним в сеть.
+ */
+const USERSCRIPT_ICON = `data:image/png;base64,${readFileSync('src/extension/icons/icon48.png').toString('base64')}`;
+
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
@@ -43,6 +49,7 @@ const USERSCRIPT_BANNER = [
   '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
   '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
   '// @version      0.13.0',
+  `// @icon         ${USERSCRIPT_ICON}`,
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -244,6 +251,10 @@ writeFileSync('dist/extension/manifest.json', `${JSON.stringify(manifest, null, 
  * каталога Chrome не загрузит расширение.
  */
 cpSync('src/extension/_locales', 'dist/extension/_locales', { recursive: true });
+/**
+ * Иконки из `icons` manifest: без файла по пути Chrome не загрузит расширение.
+ */
+cpSync('src/extension/icons', 'dist/extension/icons', { recursive: true });
 
 if (isWatch) {
   for (const config of configs) {
