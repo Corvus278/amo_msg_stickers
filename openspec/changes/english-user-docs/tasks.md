@@ -16,9 +16,9 @@
   `docs/content/en/install/{index,chromium,firefox,safari,desktop}.md`, фрагмент `docs/content/_parts/en/userscript.md`
   с картинками `../../img/...`, подключённый из английских страниц установки; `::::tabs` и `<CopyCode>` — как в
   русских; текст — typograf `en-US`, названия интерфейса amo stickers — из `src/core/i18n/messages.en.ts`
-- [ ] 2.2 `docs/content/en/setup/gif-keys.md` и `docs/content/en/setup/telegram.md`: те же шаги, скрины — те же файлы
+- [x] 2.2 `docs/content/en/setup/gif-keys.md` и `docs/content/en/setup/telegram.md`: те же шаги, скрины — те же файлы
   через `../../img/setup/...`, `alt` по-английски, ссылки внутри доки — на `/en/...`; typograf `en-US`
-- [ ] 2.3 `docs/content/en/update.md`, `docs/content/en/faq.md`, `docs/content/en/privacy.md`: скрины обновления через
+- [x] 2.3 `docs/content/en/update.md`, `docs/content/en/faq.md`, `docs/content/en/privacy.md`: скрины обновления через
   `../img/update/...`, ссылки внутри доки — на английские страницы; typograf `en-US`; проверить `pnpm docs:build`
   (битых ссылок нет) и что в собранном `docs/.vitepress/dist/en/` есть все 11 страниц
 
