@@ -24,3 +24,10 @@ export const USER_DOCS_PAGE = {
 export const userDocsUrl = (page: UserDocsPage): string => {
   return `${USER_DOCS_URL}${page}`;
 };
+
+/**
+ * Адреса страниц, на которые ведут подсказки интерфейса. Дока одна, на русском, при любом языке
+ * интерфейса: английский текст ссылки говорит об этом сам.
+ */
+export const GIF_KEYS_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.gifKeys);
+export const TELEGRAM_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.telegram);

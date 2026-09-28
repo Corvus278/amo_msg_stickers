@@ -1,7 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
 import { t } from '../../../i18n/translate';
-import { USER_DOCS_PAGE, userDocsUrl } from '../../../userDocs';
+import { GIF_KEYS_DOCS_URL, TELEGRAM_DOCS_URL } from '../../../userDocs';
 import { renderMessage } from '../../renderMessage/renderMessage';
 import { Button } from '../Button/Button';
 import { ExternalLink } from '../ExternalLink/ExternalLink';
@@ -14,12 +14,6 @@ import { SecretField } from './SecretField/SecretField';
 import { useSettingsDraft } from './useSettingsDraft/useSettingsDraft';
 
 const SETTINGS_VIEW: View = { kind: 'settings' };
-
-/**
- * Дока одна, на русском, при любом языке интерфейса: английский текст ссылки говорит об этом сам.
- */
-const GIF_KEYS_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.gifKeys);
-const TELEGRAM_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.telegram);
 
 /**
  * Ключи KLIPY и GIPHY и токен Telegram-бота. KLIPY первым: с него дока советует начинать, если
