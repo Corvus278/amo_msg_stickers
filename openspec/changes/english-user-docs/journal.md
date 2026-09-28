@@ -37,3 +37,11 @@ userDocsUrl(page, locale) с LOCALE_PREFIX: Record<Locale, string> (ru '', en 'e
 Отступление: глобальный interface ImportMeta { glob } в src/types.d.ts — в одной программе TS тестовый тип иначе не изолировать (vite/client не резолвится, отдельный tsconfig для tests выходит за группу). Риск: ядро видит тип import.meta.glob; в src/ import.meta не используется.
 Аудит: ok с первого круга; перестановка JSDoc в types.d.ts сделана без повторного аудита.
 Долг (не делаем): защита no-restricted-syntax на MetaProperty в src/core/** — по желанию.
+
+### G5 · README, заметки разработчика, версия, итог
+
+README: строка «In English: installation guide → · documentation» под «Установить». CLAUDE.md и docs/README.md — по новому устройству, правило «правка страницы — в обоих языках одним PR». Версия 0.14.0.
+Закрыт долг G1/G2: skipToContentLabel в обеих локалях, nbsp в «No guarantees».
+5.1 в headless Chrome на docs:preview: переключатель /install/firefox ↔ /en/install/firefox, поиск «token» на en — только /en/, CopyCode «Copied»/«Скопировано». Автотеста на эти сценарии нет — осознанно, проверка ручная.
+Аудит G5 совмещён с итоговым (масштаб средний; отдельный итоговый аудитор сэкономлен): ok, покрытие 20/20 сценариев. Формулировку «пункт меню» → «пункт сайдбара» координатор поправил сам.
+После архива проверить, что из openspec/specs ушли фразы «пока нет доки на английском».

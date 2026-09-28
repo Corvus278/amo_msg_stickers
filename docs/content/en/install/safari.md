@@ -2,7 +2,7 @@
 
 In Safari on a Mac, amo stickers can be installed as a userscript with the free Userscripts app.
 
-::: warning No guarantees
+::: warning No guarantees
 This way isn’t tested: the script may work, or it may not. The tested way is a Chromium browser
 ([Chrome, Yandex Browser, Edge, Opera](./chromium)) or [Firefox](./firefox): there amo stickers is installed as an
 extension or as a userscript in Tampermonkey.

@@ -13,6 +13,9 @@
 **[Установить →](https://mcar2107.github.io/amo_msg_stickers/install/)** — пошаговая инструкция для Chrome,
 Яндекс Браузера, Edge, Opera, Firefox и Safari.
 
+**In English:** [installation guide →](https://mcar2107.github.io/amo_msg_stickers/en/install/) ·
+[documentation](https://mcar2107.github.io/amo_msg_stickers/en/)
+
 Прямые ссылки на последнюю версию:
 [скачать архив расширения](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip) ·
 [установить userscript](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js).

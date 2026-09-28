@@ -105,6 +105,7 @@ export default defineConfig({
         darkModeSwitchTitle: 'Тёмная тема',
         sidebarMenuLabel: 'Меню',
         returnToTopLabel: 'Наверх',
+        skipToContentLabel: 'Перейти к содержимому',
         langMenuLabel: 'Язык',
         notFound: {
           title: 'Страница не найдена',
@@ -162,6 +163,7 @@ export default defineConfig({
         darkModeSwitchTitle: 'Dark theme',
         sidebarMenuLabel: 'Menu',
         returnToTopLabel: 'Back to top',
+        skipToContentLabel: 'Skip to content',
         langMenuLabel: 'Language',
         notFound: {
           title: 'Page not found',

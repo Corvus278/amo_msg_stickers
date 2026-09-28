@@ -9,7 +9,7 @@ manager needs, including access to site data — without it the manager can�
 
 <!--@include: ../../_parts/en/userscript.md-->
 
-::: info Violentmonkey — no guarantees
+::: info Violentmonkey — no guarantees
 The script may also work in the [Violentmonkey](https://addons.mozilla.org/firefox/addon/violentmonkey/) manager, but
 this way isn’t tested. If something doesn’t work in Violentmonkey, install Tampermonkey following the steps above.
 :::

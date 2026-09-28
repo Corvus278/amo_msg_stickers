@@ -35,16 +35,16 @@
 
 ## 4. README, заметки разработчика, версия
 
-- [ ] 4.1 `README.md`: рядом с «Установить →» — ссылка на английскую инструкцию
+- [x] 4.1 `README.md`: рядом с «Установить →» — ссылка на английскую инструкцию
   (`https://mcar2107.github.io/amo_msg_stickers/en/install/`) и на английскую доку
-- [ ] 4.2 `CLAUDE.md` (разделы про доку, структуру `docs/` и `userDocs*.ts`, «Язык интерфейса») и `docs/README.md`
+- [x] 4.2 `CLAUDE.md` (разделы про доку, структуру `docs/` и `userDocs*.ts`, «Язык интерфейса») и `docs/README.md`
   (что где, правила текста: правка страницы — в обоих языках, typograf `en-US` для английского, пути к картинкам из
   `en/`) — по новому устройству
-- [ ] 4.3 Версия 0.14.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверить
+- [x] 4.3 Версия 0.14.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверить
   `node scripts/check-version.mjs --base origin/master`
 
 ## 5. Итоговая проверка
 
-- [ ] 5.1 `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm docs:build` зелёные; на `pnpm docs:preview` переключатель
+- [x] 5.1 `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm docs:build` зелёные; на `pnpm docs:preview` переключатель
   языка с `/install/firefox` ведёт на `/en/install/firefox` и обратно, поиск на английской странице находит только
   английские страницы, `CopyCode` на `/en/install/chromium` пишет «Copied»
