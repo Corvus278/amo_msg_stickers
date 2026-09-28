@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import docsConfig from '../docs/.vitepress/config.mjs';
 import docsConfigSource from '../docs/.vitepress/config.mts?raw';
 import { USER_DOCS_PAGE, USER_DOCS_URL, userDocsUrl } from '../src/core/userDocs';
 
@@ -8,12 +9,6 @@ import { USER_DOCS_PAGE, USER_DOCS_URL, userDocsUrl } from '../src/core/userDocs
  * лежит в константе `BASE`: её берут и `base`, и ссылки `head`.
  */
 const BASE_PATTERN = /\bconst BASE\s*=\s*'([^']+)'/;
-
-/**
- * `link` английской локали в `locales` конфига VitePress. Он стоит в объекте локали до
- * вложенного `themeConfig`, поэтому между `en: {` и ним нет фигурных скобок.
- */
-const EN_LOCALE_LINK_PATTERN = /\ben:\s*\{[^{}]*?\blink:\s*'([^']+)'/;
 
 const PAGES = Object.values(USER_DOCS_PAGE);
 
@@ -83,7 +78,11 @@ describe('userDocs', () => {
 
   it('префикс английских адресов совпадает с link локали en в конфиге VitePress', () => {
     const base = BASE_PATTERN.exec(docsConfigSource)?.[1] || '';
-    const link = EN_LOCALE_LINK_PATTERN.exec(docsConfigSource)?.[1];
+    /**
+     * `link` берётся из самого конфига, а не разбором исходника: порядок полей в объекте
+     * локали тогда не важен.
+     */
+    const link = docsConfig.locales?.en?.link;
 
     expect(link).toBe('/en/');
 
