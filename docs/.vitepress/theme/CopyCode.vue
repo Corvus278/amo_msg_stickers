@@ -20,22 +20,17 @@ const props = defineProps<{
 const COPIED_MS = 1500;
 
 /**
- * Подписи на языке страницы. Английский — по началу тега `en`, любой другой язык —
- * русский, как выбирает язык интерфейс amo stickers.
+ * Подписи на языке страницы — по ключу локали в `locales` конфига: `en` — английская
+ * часть сайта, `root` — русская. Тег языка не разбирается: язык страницы задаёт конфиг.
  */
 const LABELS = {
-  ru: { copy: 'Скопировать', copied: 'Скопировано' },
+  root: { copy: 'Скопировать', copied: 'Скопировано' },
   en: { copy: 'Copy', copied: 'Copied' },
 };
 
-/**
- * Основной тег `en` без учёта регистра и региона: `en`, `en-US`, `en-GB`.
- */
-const EN_TAG = /^en(?:-|$)/i;
-
-const { lang } = useData();
+const { localeIndex } = useData();
 const labels = computed(() => {
-  return EN_TAG.test(lang.value) ? LABELS.en : LABELS.ru;
+  return localeIndex.value === 'en' ? LABELS.en : LABELS.root;
 });
 
 const isCopied = ref(false);
