@@ -25,6 +25,8 @@
   инструкция на русском.
 - **CI:** проверка сборки доки в PR (битые ссылки ломают сборку), workflow публикации на Pages.
 - **README** — продающий: что это, демо, возможности, «Установить» на доку; сборка и проверки — свёрнуты.
+- **Иконки:** у расширения и userscript — иконка amo stickers; кнопка расширения на панели меняет иконку по теме
+  браузера.
 
 ## Capabilities
 
@@ -36,7 +38,8 @@
 ### Modified Capabilities
 
 - `runtime-hosts`: userscript обновляется менеджером по ссылкам на последний релиз; экран «Настройки» — порядок
-  полей (KLIPY первым), ссылки на выдачу ключей и на доку.
+  полей (KLIPY первым), ссылки на выдачу ключей и на доку; иконки расширения и userscript, иконка кнопки по теме
+  браузера.
 - `gif-search`: подсказка режима «GIF» без ключей ведёт ещё и на страницу доки о ключах.
 - `telegram-import`: подсказка импорта говорит, где взять ссылку на пак, и ведёт на страницу доки.
 - `ci-cd`: постоянное имя архива в релизе; сборка доки проверяется в PR; публикация доки на Pages.
@@ -44,7 +47,8 @@
 ## Impact
 
 - Код: `build.mjs` (заголовок userscript), `src/core/i18n/messages.{ru,en}.ts`, `SettingsView/`, `TelegramImport/`,
-  `GifView/`, новый модуль адреса доки в `src/core/`.
+  `GifView/`, новый модуль адреса доки в `src/core/`; иконки и смена иконки кнопки — `src/extension/` (`manifest.json`,
+  `actionIcon.ts`, `content.ts`, `background.ts`).
 - Новое: `docs/` — отдельный пакет со своими `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml` и
   `tsconfig.json`, страницы в Markdown, `docs/.vitepress/` (конфиг и тема с вкладками); `.github/workflows/pages.yml`;
   правки `ci.yml`, `release.yml`, `.github/actions/setup` (ставит и зависимости доки).
