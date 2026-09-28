@@ -1,7 +1,6 @@
 node_modules
 dist
 docs/.vitepress/cache
-docs/.vitepress/dist
 pnpm-lock.yaml
 
 # Документация и спеки свёрстаны руками, Prettier ломает выравнивание таблиц.

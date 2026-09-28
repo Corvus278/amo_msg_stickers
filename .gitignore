@@ -8,7 +8,6 @@ dev/amo.css
 
 # Кэш и сборка VitePress
 docs/.vitepress/cache
-docs/.vitepress/dist
 
 # Локальное, в репозиторий не попадает: заметки и заготовки под конкретное окружение
 local/
