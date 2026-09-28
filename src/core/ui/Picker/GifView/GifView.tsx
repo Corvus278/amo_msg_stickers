@@ -2,9 +2,9 @@ import type { FunctionComponent as FC } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
 import type { RemoteGif } from '../../../db.types';
-import { t } from '../../../i18n/translate';
+import { getLocale, t } from '../../../i18n/translate';
 import type { GifFeed } from '../../../sources/gifs.types';
-import { GIF_KEYS_DOCS_URL } from '../../../userDocs';
+import { USER_DOCS_PAGE, userDocsUrl } from '../../../userDocs';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { ExternalLink } from '../ExternalLink/ExternalLink';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
@@ -120,7 +120,9 @@ export const GifView: FC<GifViewProps> = (props) => {
 
             <br />
 
-            <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('gifs.docs')}</ExternalLink>
+            <ExternalLink href={userDocsUrl(USER_DOCS_PAGE.gifKeys, getLocale())}>
+              {t('gifs.docs')}
+            </ExternalLink>
           </EmptyState>
         </MasonryGrid>
       </>

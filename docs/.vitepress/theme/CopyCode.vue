@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useData } from 'vitepress';
+import { computed, ref } from 'vue';
 
 /**
  * Адрес, который страница сайта открыть не может, — `chrome://`, `edge://` и т. п.:
@@ -17,6 +18,20 @@ const props = defineProps<{
  * Сколько держится отметка «Скопировано» после клика.
  */
 const COPIED_MS = 1500;
+
+/**
+ * Подписи на языке страницы — по ключу локали в `locales` конфига: `en` — английская
+ * часть сайта, `root` — русская. Тег языка не разбирается: язык страницы задаёт конфиг.
+ */
+const LABELS = {
+  root: { copy: 'Скопировать', copied: 'Скопировано' },
+  en: { copy: 'Copy', copied: 'Copied' },
+};
+
+const { localeIndex } = useData();
+const labels = computed(() => {
+  return localeIndex.value === 'en' ? LABELS.en : LABELS.root;
+});
 
 const isCopied = ref(false);
 let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -44,12 +59,12 @@ const handleClick = async () => {
   <button
     type="button"
     class="copy-code"
-    :title="`Скопировать ${text}`"
+    :title="`${labels.copy} ${text}`"
     @click="handleClick"
   >
     <code>{{ text }}</code>
     <span class="copy-code__status" aria-live="polite">{{
-      isCopied ? 'Скопировано' : ''
+      isCopied ? labels.copied : ''
     }}</span>
   </button>
 </template>
