@@ -11,29 +11,30 @@ GIPHY.
 С KLIPY начните, если выбираете один сервис: выбор GIF и стикеров у него шире.
 
 1. Откройте [Partner Panel KLIPY](https://partner.klipy.com/) и зарегистрируйтесь или войдите.
-2. Перейдите на страницу ключей — [partner.klipy.com/api-keys](https://partner.klipy.com/api-keys) — и создайте ключ.
-   Если панель спросит о приложении, укажите любое название, например `amo stickers`. Для amo stickers подходит
-   тестовый ключ, который панель выдаёт сразу.
-3. Скопируйте ключ.
+2. Перейдите на страницу ключей — [partner.klipy.com/api-keys](https://partner.klipy.com/api-keys). Нажмите
+   «Add Platform» и укажите любое название, например `amo stickers`, затем у платформы нажмите «Create Key».
+   Для amo stickers подходит тестовый ключ со статусом «Testing», который панель выдаёт сразу.
+3. Нажмите «Show key» у ключа и скопируйте его.
 4. В amo откройте панель amo stickers кнопкой стикеров в строке ввода, внизу панели нажмите «Настройки».
 5. Вставьте ключ в поле «KLIPY API key» и нажмите «Сохранить». Внизу панели появится «Сохранено».
 
-<!-- скрин: img/setup/klipy-api-keys.png — страница API Keys в Partner Panel KLIPY, тестовый ключ замазан -->
+![Страница API Keys в Partner Panel KLIPY: платформа с приложением, скрытый ключ «Show key», статус «Testing» и кнопки «Add Platform» и «Create Key»](../img/setup/klipy-api-keys.png)
 
-Проверьте: в режиме «GIF» появился источник «KLIPY», без запроса в ленте — тренды.
+Проверьте: в режиме «GIF» появился источник «KLIPY»: без запроса в ленте — тренды, с запросом — результаты
+поиска.
 
-<!-- скрин: img/setup/gif-mode-klipy.png — режим «GIF» amo stickers с выбранным источником «KLIPY» и трендами -->
+![Режим «GIF» amo stickers: выбран источник «KLIPY», в ленте — результаты поиска по запросу «ганвест»](../img/setup/gif-mode-klipy.png)
 
 ## GIPHY
 
 1. Откройте [панель разработчика GIPHY](https://developers.giphy.com/dashboard/) и зарегистрируйтесь или войдите.
-2. Нажмите «Create an API Key» и выберите тип «API», а не «SDK».
+2. Нажмите «Create an API Key», выберите тип «API», а не «SDK», и нажмите «Next Step».
 3. Введите название и описание приложения — любые, например `amo stickers` и `Стикеры для amo`, — примите условия и
    создайте ключ.
 4. Скопируйте ключ из списка приложений на панели.
 5. В «Настройках» amo stickers вставьте ключ в поле «GIPHY API key» и нажмите «Сохранить».
 
-<!-- скрин: img/setup/giphy-dashboard.png — панель разработчика GIPHY: выбор типа API и готовый ключ, ключ замазан -->
+<img src="../img/setup/giphy-dashboard.png" alt="Окно «Create A New API Key» в панели разработчика GIPHY: выбран тип «API», кнопка «Next Step»" width="550">
 
 Проверьте: в режиме «GIF» появились источники «GIPHY» и «GIPHY стикеры». Оба работают на одном ключе GIPHY.
 

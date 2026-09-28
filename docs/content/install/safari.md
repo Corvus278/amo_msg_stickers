@@ -17,9 +17,12 @@ Userscripts может хранить настройки не у себя, а�
 
 1. Поставьте приложение [Userscripts](https://apps.apple.com/app/userscripts/id1463298887) из App Store и откройте его
    один раз.
-2. В Safari откройте «Настройки» → «Расширения» и включите Userscripts.
+2. В Safari откройте «Настройки» → «Расширения» (в английском интерфейсе — Settings → Extensions)
+   и включите Userscripts.
 3. Откройте amo, нажмите значок Userscripts на панели Safari и разрешите расширению работать на этом сайте.
 
-<!-- скрин: img/install/safari-userscripts.png — Safari на странице amo: значок Userscripts на панели и разрешение для сайта -->
+После разрешения сайт amo появится в списке разрешений Userscripts в тех же настройках.
+
+![Настройки Safari, раздел Extensions: включён Userscripts, в разрешениях — web.amo.tm и api.telegram.org](../img/install/safari-userscripts.png)
 
 <!--@include: ../_parts/userscript.md-->
