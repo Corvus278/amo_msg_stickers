@@ -16,7 +16,7 @@ export const EN: Messages = {
   'add.telegram.title': 'Import from Telegram',
   'add.telegram.hint':
     'Pack link. Click a sticker from the pack in a Telegram chat, open the “⋮” menu in the pack window and choose “Copy Link”. Static, animated (.tgs) and video stickers are converted to GIF. {docs}',
-  'add.telegram.docs': 'Step-by-step instructions (in Russian)',
+  'add.telegram.docs': 'Step-by-step instructions',
   'add.telegram.import': 'Import',
   'add.custom.title': 'Custom sticker',
   'add.custom.caption': 'Caption (optional)',
@@ -28,7 +28,7 @@ export const EN: Messages = {
   'settings.telegram.label': 'Telegram bot token (for import)',
   'settings.telegram.hint':
     'Create any bot in {link}. The token is stored locally. {docs}',
-  'settings.docs': 'Step-by-step instructions (in Russian)',
+  'settings.docs': 'Step-by-step instructions',
   'settings.save': 'Save',
   'stickers.recent': 'Recent',
   'stickers.packEmpty': 'Pack is empty',
@@ -65,7 +65,7 @@ export const EN: Messages = {
   'gifs.nothingFound': 'Nothing found',
   'gifs.noKeys': 'GIF search needs a GIPHY or KLIPY API key',
   'gifs.openSettings': 'Open settings',
-  'gifs.docs': 'How to get a key (in Russian)',
+  'gifs.docs': 'How to get a key',
   'gifs.feed.giphyGifs': 'GIPHY',
   'gifs.feed.giphyStickers': 'GIPHY stickers',
   'gifs.feed.klipy': 'KLIPY',

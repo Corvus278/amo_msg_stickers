@@ -1,3 +1,4 @@
+import type { Locale } from './i18n/i18n.types';
 import type { UserDocsPage } from './userDocs.types';
 
 /**
@@ -7,10 +8,8 @@ import type { UserDocsPage } from './userDocs.types';
 export const USER_DOCS_URL = 'https://mcar2107.github.io/amo_msg_stickers/';
 
 /**
- * Страницы, на которые ссылается интерфейс, — пути исходников в `docs/` без `.md`: сайт собран
- * с `cleanUrls`, и адрес страницы — база плюс этот путь.
- *
- * Язык не параметр: английской доки нет, и ссылки из обоих языков интерфейса ведут на русскую.
+ * Страницы, на которые ссылается интерфейс, — пути исходников в `docs/content/` без `.md`: сайт
+ * собран с `cleanUrls`, и адрес страницы — база, префикс языка и этот путь.
  */
 export const USER_DOCS_PAGE = {
   gifKeys: 'setup/gif-keys',
@@ -18,16 +17,23 @@ export const USER_DOCS_PAGE = {
 } as const;
 
 /**
- * @param page — страница доки
- * @returns полный адрес страницы
+ * Префикс страниц доки на каждом языке интерфейса: русская — корень сайта, английская — локаль
+ * `en` VitePress (`link: '/en/'` в `docs/.vitepress/config.mts`, сверяет тест). `Record` по
+ * `Locale` не даёт добавить язык интерфейса без префикса его доки.
  */
-export const userDocsUrl = (page: UserDocsPage): string => {
-  return `${USER_DOCS_URL}${page}`;
+const LOCALE_PREFIX: Readonly<Record<Locale, string>> = {
+  ru: '',
+  en: 'en/',
 };
 
 /**
- * Адреса страниц, на которые ведут подсказки интерфейса. Дока одна, на русском, при любом языке
- * интерфейса: английский текст ссылки говорит об этом сам.
+ * Язык — параметр, а не текущий язык модуля `translate.ts`: адрес зовётся в рендере с
+ * `getLocale()`, как `t`, — константа модуля застыла бы на русском до `setLocale` в `start()`.
+ *
+ * @param page — страница доки
+ * @param locale — язык интерфейса: ссылка ведёт на доку на нём же
+ * @returns полный адрес страницы
  */
-export const GIF_KEYS_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.gifKeys);
-export const TELEGRAM_DOCS_URL = userDocsUrl(USER_DOCS_PAGE.telegram);
+export const userDocsUrl = (page: UserDocsPage, locale: Locale): string => {
+  return `${USER_DOCS_URL}${LOCALE_PREFIX[locale]}${page}`;
+};

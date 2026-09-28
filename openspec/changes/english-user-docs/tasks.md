@@ -24,12 +24,12 @@
 
 ## 3. Ссылки из интерфейса по языку
 
-- [ ] 3.1 `src/core/userDocs.ts`: `userDocsUrl(page, locale)` с префиксами языков `Record<Locale, string>`
+- [x] 3.1 `src/core/userDocs.ts`: `userDocsUrl(page, locale)` с префиксами языков `Record<Locale, string>`
   (`ru: ''`, `en: 'en/'`), убрать `GIF_KEYS_DOCS_URL` и `TELEGRAM_DOCS_URL`, комментарии — без «английской доки нет»;
   `SettingsView`, `GifView`, `TelegramImport` считают адрес в рендере через `getLocale()`
-- [ ] 3.2 `src/core/i18n/messages.en.ts`: `settings.docs` и `add.telegram.docs` — «Step-by-step instructions»,
+- [x] 3.2 `src/core/i18n/messages.en.ts`: `settings.docs` и `add.telegram.docs` — «Step-by-step instructions»,
   `gifs.docs` — «How to get a key», без «(in Russian)»
-- [ ] 3.3 Тесты: `tests/userDocs.test.ts` — исходник каждой страницы `USER_DOCS_PAGE` на обоих языках, адреса `ru`
+- [x] 3.3 Тесты: `tests/userDocs.test.ts` — исходник каждой страницы `USER_DOCS_PAGE` на обоих языках, адреса `ru`
   (корень) и `en` (`/en/`), локаль `en` в конфиге VitePress с `link: '/en/'`; новый тест пар страниц — у каждой `.md`
   в `docs/content/` вне `en/` и `_parts/` есть пара в `docs/content/en/` и наоборот; `pnpm test` зелёный
 

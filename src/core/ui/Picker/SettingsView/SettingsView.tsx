@@ -1,7 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import { t } from '../../../i18n/translate';
-import { GIF_KEYS_DOCS_URL, TELEGRAM_DOCS_URL } from '../../../userDocs';
+import { getLocale, t } from '../../../i18n/translate';
+import { USER_DOCS_PAGE, userDocsUrl } from '../../../userDocs';
 import { renderMessage } from '../../renderMessage/renderMessage';
 import { Button } from '../Button/Button';
 import { ExternalLink } from '../ExternalLink/ExternalLink';
@@ -23,6 +23,9 @@ const SETTINGS_VIEW: View = { kind: 'settings' };
 export const SettingsView: FC = () => {
   const { draft, changeField, save } = useSettingsDraft();
   const { giphyKey, klipyKey, telegramToken } = draft;
+  const locale = getLocale();
+  const gifKeysDocsUrl = userDocsUrl(USER_DOCS_PAGE.gifKeys, locale);
+  const telegramDocsUrl = userDocsUrl(USER_DOCS_PAGE.telegram, locale);
 
   const handleGiphyKeyInput = (value: string) => {
     changeField('giphyKey', value);
@@ -61,7 +64,7 @@ export const SettingsView: FC = () => {
                 </ExternalLink>
               ),
               docs: (
-                <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('settings.docs')}</ExternalLink>
+                <ExternalLink href={gifKeysDocsUrl}>{t('settings.docs')}</ExternalLink>
               ),
             })}
           </SecretField>
@@ -79,7 +82,7 @@ export const SettingsView: FC = () => {
                 </ExternalLink>
               ),
               docs: (
-                <ExternalLink href={GIF_KEYS_DOCS_URL}>{t('settings.docs')}</ExternalLink>
+                <ExternalLink href={gifKeysDocsUrl}>{t('settings.docs')}</ExternalLink>
               ),
             })}
           </SecretField>
@@ -93,7 +96,7 @@ export const SettingsView: FC = () => {
             {renderMessage('settings.telegram.hint', {
               link: <ExternalLink href="https://t.me/BotFather">@BotFather</ExternalLink>,
               docs: (
-                <ExternalLink href={TELEGRAM_DOCS_URL}>{t('settings.docs')}</ExternalLink>
+                <ExternalLink href={telegramDocsUrl}>{t('settings.docs')}</ExternalLink>
               ),
             })}
           </SecretField>

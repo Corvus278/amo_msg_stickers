@@ -1,7 +1,7 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import { t } from '../../../../i18n/translate';
-import { TELEGRAM_DOCS_URL } from '../../../../userDocs';
+import { getLocale, t } from '../../../../i18n/translate';
+import { USER_DOCS_PAGE, userDocsUrl } from '../../../../userDocs';
 import { renderMessage } from '../../../renderMessage/renderMessage';
 import { Button } from '../../Button/Button';
 import { ExternalLink } from '../../ExternalLink/ExternalLink';
@@ -33,7 +33,9 @@ export const TelegramImport: FC = () => {
       <p className="text-xs leading-[1.4] text-cadetGray-30 dark:text-gray-70">
         {renderMessage('add.telegram.hint', {
           docs: (
-            <ExternalLink href={TELEGRAM_DOCS_URL}>{t('add.telegram.docs')}</ExternalLink>
+            <ExternalLink href={userDocsUrl(USER_DOCS_PAGE.telegram, getLocale())}>
+              {t('add.telegram.docs')}
+            </ExternalLink>
           ),
         })}
       </p>
