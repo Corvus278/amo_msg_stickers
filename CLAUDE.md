@@ -602,6 +602,14 @@ open http://127.0.0.1:8777/dev/harness.html
 
 Гейт коммита гоняет только тесты по изменённым файлам (`vitest --changed`); полный прогон — `pnpm test`.
 
+**Правило: без Node API в TypeScript.** Код и тесты на TypeScript (`src/`, `tests/`) не используют Node API —
+`node:*`, `Buffer`, `process`, `__dirname`: типов Node в проекте нет, `tsconfig.json` подключает только
+`types: ["chrome"]`. Вместо них — Web API из lib DOM, которые есть и в Node: `crypto.subtle`, `atob` / `btoa`,
+`TextEncoder` / `TextDecoder`, `CompressionStream`, файлы — через `import.meta.glob` и импорт с `?raw`, а не `fs`.
+Локальный `pnpm typecheck` нарушение может не поймать — типы Node иногда подхватываются транзитивно из
+`node_modules`, — и оно падает только в CI. Node API остаётся в `.mjs` вне проверки типов: `build.mjs`,
+`scripts/*.mjs`.
+
 ## Линтинг
 
 ```
