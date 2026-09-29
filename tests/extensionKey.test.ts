@@ -1,5 +1,3 @@
-import { createHash, createPublicKey } from 'node:crypto';
-
 import { describe, expect, it } from 'vitest';
 
 import manifest from '../src/extension/manifest.json';
@@ -16,13 +14,21 @@ const STORE_EXTENSION_ID = 'abjnjphijggkkdbbmkldhibgepgdcgip';
 const ID_ALPHABET_START = 'a'.codePointAt(0) || 0;
 
 /**
- * Ключ из manifest в байтах DER.
+ * Длина ID: Chrome берёт первые 16 байт хеша ключа, по букве на каждую из их 32 шестнадцатеричных цифр.
+ */
+const ID_LENGTH = 32;
+
+/**
+ * Ключ из manifest в байтах DER. Web Crypto, а не `node:crypto`: типов Node в проекте нет, а `crypto.subtle` и
+ * `atob` описаны в lib DOM и есть в Node.
  *
  * @param key — публичный ключ из manifest, base64 DER
  * @returns байты ключа
  */
 const keyBytes = (key: string) => {
-  return Uint8Array.from(Buffer.from(key, 'base64'));
+  return Uint8Array.from(atob(key), (char) => {
+    return char.codePointAt(0) || 0;
+  });
 };
 
 /**
@@ -32,8 +38,14 @@ const keyBytes = (key: string) => {
  * @param key — публичный ключ из manifest, base64 DER
  * @returns ID расширения
  */
-const extensionId = (key: string) => {
-  const hex = createHash('sha256').update(keyBytes(key)).digest('hex').slice(0, 32);
+const extensionId = async (key: string) => {
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', keyBytes(key)));
+  const hex = [...hash]
+    .map((byte) => {
+      return byte.toString(16).padStart(2, '0');
+    })
+    .join('')
+    .slice(0, ID_LENGTH);
 
   return [...hex]
     .map((digit) => {
@@ -43,17 +55,19 @@ const extensionId = (key: string) => {
 };
 
 describe('ключ расширения', () => {
-  it('разбирается как публичный ключ', () => {
-    expect(() => {
-      return createPublicKey({
-        key: Buffer.from(manifest.key, 'base64'),
-        format: 'der',
-        type: 'spki',
-      });
-    }).not.toThrow();
+  it('разбирается как публичный ключ', async () => {
+    await expect(
+      crypto.subtle.importKey(
+        'spki',
+        keyBytes(manifest.key),
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        true,
+        ['verify']
+      )
+    ).resolves.toBeDefined();
   });
 
-  it('даёт ID карточки Chrome Web Store', () => {
-    expect(extensionId(manifest.key)).toBe(STORE_EXTENSION_ID);
+  it('даёт ID карточки Chrome Web Store', async () => {
+    await expect(extensionId(manifest.key)).resolves.toBe(STORE_EXTENSION_ID);
   });
 });
