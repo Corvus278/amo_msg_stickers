@@ -648,6 +648,10 @@ GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-actio
 - **Дока** (`pages.yml`): пуш в `master`, меняющий `docs/**` (или окружение, корневой `package.json` со скриптом
   `docs:build` и сам workflow), собирает сайт и публикует его на GitHub Pages без релиза и подъёма версии; упавшая
   сборка до деплоя не доходит. Идущая публикация не отменяется.
+- **Claude Code** (`claude.yml`): `@claude` в issue, комментарии, ревью или комменте ревью запускает
+  `anthropics/claude-code-action` — ответ в треде и правки в ветку. Авторизация — секрет `CLAUDE_CODE_OAUTH_TOKEN`
+  (`claude setup-token`), окружение — `.github/actions/setup`, из команд разрешены `pnpm lint`, `test`, `typecheck`,
+  `format`.
 
 ## Воркфлоу задачи
 
