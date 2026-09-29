@@ -208,8 +208,8 @@ export default defineConfig(
   {
     files: ['src/core/**/*.{ts,tsx}'],
     rules: {
-      // Ядро знает только контракты `core/host.types.ts`: окружения подключают к ним свои
-      // адаптеры, а не наоборот.
+      // Ядро знает только контракты `core/host.types.ts` и протокол агента `shared/pageBridge.ts`:
+      // окружения подключают к ним свои адаптеры и агента, а не наоборот.
       'no-restricted-imports': [
         'error',
         {
@@ -218,6 +218,43 @@ export default defineConfig(
               regex: String.raw`^(\.\./)+(userscript|extension)(/|$)`,
               message:
                 'Граница ядра: src/core не импортирует из src/userscript и src/extension — только контракты core/host.types.ts.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/shared/**/*.ts'],
+    rules: {
+      // Общие модули импортируют и ядро, и окружения, и агент в мире страницы: сами они не
+      // зависят ни от кого, иначе через них в агента утянется ядро.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: String.raw`^\.\./`,
+              message: 'Граница shared: src/shared не импортирует ничего вне src/shared.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/page/**/*.ts'],
+    rules: {
+      // Агент уходит в мир страницы строкой в userscript и файлом в расширении: в нём только
+      // его модули и протокол, без ядра и окружений.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: String.raw`^\.\./(?!shared/)`,
+              message:
+                'Граница агента: src/page импортирует только src/page и src/shared.',
             },
           ],
         },

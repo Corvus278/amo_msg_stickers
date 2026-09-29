@@ -12,6 +12,7 @@ import type { Host } from './host.types';
 import { createHoverPopup } from './hoverPopup';
 import type { OpenedBy } from './hoverPopup.types';
 import { MAX_REMOTE_GIF_BYTES } from './net';
+import { createPageClient, fileInputOf } from './pageClient';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
 import { MAX_GIF_BYTES } from './sidePick';
 
@@ -59,6 +60,7 @@ export const start = (host: Host) => {
   injectMessageStyle();
 
   let activeButton: HTMLElement | null = null;
+  const pageClient = createPageClient(document, fileInputOf);
 
   const toFile = async (item: SendItem) => {
     switch (item.kind) {
@@ -100,7 +102,7 @@ export const start = (host: Host) => {
 
     if (!composer) throw new SendError(t('error.send.noComposer'));
 
-    await sendFile(composer, await toFile(item));
+    await sendFile(composer, await toFile(item), pageClient);
     await pushRecent(item);
   };
 

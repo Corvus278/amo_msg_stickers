@@ -11,7 +11,54 @@ vi.mock('../src/core/app', () => {
   return { start: vi.fn() };
 });
 
+/**
+ * Виртуальный модуль esbuild-плагина vitest не собирает: код агента подменён меткой.
+ */
+vi.mock('page-agent:code', () => {
+  return { PAGE_AGENT_CODE: '/* agent */' };
+});
+
 const TG_URL = 'https://api.telegram.org/bot1:x/getMe';
+
+/**
+ * Порядок событий старта: внедрение агента и вызов `start`.
+ */
+const bootOrder: string[] = [];
+
+/**
+ * `<script>` агента, как его видит заглушка документа.
+ */
+type EntryScript = {
+  /**
+   * Код агента.
+   */
+  textContent: string;
+};
+
+/**
+ * `document` точки входа: `body` есть, `<script>` агента пишет в `bootOrder` свою вставку и
+ * удаление.
+ *
+ * @returns заглушка документа
+ */
+const entryDocument = () => {
+  return {
+    body: {},
+    head: {
+      append: (script: EntryScript) => {
+        bootOrder.push(`inject:${script.textContent}`);
+      },
+    },
+    createElement: () => {
+      return {
+        textContent: '',
+        remove: () => {
+          bootOrder.push('remove');
+        },
+      };
+    },
+  };
+};
 
 /**
  * Запускает точку входа userscript заново: режим выбирается при импорте модуля по тому,
@@ -75,7 +122,8 @@ beforeEach(() => {
     return new Response('{}', { status: 200 });
   });
   localStorageMock = emptyLocalStorage();
-  vi.stubGlobal('document', { body: {} });
+  bootOrder.length = 0;
+  vi.stubGlobal('document', entryDocument());
   vi.stubGlobal('localStorage', localStorageMock);
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -156,5 +204,18 @@ describe('userscript: выбор настроек', () => {
     await writeSettings(host);
 
     expect(localStorageMock.setItem).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('userscript: агент в мире страницы', () => {
+  it('внедряется элементом <script> до start и сразу удаляется', async () => {
+    const { start } = await import('../src/core/app');
+
+    vi.mocked(start).mockImplementation(() => {
+      bootOrder.push('start');
+    });
+    await bootHost();
+
+    expect(bootOrder).toEqual(['inject:/* agent */', 'remove', 'start']);
   });
 });

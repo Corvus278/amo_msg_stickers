@@ -4,7 +4,7 @@
  * data-testid в amo нет: опираемся на aria-атрибуты и стабильные tailwind-классы.
  */
 
-import type { Composer } from './amoDom.types';
+import type { Composer, SendComposer, ShownNode } from './amoDom.types';
 
 const EDITABLE_SELECTOR = 'div[contenteditable="true"][aria-placeholder]';
 const ROW_SELECTOR = 'div.flex.size-full';
@@ -66,18 +66,20 @@ export const composerOf = (el: Element): Composer | null => {
 /**
  * Кнопки скрыты через size-0/opacity-0 и становятся видимыми с opacity-100.
  */
-const isShown = (el: HTMLElement | null) => {
+const isShown = (el: ShownNode | null) => {
   return Boolean(el?.classList.contains('opacity-100'));
 };
 
-export const isEditing = ({ cancelEditButton }: Composer) => {
+export const isEditing = ({
+  cancelEditButton,
+}: Pick<SendComposer, 'cancelEditButton'>) => {
   return isShown(cancelEditButton);
 };
 
 /**
  * Кнопка «Отправить» видна, если есть текст или вложения.
  */
-export const isDraftEmpty = ({ sendButton }: Composer) => {
+export const isDraftEmpty = ({ sendButton }: Pick<SendComposer, 'sendButton'>) => {
   return !isShown(sendButton);
 };
 

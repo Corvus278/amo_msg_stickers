@@ -1,0 +1,193 @@
+import type { PageRejectReason } from '../shared/pageBridge.types';
+
+/**
+ * Локальное медиа-фото amo до загрузки, как у `createPreparingLocalMediaWithFile`.
+ */
+export type AmoPhotoMedia = {
+  /**
+   * Id медиа — непрозрачная уникальная строка; совпадает с `localPhotoSize.localFileId`,
+   * иначе amo не найдёт файл при загрузке и повторе.
+   */
+  id: string;
+
+  /**
+   * Медиа ещё не на сервере.
+   */
+  isLocal: true;
+
+  /**
+   * Имя файла — у получателя становится `alt` картинки.
+   */
+  fileName: string;
+
+  /**
+   * Локальный файл фото: id и размер; ширину и высоту amo досчитает сам.
+   */
+  localPhotoSize: {
+    /**
+     * Ключ файла в отправляемых файлах amo.
+     */
+    localFileId: string;
+
+    /**
+     * Размер файла в байтах.
+     */
+    size: number;
+  };
+
+  /**
+   * Id файла на сервере; null — ещё не загружен.
+   */
+  uploadedFileId: null;
+
+  /**
+   * `MediaLocalFlags.PREPARING`: amo подготовит медиа сам — посчитает размеры.
+   */
+  localFlag: 1;
+
+  /**
+   * Вид медиа.
+   */
+  mediaType: 'photo';
+
+  /**
+   * Сам файл; amo забирает его в отправляемые файлы и убирает из сообщения.
+   */
+  file: File;
+};
+
+/**
+ * Член чата в форме amo для `from` / `to`.
+ */
+export type AmoMember = {
+  /**
+   * Пусто: у себя и у «всех» id нет.
+   */
+  memberId: '';
+
+  /**
+   * `self` — отправитель, `all` — сообщение без адресата-упоминания.
+   */
+  memberType: 'self' | 'all';
+};
+
+/**
+ * Сообщение для запроса `sendNewMessages` — объект `buildRegularMessages` amo без
+ * упоминания, ответа и подписи. Ключ `[conversationType]: conversationId` amo тоже
+ * требует — он добавляется при сборке.
+ */
+export type AmoStickerMessage = {
+  /**
+   * Id чата — ключ в `state.dialogs`.
+   */
+  conversationId: string;
+
+  /**
+   * Тип пира чата.
+   */
+  conversationType: string;
+
+  /**
+   * `MESSAGE_FLAGS.OUT` — исходящее.
+   */
+  flags: [2];
+
+  /**
+   * Отправитель в форме запроса.
+   */
+  from: {
+    /**
+     * Отправитель — текущий пользователь.
+     */
+    memberSelf: Record<string, never>;
+  };
+
+  /**
+   * Адресат в форме запроса.
+   */
+  to: {
+    /**
+     * Сообщение всем участникам чата.
+     */
+    memberAll: Record<string, never>;
+  };
+
+  /**
+   * Отправитель в форме состояния.
+   */
+  fromMember: AmoMember;
+
+  /**
+   * Адресат в форме состояния.
+   */
+  toMember: AmoMember;
+
+  /**
+   * Текст сообщения — пустой: стикер без подписи.
+   */
+  message: '';
+
+  /**
+   * uuid v1 в формате amo.
+   */
+  id: string;
+
+  /**
+   * Ключ идемпотентности — тот же `id`: по нему amo заменит локальное сообщение серверным.
+   */
+  idempotencyKey: string;
+
+  /**
+   * Время создания, мс — из `id`.
+   */
+  date: number;
+
+  /**
+   * Фото-стикер.
+   */
+  media: AmoPhotoMedia;
+
+  /**
+   * Сообщение отправляется.
+   */
+  sending: true;
+
+  /**
+   * Сообщение пока только локальное.
+   */
+  isLocal: true;
+
+  /**
+   * Обычное сообщение, не служебное.
+   */
+  type: 'regular';
+};
+
+export type BuildMessageResult =
+  | {
+      /**
+       * Готовое сообщение.
+       */
+      message: AmoStickerMessage;
+    }
+  | {
+      /**
+       * Причина, по которой сообщение не собрано.
+       */
+      reason: Extract<PageRejectReason, 'no-conversation' | 'unsupported-conversation'>;
+    };
+
+/**
+ * Открытый чат, в который уходит сообщение.
+ */
+export type AmoConversation = {
+  /**
+   * Id чата — ключ в `state.dialogs`.
+   */
+  id: string;
+
+  /**
+   * Тип пира из `state.dialogs[id].conversationType`: `user`, `chat`, `lead` и т. п.
+   */
+  type: string;
+};
