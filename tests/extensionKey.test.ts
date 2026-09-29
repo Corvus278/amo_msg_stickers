@@ -46,7 +46,7 @@ describe('ключ расширения', () => {
   it('разбирается как публичный ключ', () => {
     expect(() => {
       return createPublicKey({
-        key: Buffer.from(keyBytes(manifest.key)),
+        key: Buffer.from(manifest.key, 'base64'),
         format: 'der',
         type: 'spki',
       });
