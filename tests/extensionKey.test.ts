@@ -11,6 +11,11 @@ import manifest from '../src/extension/manifest.json';
 const STORE_EXTENSION_ID = 'abjnjphijggkkdbbmkldhibgepgdcgip';
 
 /**
+ * Первая буква алфавита ID: Chrome пишет шестнадцатеричную цифру `n` буквой со сдвигом `n` от `a`.
+ */
+const ID_ALPHABET_START = 'a'.codePointAt(0) || 0;
+
+/**
  * Ключ из manifest в байтах DER.
  *
  * @param key — публичный ключ из manifest, base64 DER
@@ -32,7 +37,7 @@ const extensionId = (key: string) => {
 
   return [...hex]
     .map((digit) => {
-      return String.fromCodePoint(97 + Number.parseInt(digit, 16));
+      return String.fromCodePoint(ID_ALPHABET_START + Number.parseInt(digit, 16));
     })
     .join('');
 };
