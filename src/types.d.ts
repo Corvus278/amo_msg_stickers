@@ -129,6 +129,14 @@ declare module 'gif-worker:code' {
 }
 
 /**
+ * Код агента в мире страницы (`src/page/index.ts`) строкой — из esbuild-плагина
+ * `page-agent` в `build.mjs`: userscript вставляет его элементом `<script>`.
+ */
+declare module 'page-agent:code' {
+  export const PAGE_AGENT_CODE: string;
+}
+
+/**
  * Расширение глобального `Window` возможно только через `interface`: у `type` нет
  * слияния объявлений.
  */
@@ -138,4 +146,10 @@ interface Window {
    * а стартовать нужно один раз.
    */
   __amoStickers?: boolean;
+
+  /**
+   * Флаг запуска агента в мире страницы (`src/page/agent.ts`): расширение и userscript
+   * могут подключить его оба, а слушать команды должен один.
+   */
+  __amoStickersPage?: boolean;
 }

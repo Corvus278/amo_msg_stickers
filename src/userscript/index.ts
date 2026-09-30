@@ -1,9 +1,12 @@
+import { PAGE_AGENT_CODE } from 'page-agent:code';
+
 import { start } from '../core/app';
 import type { Host, HostNetwork, HostSettings } from '../core/host.types';
 
 import { fetchNetwork } from './fetchNetwork';
 import type { GmGetValue, GmSetValue, GmXmlhttpRequest } from './gm.types';
 import { gmNetwork } from './gmNetwork';
+import { injectPageAgent } from './pageAgent';
 import { gmSettings, localStorageSettings } from './settings';
 
 /**
@@ -47,7 +50,18 @@ const host: Host = {
   ...pickHostSettings(),
 };
 
+/**
+ * Агент — до ядра: к первому клику по стикеру он уже слушает команды, а ядро ни от чего в
+ * нём не зависит на старте. Сбой вставки (Trusted Types, CSP) ядро не роняет: без агента
+ * отправка идёт запасным путём.
+ */
 const boot = () => {
+  try {
+    injectPageAgent(document, PAGE_AGENT_CODE);
+  } catch (error) {
+    console.warn('[amo-stickers] page agent not injected:', error);
+  }
+
   start(host);
 };
 

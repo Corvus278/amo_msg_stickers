@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  PAGE_REQUEST_EVENT,
+  PAGE_RESPONSE_EVENT,
+  parsePageRequest,
+  parsePageResponse,
+  toPageEvent,
+} from '../src/shared/pageBridge';
+
+const eventWith = (detail: unknown) => {
+  return new CustomEvent(PAGE_REQUEST_EVENT, { detail });
+};
+
+const json = (value: unknown) => {
+  return eventWith(JSON.stringify(value));
+};
+
+describe('parsePageRequest', () => {
+  it('разбирает команду send, созданную toPageEvent', () => {
+    const event = toPageEvent(PAGE_REQUEST_EVENT, { id: 'a-1', op: 'send' });
+
+    expect(parsePageRequest(event)).toEqual({ id: 'a-1', op: 'send' });
+  });
+
+  it('не пропускает лишние поля дальше', () => {
+    expect(parsePageRequest(json({ id: 'a', op: 'send', extra: { x: 1 } }))).toEqual({
+      id: 'a',
+      op: 'send',
+    });
+  });
+
+  it.each([
+    ['неизвестный op', { id: 'a', op: 'stash' }],
+    ['op не строка', { id: 'a', op: { toString: 'send' } }],
+    ['нет id', { op: 'send' }],
+    ['id не строка', { id: 1, op: 'send' }],
+    ['пустой id', { id: '', op: 'send' }],
+    ['id длиннее 64', { id: 'x'.repeat(65), op: 'send' }],
+    ['массив', ['a', 'send']],
+    ['null', null],
+  ])('отклоняет: %s', (_case, payload) => {
+    expect(parsePageRequest(json(payload))).toBeNull();
+  });
+
+  it('отклоняет detail-объект и не-JSON', () => {
+    expect(parsePageRequest(eventWith({ id: 'a', op: 'send' }))).toBeNull();
+    expect(parsePageRequest(eventWith('{id:'))).toBeNull();
+    expect(parsePageRequest(new Event(PAGE_REQUEST_EVENT))).toBeNull();
+  });
+
+  it('принимает id ровно 64 символа', () => {
+    const id = 'x'.repeat(64);
+
+    expect(parsePageRequest(json({ id, op: 'send' }))).toEqual({ id, op: 'send' });
+  });
+});
+
+describe('parsePageResponse', () => {
+  it('разбирает accepted и rejected, созданные toPageEvent', () => {
+    expect(
+      parsePageResponse(toPageEvent(PAGE_RESPONSE_EVENT, { id: 'a', status: 'accepted' }))
+    ).toEqual({ id: 'a', status: 'accepted' });
+    expect(
+      parsePageResponse(
+        toPageEvent(PAGE_RESPONSE_EVENT, {
+          id: 'a',
+          status: 'rejected',
+          reason: 'no-client',
+        })
+      )
+    ).toEqual({ id: 'a', status: 'rejected', reason: 'no-client' });
+  });
+
+  it('не пропускает лишние поля дальше', () => {
+    expect(parsePageResponse(json({ id: 'a', status: 'accepted', reason: 'x' }))).toEqual(
+      {
+        id: 'a',
+        status: 'accepted',
+      }
+    );
+  });
+
+  it.each([
+    ['неизвестный статус', { id: 'a', status: 'sent' }],
+    ['rejected без reason', { id: 'a', status: 'rejected' }],
+    ['reason не строка', { id: 'a', status: 'rejected', reason: 42 }],
+    ['неизвестная причина', { id: 'a', status: 'rejected', reason: 'timeout' }],
+    ['id не строка', { id: 7, status: 'accepted' }],
+  ])('отклоняет: %s', (_case, payload) => {
+    expect(parsePageResponse(json(payload))).toBeNull();
+  });
+});

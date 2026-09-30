@@ -9,8 +9,9 @@ amo stickers — стикеры и GIF для мессенджера amo (web). 
 стикеров из картинки, GIF, видео или `.tgs` с подписью и паков, импортированных из Telegram. «GIF» — поиск GIPHY и
 KLIPY и недавние GIF. Стикер отправляется кликом.
 
-Публичного API для отправки сообщений у amo нет, поэтому код живёт внутри чужой страницы и отправляет стикер штатным
-путём пользователя: вставкой файла в поле ввода и кликом «Отправить».
+Публичного API для отправки сообщений у amo нет, поэтому код живёт внутри чужой страницы и отправляет стикер
+внутренней очередью amo — той же, которой amo отправляет опрос, — отдельным сообщением, не трогая поле ввода. Если
+очередь недоступна, стикер уходит штатным путём пользователя: вставкой файла в поле ввода и кликом «Отправить».
 
 Дока пользователя — сайт VitePress из `docs/` на GitHub Pages, `https://mcar2107.github.io/amo_msg_stickers/`:
 установка по браузерам, ключи GIF, импорт из Telegram, обновление, частые вопросы, политика конфиденциальности —
@@ -44,8 +45,8 @@ pnpm docs:dev          # сайт доки локально; docs:build — сб
 - **расширение** Chrome / Яндекс / Edge (MV3): content script + service worker, `dist/extension/`;
 - **userscript** для Tampermonkey и других менеджеров: `dist/amo-stickers.user.js` с заголовком `==UserScript==`.
 
-У сборки два esbuild-плагина: `tailwind` отдаёт ядру CSS пикера строкой, `gif-worker` — код Worker-а кодирования GIF
-(«Сборка CSS и Worker-а»).
+У сборки три esbuild-плагина: `tailwind` отдаёт ядру CSS пикера строкой, `gif-worker` — код Worker-а кодирования GIF,
+`page-agent` — код агента в мире страницы для userscript («Сборка CSS и Worker-а»).
 
 Различия целей спрятаны за интерфейсом `Host` (`core/host.types.ts`): сеть и хранение настроек. Расширение ходит в
 сеть через service worker — обход CORS, настройки держит в `chrome.storage.local`. Userscript с менеджером ходит в
@@ -110,7 +111,9 @@ src/
     app.ts           старт: поиск полей ввода MutationObserver-ом, кнопка рядом с эмодзи, открытие пикера, отправка
     amoDom.ts        всё знание о DOM amo: селекторы поля ввода, эмодзи, «Отправить», отмены редактирования, темы;
                      стиль своих сообщений в ленте (`injectMessageStyle`, лимит стикера `STICKER_MAX_SIDE_PX`)
-    sender.ts        отправка файла: paste → ожидание вложения → клик «Отправить», проверки черновика
+    sender.ts        отправка файла: очередь amo через агента в мире страницы, иначе запасной путь — paste →
+                     ожидание вложения → клик «Отправить» с проверками черновика
+    pageClient*.ts   клиент агента в мире страницы: пометка поля ввода и `<input>` с файлом, команда и синхронный ответ
     fileName*.ts     имя отправляемого файла: сборка и разбор `[метка.]amostk.k-<вид>…gif`, вычистка метки,
                      `sendFileName` — имя для элемента пикера (`fileName.types.ts` — типы)
     convert.ts       любой источник (картинка, GIF, видео, .tgs) → GIF: пробный и полные проходы, подпись, GIF как есть
@@ -132,7 +135,6 @@ src/
                      скачивания GIF из поиска `MAX_REMOTE_GIF_BYTES`
     gif.ts           проверка GIF по блочной структуре (`inspectGif`)
     tgs.ts           распаковка `.tgs` с лимитом и проверкой Lottie
-    guards.ts        общий первый шаг гардов ответов API (`isObject`)
     userDocs*.ts     адрес доки `USER_DOCS_URL`, страницы, на которые ведёт интерфейс (`USER_DOCS_PAGE`), и
                      `userDocsUrl(page, locale)` — адрес страницы на языке интерфейса; путь совпадает с `base`
                      доки, префикс `en` — с `link` её локали, их сверяет тест
@@ -176,18 +178,32 @@ src/
   extension/      content.ts (Host расширения), background.ts (service worker: fetch в обход CORS, иконка кнопки
                   по теме), actionIcon.ts (иконки кнопки по теме и гард сообщения о теме),
                   fetchResponse.ts (отказ SW с ключом словаря и его разбор в content script),
-                  messages.types.ts (протокол content ↔ background), manifest.json, _locales/ — описание расширения
+                  messages.types.ts (протокол content ↔ background), manifest.json (content script и агент
+                  `page.js` с `"world": "MAIN"`), _locales/ — описание расширения
                   на русском и английском, icons/ — иконки расширения 16/32/48/128 (48 — ещё и `@icon` userscript)
   userscript/     index.ts — выбор режима по GM API и сборка Host; адаптеры: gmNetwork.ts (сеть через
                   `GM_xmlhttpRequest`), fetchNetwork.ts (прямой `fetch`), settings.ts (хранилище менеджера с переносом
                   из `localStorage` и `localStorage` без менеджера); gm.types.ts — типы используемого среза GM API,
-                  settings.types.ts — типы хранилищ адаптеров настроек
-  types.d.ts      описания модулей без типов: gifenc, `*.css` и `gif-worker:code` строкой; флаг `window.__amoStickers`;
+                  settings.types.ts — типы хранилищ адаптеров настроек; pageAgent.ts — внедрение агента в мир
+                  страницы элементом `<script>`
+  page/           агент в мире страницы — отправка стикера через очередь amo: index.ts — точка входа, agent.ts —
+                  слушатель команд ядра, findClient.ts — `{ reduxStore, sendRequest }` amo по fiber от поля ввода,
+                  buildMessage.ts — сообщение как у очереди отправки amo, amo.types.ts — срез
+                  внутренностей amo, field.ts — поле чужого объекта без доверия к форме
+  shared/         чистые модули, общие для ядра, окружений и агента в мире страницы, без импортов извне `shared/`:
+                  guards.ts — общий первый шаг гардов ответов API (`isObject`)
+                  pageBridge*.ts — протокол ядра и агента в мире страницы: события, атрибуты, разбор команды и ответа
+  types.d.ts      описания модулей без типов: gifenc, `*.css`, `gif-worker:code` и `page-agent:code` строкой; флаги
+                  `window.__amoStickers` и `window.__amoStickersPage`;
                   `ImportMeta.glob` vite для теста пар страниц доки
 dev/harness.html  стенд: разметка инпута и сообщения ленты amo на CSS его страницы (`dev/amo.css`, в git не лежит);
                   вставка и «Отправить» замоканы — «Отправить» кладёт в ленту сообщение с картинкой, `alt` которой —
                   имя файла; переключатели «входящее» и «с именем автора», кнопки «картинка без метки» и «ответ с
-                  цитатой», выбор «язык amo» — пишет `i18nextLng` и перезагружает стенд
+                  цитатой», выбор «язык amo» — пишет `i18nextLng` и перезагружает стенд; поддельный
+                  провайдер amo `{ reduxStore, sendRequest }` в `__reactFiber$harness` поля ввода — `sendRequest` кладёт картинку в
+                  ленту, не трогая поле; переключатель «очередь amo» (выключен — провайдера нет, работает запасной
+                  путь). Агент на стенде внедряется `<script>`, как в userscript; MAIN-скрипт расширения — только
+                  в живом amo
 docs/             дока пользователя — отдельный пакет VitePress: .vitepress/ (config.mts, theme/ — style.css,
                   CopyCode.vue); content/ — страницы index, install/, setup/, update, faq, privacy, en/ — они же
                   по-английски с теми же путями, _parts/ — общие фрагменты страниц (_parts/en/ — английские),
@@ -435,7 +451,12 @@ data URI: менеджеру не нужно ходить за ней в сет�
 `src/core/ui/**/*.tsx`; конфиг и компоненты плагин отдаёт в `watchFiles`, поэтому `pnpm watch` пересобирает CSS при их
 правке.
 
-Код Worker-а кодирования GIF собирает esbuild-плагин `gif-worker`: `src/core/gifWorkerEntry.ts` — отдельным бандлом
+Код отдельного бандла строкой отдаёт фабрика esbuild-плагинов `bundleCodePlugin` в `build.mjs`: модуль `<имя>:code`
+экспортирует строку с IIFE-бандлом входа. Ею собраны два модуля — `gif-worker:code` и `page-agent:code`
+(`PAGE_AGENT_CODE`, агент в мире страницы из `src/page/index.ts`: его userscript вставляет элементом `<script>`).
+Расширению агент нужен файлом — `dist/extension/page.js`, отдельная точка входа того же `src/page/index.ts`.
+
+Код Worker-а кодирования GIF собирает плагин `gif-worker`: `src/core/gifWorkerEntry.ts` — отдельным бандлом
 (IIFE, в сборке минифицирован, в `watch` — с inline-sourcemap), который попадает в ядро строкой из виртуального модуля
 `gif-worker:code` (`GIF_WORKER_CODE`, `declare module` в `src/types.d.ts`). Строкой — потому что userscript не может
 подключить отдельный файл Worker-а, и ядро запускает его из blob URL. Код Worker-а лежит в `content.js` и в
@@ -451,11 +472,30 @@ Vitest плагина не знает, поэтому `gif-worker:code` в те�
 ### Отправка
 
 ```
-blob → File(image/gif, имя из sendFileName) → paste в contenteditable → вложение → click [aria-label="Send message"]
+blob → File(image/gif, имя из sendFileName) → sendFile
+  ├─ очередь amo: команда агенту → sendRequest({ type: 'sendNewMessages' }) → accepted
+  └─ запасной путь: paste в contenteditable → вложение → click [aria-label="Send message"]
 ```
 
-В `DataTransfer` кладётся **только** файл: при наличии `text/plain` поле вставит текст, а не вложение.
-Вложение ждём до 15 с по появлению кнопки «Отправить». Если в поле есть текст или вложения, либо идёт
+Основной путь — очередь отправки amo, та же, которой уходит опрос: стикер идёт отдельным сообщением, поле ввода
+(текст, вложения, ответ, редактирование, курсор) не трогается. Очередь видна только скриптам страницы, поэтому
+отправляет агент в мире страницы (`src/page/`): ядро помечает поле ввода и скрытый `<input type="file">` с файлом
+атрибутом с `id` команды и шлёт `CustomEvent` (`shared/pageBridge.ts`, клиент — `core/pageClient.ts`); `<input>` лежит
+в `documentElement`, а не в `body`, чтобы не будить `MutationObserver` ядра и amo. Агент находит
+`{ reduxStore, sendRequest }` amo по fiber от поля ввода (`findClient.ts`), собирает сообщение так же, как страница
+кладёт в очередь опрос (`buildMessage.ts`: чат — из `state.location` и `state.dialogs`, фото с `localFlag:
+PREPARING`, без ответа), вызывает `sendRequest` и отвечает синхронно: `accepted` или `rejected` с причиной. Пометки и
+`<input>` клиент снимает сразу по ответу.
+
+Выбирает путь `sendFile` (`sender.ts`): `accepted` — готово; `rejected` или нет ответа к возврату из `dispatchEvent`
+(агента нет) — `console.info` с причиной и сразу запасной путь, без ожидания. После `accepted` запасного пути нет при любом исходе загрузки: один клик — одно сообщение.
+Исход загрузки ядро не ждёт — неудачу amo показывает в ленте неотправленным сообщением с «Повторить», — поэтому
+«отправлено» значит «amo принял»: для очереди — `accepted`, для вставки — клик «Отправить»; после этого `app.ts`
+пишет недавние. `media.id` сообщения совпадает с `localPhotoSize.localFileId`, как у своих вложений amo: иначе amo
+не найдёт файл при загрузке и повторе.
+
+Запасной путь — вставка файла в поле ввода. В `DataTransfer` кладётся **только** файл: при наличии `text/plain` поле вставит текст, а не
+вложение. Вложение ждём до 15 с по появлению кнопки «Отправить». Если в поле есть текст или вложения, либо идёт
 редактирование, отправка блокируется `SendError` — иначе стикер ушёл бы вместе с черновиком.
 
 Имя файла собирает `app.ts` через `sendFileName` и передаёт в `toGifFile` / `toCheckedGifFile` готовым: имени по
@@ -541,6 +581,13 @@ amo перекодирует PNG и WebP в JPEG с белым фоном, бе�
 адаптеров и передаёт в `start(host)`; импорт из `src/userscript/` и `src/extension/` ядру запрещает eslint
 («Линтинг»).
 
+Второй контракт с окружением — агент в мире страницы (`src/page/`, протокол — `shared/pageBridge.ts`, «Отправка»):
+окружение подключает его само до `start`. Расширение — content script `page.js` с `"world": "MAIN"` в manifest:
+своим файлом, без вставки кода в страницу. Userscript — `injectPageAgent` (`src/userscript/pageAgent.ts`): строка
+`PAGE_AGENT_CODE` элементом `<script>`, который удаляется сразу после вставки; так же и без менеджера. Не подключил —
+ядро не получит ответа агента, и отправка пойдёт запасным путём. Повторное подключение (расширение и userscript на
+одной странице) агент гасит флагом `window.__amoStickersPage`.
+
 Адаптеры userscript — чистые функции, зависимости приходят параметрами, поэтому тесты гоняют их без менеджера:
 `gmNetwork(request)`, `fetchNetwork()`, `gmSettings(gmStore, storage)`, `localStorageSettings(storage)`. Режим
 выбирается в одном месте — `src/userscript/index.ts`: `GM_*` менеджер кладёт в область видимости скрипта, а не в
@@ -589,6 +636,13 @@ GIF-блобы; у своего стикера — ещё подпись `captio
 - `file_path` Telegram — без `..`, иначе URL схлопнется и запрос с токеном уйдёт в другой метод Bot API;
 - `.tgs` распаковывается не больше 8 МБ и проходит `isLottieJson`; GIF из поиска перед вставкой — `inspectGif`.
 
+### Что писать об amo
+
+В публичных файлах (код, комментарии, тесты, дока, OpenSpec, CLAUDE.md) об amo — только наблюдаемое поведение страницы
+и то, что видно в её бандле и рантайме (`sendRequest`, `reduxStore`, `state.dialogs`, форма сообщения очереди): без
+путей к исходникам amo web и имён его внутренних функций. Заметки по исходникам — в `CLAUDE.local.md`, он в
+`.gitignore`.
+
 ## Тесты
 
 Стек — vitest, проект `unit` (`tests/**/*.test.{ts,tsx}`, окружение `node`). Тесты лежат плоско в `tests/`,
@@ -626,8 +680,13 @@ eslint.config.mjs        # flat config: typescript-eslint + prettier + jsdoc + s
   единственный канал диагностики.
 - `local/**` в eslint игнорируется: каталог в `.gitignore`, в нём локальные заготовки вне tsconfig.
 
-Граница ядра: `no-restricted-imports` на `src/core/**` запрещает импорт из `src/userscript/` и `src/extension/` —
-ядро знает только контракты `core/host.types.ts`, а окружения подключают к ним свои адаптеры.
+Границы — `no-restricted-imports`:
+
+- `src/core/**` не импортирует из `src/userscript/` и `src/extension/` — ядро знает только контракты
+  `core/host.types.ts` и протокол агента `shared/pageBridge.ts`, а окружения подключают к ним свои адаптеры и агента;
+- `src/shared/**` не импортирует ничего вне `src/shared/`: его берут и ядро, и окружения, и агент;
+- `src/page/**` импортирует только `src/page/` и `src/shared/` — иначе в агента, который уходит в мир страницы, утянется
+  ядро.
 
 `.claude/hooks/lint.sh` — PostToolUse-хук: после каждой правки гоняет по файлу eslint (+`tsc --noEmit` для `.ts`/
 `.tsx`). Ошибки в правленом файле блокируют правку.

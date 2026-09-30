@@ -151,6 +151,7 @@
           <option value="en">en</option>
         </select>
       </label>
+      <label><input type="checkbox" id="queue" checked /> очередь amo</label>
       <label><input type="checkbox" id="slow" /> медленная загрузка</label>
       <label><input type="checkbox" id="incoming" /> входящее</label>
       <label><input type="checkbox" id="author" /> с именем автора</label>
@@ -240,13 +241,21 @@
         sendBtn.querySelector('svg').classList.toggle('size-4.5', visible);
       }
 
+      /**
+       * «Медленная загрузка»: вложение и отправка через очередь ждут одинаково — 1,5 с.
+       */
+      const SLOW_DELAY_MS = 1500;
+      const slowDelay = () =>
+        document.getElementById('slow').checked
+          ? new Promise((r) => setTimeout(r, SLOW_DELAY_MS))
+          : Promise.resolve();
+
       editable.addEventListener('input', syncSend);
       editable.addEventListener('paste', async (e) => {
         const f = Array.from(e.clipboardData?.files || []);
         if (!f.length) return;
         e.preventDefault();
-        if (document.getElementById('slow').checked)
-          await new Promise((r) => setTimeout(r, 1500));
+        await slowDelay();
         files.push(...f);
         attachments.replaceChildren(
           ...files.map((x) =>
@@ -386,6 +395,51 @@
         }
         if (text) sendText(text);
       });
+
+      /**
+       * Поддельный провайдер amo (design.md change send-via-amo-queue, «Стенд»): агент в мире
+       * страницы ищет `{ reduxStore, sendRequest }` по fiber от поля ввода. `sendRequest` кладёт
+       * картинку сообщения в ленту, как amo после отправки; поле ввода не трогается.
+       * «Очередь amo» выключена — провайдера нет, и стикер уходит запасным путём, вставкой.
+       */
+      const HARNESS_CHAT_ID = 'harness-chat';
+      const amoClient = {
+        reduxStore: {
+          getState: () => ({
+            location: {
+              type: 'conversation',
+              payload: {
+                conversationType: 'direct',
+                selectedConversationId: HARNESS_CHAT_ID,
+              },
+            },
+            dialogs: {
+              [HARNESS_CHAT_ID]: { id: HARNESS_CHAT_ID, conversationType: 'user' },
+            },
+          }),
+        },
+        sendRequest: async ({ type, payload }) => {
+          console.log('[harness] sendRequest', type, payload.messages);
+          for (const { media } of payload.messages) {
+            await slowDelay();
+            await sendMedia(media.file, media.fileName);
+            lastFile = { file: media.file, name: media.fileName };
+          }
+        },
+      };
+      const syncQueue = () => {
+        editable.__reactFiber$harness = document.getElementById('queue').checked
+          ? {
+              return: {
+                return: null,
+                alternate: null,
+                memoizedProps: { value: amoClient },
+              },
+            }
+          : undefined;
+      };
+      document.getElementById('queue').onchange = syncQueue;
+      syncQueue();
 
       /**
        * Последняя отправленная «Отправить» картинка без метки в имени — сравнить размер GIF
