@@ -29,3 +29,11 @@ G3 ok, аудит с первого круга, critical нет.
 Причина preview в HoldReason/PANEL_REASONS; PreviewProvider (openHold/openPinned/close + preview в usePreview) смонтирован в Picker.tsx уже в 3.2 (иначе мёртвый код), оверлей в 3.3 перед StatusBar. Отпускание — чистый watchHoldRelease (стоп-клик через stopImmediatePropagation + preventDefault). ARIA и возврат фокуса — чистые функции previewA11y с тестами.
 Долг: (1) слушатель отпускания вешается в useEffect после рендера — pointerup в пределах кадра после 300 мс проскочит (лечится useLayoutEffect / подпиской в openHold) — проверить на стенде 3.4/4.2; (2) правила закрытия в эффектах провайдера без юнит-теста (окружение node); (3) focusout с relatedTarget=null закрывает pinned, порядок возврата фокуса после меню vs фокус на «Закрыть» — проверить в 4.1; (4) CLOSE_BUTTON_CLASS дублирует кнопку «Назад» в Screen.tsx; (5) пустой case 'escape' в previewA11y.
 Вне группы остаётся 3.4 (стенд).
+
+### G4 · Ячейки и меню
+
+G4 ok, аудит с первого круга, critical нет. Закрыты только кодовые части 4.1–4.3.
+CellMenu: onPreview обязательный, kind необязателен, состав пунктов — чистая cellMenuItems(kind) с тестом. StickerCell и MasonryCell: usePressPreview + usePreview (K6 проверен rg), select-none, isDisabled по занятости. Меню у всех GIF; у найденной один пункт, у недавней два. GIF: url = версия для отправки, previewUrl = превью ленты.
+Долг G3 №1 закрыт: слушатели watchHoldRelease взводятся синхронно в openHold, снимаются в close/openPinned/размонтировании.
+Долг: управление unwatchReleaseRef в провайдере без юнит-теста (можно вынести в чистый держатель слушателя); в CellMenu ветка `!kind || !onRemove` дублирует cellMenuItems; подключение onPreview/kind в ячейках наблюдается только стендом.
+Не проверено (нужен стенд / живой amo с ключом GIF, чекбоксы 3.4, 4.4, 6.2 остаются [ ]): меню стикера/недавнего/GIF, порядок фокуса меню → «Закрыть предпросмотр», удержание 300 мс, отпускание не отправляет, быстрый клик отправляет, отпускание вне панели, drag/выделение, английский интерфейс, прокрутка при удержании.

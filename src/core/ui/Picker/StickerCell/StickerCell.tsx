@@ -8,22 +8,28 @@ import { CellSpinner } from '../CellSpinner/CellSpinner';
 import { CellMenu } from '../Menu/CellMenu/CellMenu';
 import { isMenuKey } from '../Menu/menuKey/menuKey';
 import { useContextMenu } from '../Menu/useContextMenu/useContextMenu';
+import { usePreview } from '../Preview/usePreview';
 import { useCellSend } from '../useCellSend/useCellSend';
+import { usePressPreview } from '../usePressPreview/usePressPreview';
 
 import type { StickerCellProps } from './StickerCell.types';
 
 /**
  * Занятая отправкой ячейка — `disabled`: не принимает клики до конца отправки, картинка
  * приглушена, а индикатор поверх неё — нет.
+ *
+ * `select-none`: удержание с дрожанием курсора не начинает выделение текста страницы под
+ * пикером.
  */
 const CELL_CLASS = [
-  'group relative flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg bg-transparent p-1',
+  'group relative select-none flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg bg-transparent p-1',
   'transition-colors duration-base hover:bg-cadetGray-30/[.14] dark:hover:bg-white-0/[.07]',
   'disabled:pointer-events-none',
 ].join(' ');
 
 /**
- * Ячейка стикера: отправка нажатием, удаление — пунктом контекстного меню.
+ * Ячейка стикера: отправка нажатием, предпросмотр — удержанием кнопки мыши или пунктом
+ * контекстного меню, удаление — пунктом контекстного меню.
  *
  * Меню стоит рядом с кнопкой, а не внутри: кнопка внутри кнопки — невалидный HTML. В сетке
  * ряда оно места не занимает — у него `position: fixed`.
@@ -35,6 +41,13 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
   const { id, item, url, name, removeKind, onRemove } = props;
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
+  const { openHold, openPinned } = usePreview();
+  const pressHandlers = usePressPreview({
+    isDisabled: isBusy,
+    onHold: (source) => {
+      openHold({ url, name: name.preview }, source);
+    },
+  });
 
   const handleSendClick = () => {
     void sendItem();
@@ -58,6 +71,10 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
     close();
   };
 
+  const handleMenuPreview = () => {
+    if (opening) openPinned({ url, name: name.preview }, opening.source);
+  };
+
   const handleItemRemove = () => {
     onRemove(item);
   };
@@ -74,6 +91,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
         onClick={handleSendClick}
         onContextMenu={handleSendContextMenu}
         onKeyDown={handleSendKeyDown}
+        {...pressHandlers}
       >
         {/*
          * Без `loading="lazy"`: лента стикеров декодирует картинки окна заранее, до прыжка к
@@ -95,6 +113,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
           kind={removeKind}
           opening={opening}
           onClose={handleMenuClose}
+          onPreview={handleMenuPreview}
           onRemove={handleItemRemove}
         />
       )}

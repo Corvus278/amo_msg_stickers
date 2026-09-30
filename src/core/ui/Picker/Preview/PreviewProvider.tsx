@@ -1,5 +1,5 @@
 import type { FunctionComponent as FC } from 'preact';
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import { usePicker } from '../PickerProvider/usePicker';
 import { usePickerView } from '../usePickerView/usePickerView';
@@ -21,6 +21,10 @@ import type {
  * посреди удержания не закрывает попап. Предпросмотр закрывается вместе с панелью, при
  * переключении режима и при открытии экрана — обычные клики под подложкой закрыты, но
  * переключение идёт и с клавиатуры.
+ *
+ * Слушатели отпускания взводятся в `openHold` синхронно, а не эффектом после рендера:
+ * `pointerup` в пределах кадра после срабатывания задержки в эффект бы не успел, и предпросмотр
+ * остался бы открытым без кнопки.
  */
 export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   const { phase, children } = props;
@@ -28,20 +32,36 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   const { mode, screen } = usePickerView();
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const isOpen = preview !== null;
-  const isHold = preview?.mode === 'hold';
   const isPanelClosed = phase === 'closed';
 
+  const unwatchReleaseRef = useRef<(() => void) | null>(null);
+
+  const unwatchRelease = useCallback(() => {
+    unwatchReleaseRef.current?.();
+    unwatchReleaseRef.current = null;
+  }, []);
+
   const close = useCallback(() => {
+    unwatchRelease();
     setPreview(null);
-  }, []);
+  }, [unwatchRelease]);
 
-  const openHold = useCallback((target: PreviewTarget, source: HTMLElement) => {
-    setPreview({ target, mode: 'hold', source });
-  }, []);
+  const openHold = useCallback(
+    (target: PreviewTarget, source: HTMLElement) => {
+      unwatchRelease();
+      unwatchReleaseRef.current = watchHoldRelease(window, close);
+      setPreview({ target, mode: 'hold', source });
+    },
+    [unwatchRelease, close]
+  );
 
-  const openPinned = useCallback((target: PreviewTarget, source: HTMLElement) => {
-    setPreview({ target, mode: 'pinned', source });
-  }, []);
+  const openPinned = useCallback(
+    (target: PreviewTarget, source: HTMLElement) => {
+      unwatchRelease();
+      setPreview({ target, mode: 'pinned', source });
+    },
+    [unwatchRelease]
+  );
 
   useEffect(() => {
     setHold('preview', isOpen);
@@ -49,9 +69,10 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
 
   useEffect(() => {
     return () => {
+      unwatchRelease();
       setHold('preview', false);
     };
-  }, [setHold]);
+  }, [setHold, unwatchRelease]);
 
   useEffect(() => {
     if (isPanelClosed) close();
@@ -60,12 +81,6 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   useEffect(() => {
     close();
   }, [mode, screen, close]);
-
-  useEffect(() => {
-    if (!isHold) return undefined;
-
-    return watchHoldRelease(window, close);
-  }, [isHold, close]);
 
   const value = useMemo<PreviewContextValue>(() => {
     return { preview, openHold, openPinned, close };
