@@ -121,8 +121,17 @@ describe('startAgent', () => {
     expect(String(rawDetails[0])).not.toContain(DRAFT_TEXT);
   });
 
+  it('rejected no-client, если у значения провайдера не та форма, — без sendRequest', () => {
+    const sendRequest = vi.fn();
+    const { responses, send } = setup({ client: { sendRequest } });
+
+    send();
+
+    expect(responses).toEqual([{ id: 'cmd-1', status: 'rejected', reason: 'no-client' }]);
+    expect(sendRequest).not.toHaveBeenCalled();
+  });
+
   it.each([
-    ['no-client', { client: { theme: 'dark' } }],
     ['no-file', { files: [] }],
     ['no-file', { files: ['не файл'] }],
     ['no-conversation', { state: { location: { type: 'settings' } } }],
