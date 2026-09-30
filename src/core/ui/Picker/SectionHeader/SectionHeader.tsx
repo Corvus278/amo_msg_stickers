@@ -1,5 +1,8 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { packLink } from '../../../packLink';
+import { usePicker } from '../PickerProvider/usePicker';
+
 import { ClearRecentButton } from './ClearRecentButton/ClearRecentButton';
 import { headerAction } from './headerAction/headerAction';
 import { PackMenuButton } from './PackMenuButton/PackMenuButton';
@@ -16,6 +19,11 @@ const TITLE_CLASS =
  */
 export const SectionHeader: FC<SectionHeaderProps> = (props) => {
   const { sectionId, title, top, height, onPackDelete, onRecentClear } = props;
+  const { packs } = usePicker();
+  const pack = packs.find(({ id }) => {
+    return id === sectionId;
+  });
+  const link = pack ? packLink(pack) : null;
 
   const handleClearConfirm = () => {
     onRecentClear();
@@ -32,7 +40,7 @@ export const SectionHeader: FC<SectionHeaderProps> = (props) => {
       }
 
       case 'menu': {
-        return <PackMenuButton title={title} onDelete={handlePackDelete} />;
+        return <PackMenuButton title={title} link={link} onDelete={handlePackDelete} />;
       }
 
       default: {
