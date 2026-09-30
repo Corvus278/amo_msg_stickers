@@ -59,7 +59,8 @@ const logOutcome = async (sending: Promise<unknown>) => {
 
 /**
  * Ответ уходит синхронно, до возврата из `dispatchEvent` ядра: вся работа до вызова
- * `sendRequest` синхронная, и ответ ядро получает до возврата из своей команды.
+ * `sendRequest` синхронная, а исход очереди не ждём — `accepted` значит «`sendRequest` не
+ * бросил», дальнейшее показывает сама amo (design.md, п. 6).
  *
  * @param doc — документ страницы
  * @param event — команда ядра
