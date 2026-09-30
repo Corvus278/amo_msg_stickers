@@ -241,13 +241,21 @@
         sendBtn.querySelector('svg').classList.toggle('size-4.5', visible);
       }
 
+      /**
+       * «Медленная загрузка»: вложение и отправка через очередь ждут одинаково — 1,5 с.
+       */
+      const SLOW_DELAY_MS = 1500;
+      const slowDelay = () =>
+        document.getElementById('slow').checked
+          ? new Promise((r) => setTimeout(r, SLOW_DELAY_MS))
+          : Promise.resolve();
+
       editable.addEventListener('input', syncSend);
       editable.addEventListener('paste', async (e) => {
         const f = Array.from(e.clipboardData?.files || []);
         if (!f.length) return;
         e.preventDefault();
-        if (document.getElementById('slow').checked)
-          await new Promise((r) => setTimeout(r, 1500));
+        await slowDelay();
         files.push(...f);
         attachments.replaceChildren(
           ...files.map((x) =>
@@ -413,8 +421,7 @@
         sendRequest: async ({ type, payload }) => {
           console.log('[harness] sendRequest', type, payload.messages);
           for (const { media } of payload.messages) {
-            if (document.getElementById('slow').checked)
-              await new Promise((r) => setTimeout(r, 1500));
+            await slowDelay();
             await sendMedia(media.file, media.fileName);
             lastFile = { file: media.file, name: media.fileName };
           }
