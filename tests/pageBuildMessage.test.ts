@@ -7,7 +7,7 @@ import { makeGif } from './helpers/makeGif';
 
 const NOW = Date.UTC(2026, 8, 28, 14, 51, 14, 181);
 const FILE_NAME = '😀.amostk.k-sticker.gif';
-const CHAT_ID = 'c6c2b400-287a-4155-be49-d0054e724e9a';
+const CHAT_ID = '00000000-0000-4000-8000-000000000061';
 
 const stateWith = (conversationType: string | undefined, route = 'conversation') => {
   return {
