@@ -22,3 +22,10 @@ G1 ok, аудит с первого круга, critical нет, долг нет
 G2 ok, аудит с первого круга, critical нет.
 createPressGesture (HOLD_DELAY_MS=300, HOLD_SLOP_PX=6, dispose) + usePressPreview({ onHold, isDisabled }); onHold получает source (кнопку ячейки) под K3 openHold(target, source). Порог сдвига — Math.hypot строго > 6.
 Долг: при isDisabled нажатие выходит до gesture.start, незавершённый жест не отменяется (не проявится); имена onPointerUp/Cancel ссылаются на onPointerLeave; хук (useEffect dispose, latestRef) тестом не покрыт — окружение node; в тестах нет границы ровно 6 px.
+
+### G3 · Контекст и оверлей
+
+G3 ok, аудит с первого круга, critical нет.
+Причина preview в HoldReason/PANEL_REASONS; PreviewProvider (openHold/openPinned/close + preview в usePreview) смонтирован в Picker.tsx уже в 3.2 (иначе мёртвый код), оверлей в 3.3 перед StatusBar. Отпускание — чистый watchHoldRelease (стоп-клик через stopImmediatePropagation + preventDefault). ARIA и возврат фокуса — чистые функции previewA11y с тестами.
+Долг: (1) слушатель отпускания вешается в useEffect после рендера — pointerup в пределах кадра после 300 мс проскочит (лечится useLayoutEffect / подпиской в openHold) — проверить на стенде 3.4/4.2; (2) правила закрытия в эффектах провайдера без юнит-теста (окружение node); (3) focusout с relatedTarget=null закрывает pinned, порядок возврата фокуса после меню vs фокус на «Закрыть» — проверить в 4.1; (4) CLOSE_BUTTON_CLASS дублирует кнопку «Назад» в Screen.tsx; (5) пустой case 'escape' в previewA11y.
+Вне группы остаётся 3.4 (стенд).

@@ -93,9 +93,9 @@ export type HoverPopup<T> = {
 
 /**
  * Причина удержания попапа: фокус в текстовом поле панели, открытый системный диалог
- * выбора файла, идущий импорт пака, идущая конвертация стикера.
+ * выбора файла, идущий импорт пака, идущая конвертация стикера, открытый предпросмотр.
  */
-export type HoldReason = 'field' | 'fileDialog' | 'import' | 'conversion';
+export type HoldReason = 'field' | 'fileDialog' | 'import' | 'conversion' | 'preview';
 
 export type PopupHolds = {
   /**
