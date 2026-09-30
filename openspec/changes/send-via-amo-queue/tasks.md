@@ -68,6 +68,10 @@
 - [x] 6.1 Версия 0.15.0 в `package.json`, `src/extension/manifest.json`, `@version` в `build.mjs`; проверка —
   `node scripts/check-version.mjs --base origin/master` проходит
 - [x] 6.2 Проверки: `pnpm lint`, `pnpm test`, `pnpm build` зелёные (вывод в отчёте)
-- [ ] 6.3 Приёмка в живом amo (руками, расширение и userscript в Tampermonkey; Violentmonkey и Safari — по
+- [x] 6.3 Приёмка в живом amo (руками, расширение и userscript в Tampermonkey; Violentmonkey и Safari — по
   возможности): критерии issue #61 — «привет» и картинка в поле, direct, group chat, чат с клиентом, активный ответ,
-  редактирование; в консоли нет ошибок агента; результат — в отчёте и описании PR
+  редактирование; в консоли нет ошибок агента; результат — в отчёте и описании PR. Пройдено 2026-09-30: расширение —
+  все сценарии, GIF из поиска, консоль без ошибок; userscript в Tampermonkey при выключенном расширении —
+  `started (userscript)`, `__amoStickersPage === true`, стикер при тексте с картинкой и при пустом поле, без
+  `amo queue unavailable`. Violentmonkey и Safari не проверялись. Сообщение попадает в `state.messages` синхронно, в
+  вызове `sendRequest`.
