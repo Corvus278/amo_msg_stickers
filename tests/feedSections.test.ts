@@ -101,13 +101,21 @@ describe('feedSections', () => {
         key: 'a1',
         item: { kind: 'local', stickerId: 'a1' },
         sticker: BY_PACK.get('tg:a')?.[0],
-        name: { send: 'Отправить стикер 😀', menu: 'Действия: стикер 😀' },
+        name: {
+          send: 'Отправить стикер 😀',
+          menu: 'Действия: стикер 😀',
+          preview: 'Предпросмотр стикера 😀',
+        },
       },
       {
         key: 'a2',
         item: { kind: 'local', stickerId: 'a2' },
         sticker: BY_PACK.get('tg:a')?.[1],
-        name: { send: 'Отправить стикер', menu: 'Действия: стикер' },
+        name: {
+          send: 'Отправить стикер',
+          menu: 'Действия: стикер',
+          preview: 'Предпросмотр стикера',
+        },
       },
     ]);
   });
