@@ -10,6 +10,7 @@ import type { PageRejectReason, PageResponse } from '../shared/pageBridge.types'
 
 import type { AgentDocument, AgentNode } from './agent.types';
 import { buildMessage } from './buildMessage';
+import type { BuildMessageResult } from './buildMessage.types';
 import { fieldOf } from './field';
 import { findClient } from './findClient';
 
@@ -90,7 +91,19 @@ const handleRequest = (doc: AgentDocument, event: Event) => {
 
   if (!client) return reject('no-client');
 
-  const built = buildMessage(client.reduxStore.getState(), file, Date.now(), Math.random);
+  /**
+   * `getState` и чтение состояния — чужой код: исключение в них — отказ с причиной, а не
+   * молчание, которое ядро приняло бы за отсутствие агента.
+   */
+  let built: BuildMessageResult;
+
+  try {
+    built = buildMessage(client.reduxStore.getState(), file, Date.now(), Math.random);
+  } catch (error) {
+    console.warn('[amo-stickers] amo state unreadable:', error);
+
+    return reject('build-threw');
+  }
 
   if ('reason' in built) return reject(built.reason);
 

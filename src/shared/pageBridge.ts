@@ -31,6 +31,7 @@ export const PAGE_FILE_ATTR = 'data-amo-stickers-file';
  * - `no-client` — у поля ввода не нашёлся `{ reduxStore, sendRequest }` amo;
  * - `no-conversation` — открыт не чат, или его нет в `state.dialogs`, или у записи нет типа;
  * - `unsupported-conversation` — тип чата, для которого amo не соберёт запрос;
+ * - `build-threw` — чтение состояния amo или сборка сообщения бросили исключение;
  * - `send-threw` — `sendRequest` бросил до постановки в очередь.
  */
 export const PAGE_REJECT_REASONS = [
@@ -39,6 +40,7 @@ export const PAGE_REJECT_REASONS = [
   'no-client',
   'no-conversation',
   'unsupported-conversation',
+  'build-threw',
   'send-threw',
 ] as const;
 

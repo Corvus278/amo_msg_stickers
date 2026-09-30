@@ -170,6 +170,31 @@ describe('startAgent', () => {
     ]);
   });
 
+  it('rejected build-threw, если состояние amo не читается, — без sendRequest', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {
+      return undefined;
+    });
+
+    const sendRequest = vi.fn();
+    const { responses, send } = setup({
+      client: {
+        sendRequest,
+        reduxStore: {
+          getState: () => {
+            throw new Error('store detached');
+          },
+        },
+      },
+    });
+
+    send();
+
+    expect(responses).toEqual([
+      { id: 'cmd-1', status: 'rejected', reason: 'build-threw' },
+    ]);
+    expect(sendRequest).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['неизвестная операция', JSON.stringify({ id: 'cmd-1', op: 'stash' })],
     ['не JSON', '{'],
