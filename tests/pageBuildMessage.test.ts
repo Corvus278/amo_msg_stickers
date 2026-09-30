@@ -41,7 +41,7 @@ const build = (
 };
 
 /**
- * Разбор времени из uuid v1 — алгоритм `uuidv1.timestamp` amo (`web: src/utils/uuidv1.js`).
+ * Разбор времени из uuid v1 по RFC 4122: время в id должно совпасть с `now`.
  */
 const amoTimestamp = (id: string) => {
   const [low = '', mid = '', high = ''] = id.split('-');
@@ -53,7 +53,7 @@ const amoTimestamp = (id: string) => {
 };
 
 describe('buildMessage', () => {
-  it('собирает сообщение по образцу buildRegularMessages для личного чата', () => {
+  it('собирает сообщение для очереди amo для личного чата', () => {
     const message = build(stateWith('user'));
     const expected: Omit<AmoStickerMessage, 'id' | 'idempotencyKey' | 'media'> = {
       conversationId: CHAT_ID,
@@ -146,7 +146,7 @@ describe('buildMessage', () => {
     });
   });
 
-  it('unsupported-conversation для типа, которого не знает mapRequestPeer', () => {
+  it('unsupported-conversation для типа чата, для которого amo не собирает запрос', () => {
     expect(buildMessage(stateWith('subject'), gifFile(), NOW, Math.random)).toEqual({
       reason: 'unsupported-conversation',
     });

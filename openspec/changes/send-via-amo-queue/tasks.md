@@ -19,7 +19,7 @@
   `tests/pageFindClient.test.ts` на новом `tests/helpers/fakeFiber.ts`: провайдер на глубине, только на `alternate`,
   нет ключа, нет провайдера, петля `.return`, `value` без `getState`
 - [x] 2.2 `src/page/buildMessage.ts` с приватным uuid v1 — сообщение или причина отказа по design.md, п. 5; проверка —
-  `tests/pageBuildMessage.test.ts`: время из uuid по алгоритму `uuidv1.timestamp` amo равно `now`, версия и вариант
+  `tests/pageBuildMessage.test.ts`: время из uuid по RFC 4122 равно `now`, версия и вариант
   uuid, поля сообщения для `user` / `chat` / `lead`, без `refersTo`, без типа пира — `no-conversation`, `/settings/…` и чат вне
   `dialogs` — `no-conversation`, тип `subject` — `unsupported-conversation`, `media.id === localPhotoSize.localFileId`
   и производный от id сообщения
