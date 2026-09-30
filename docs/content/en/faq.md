@@ -77,3 +77,10 @@ in this preview: that needs the hold.
 
 If holding doesn’t open the preview, keep the cursor still while you hold the button: moving it by more than 6
 px cancels the hold. The right and middle mouse buttons don’t open the preview.
+
+## How to share a pack from Telegram
+
+Click “…” in the pack header above its stickers and choose “Copy link”: a link like t.me/addstickers/Name goes
+to the clipboard, and “Pack link copied” appears at the bottom of the panel. You can send it in a chat or paste it into
+“Add stickers” on another device. “My stickers” has no menu, and a pack without a Telegram set name has no “Copy link”
+item.
