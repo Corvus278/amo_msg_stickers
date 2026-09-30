@@ -52,10 +52,16 @@ const host: Host = {
 
 /**
  * Агент — до ядра: к первому клику по стикеру он уже слушает команды, а ядро ни от чего в
- * нём не зависит на старте.
+ * нём не зависит на старте. Сбой вставки (Trusted Types, CSP) ядро не роняет: без агента
+ * отправка идёт запасным путём.
  */
 const boot = () => {
-  injectPageAgent(document, PAGE_AGENT_CODE);
+  try {
+    injectPageAgent(document, PAGE_AGENT_CODE);
+  } catch (error) {
+    console.warn('[amo-stickers] page agent not injected:', error);
+  }
+
   start(host);
 };
 

@@ -218,4 +218,29 @@ describe('userscript: агент в мире страницы', () => {
 
     expect(bootOrder).toEqual(['inject:/* agent */', 'remove', 'start']);
   });
+
+  it('сбой вставки агента не мешает старту ядра', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {
+      return undefined;
+    });
+    const { start } = await import('../src/core/app');
+
+    vi.mocked(start).mockImplementation(() => {
+      bootOrder.push('start');
+    });
+    vi.stubGlobal('document', {
+      ...entryDocument(),
+      createElement: () => {
+        throw new TypeError('This document requires TrustedScript assignment');
+      },
+    });
+    await bootHost();
+
+    expect(bootOrder).toEqual(['start']);
+    expect(warn).toHaveBeenCalledWith(
+      '[amo-stickers] page agent not injected:',
+      expect.any(TypeError)
+    );
+    warn.mockRestore();
+  });
 });
