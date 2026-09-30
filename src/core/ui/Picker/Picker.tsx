@@ -114,7 +114,7 @@ const isTextField = (target: EventTarget | null) => {
 };
 
 export const Picker: FC<PickerProps> = (props) => {
-  const { phase, isDark, onClose } = props;
+  const { phase, isDark, previewRoot, onClose } = props;
   const { setHold } = usePicker();
   const { mode, screen } = usePickerView();
   /**
@@ -170,12 +170,12 @@ export const Picker: FC<PickerProps> = (props) => {
            */}
           {screen && <Screen key={screen}>{renderScreen(screen)}</Screen>}
 
-          <PreviewOverlay />
-
           <StatusBar />
         </div>
 
         <Footer />
+
+        <PreviewOverlay container={previewRoot} isDark={isDark} />
       </PreviewProvider>
     </dialog>
   );

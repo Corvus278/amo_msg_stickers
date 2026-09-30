@@ -38,14 +38,18 @@ const CELL_CLASS = [
  * отправляют стикер — меню открывают только правый клик, клавиша меню и `Shift+F10`.
  */
 export const StickerCell: FC<StickerCellProps> = (props) => {
-  const { id, item, url, name, removeKind, onRemove } = props;
+  const { id, item, url, emoji, name, removeKind, onRemove } = props;
+  const target = { url, emoji, name: name.preview };
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
-  const { openHold, openPinned } = usePreview();
+  const { openHold, swapHold, openPinned } = usePreview();
   const pressHandlers = usePressPreview({
     isDisabled: isBusy,
     onHold: (source) => {
-      openHold({ url, name: name.preview }, source);
+      openHold(target, source);
+    },
+    onSwap: (source) => {
+      swapHold(target, source);
     },
   });
 
@@ -72,7 +76,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
   };
 
   const handleMenuPreview = () => {
-    if (opening) openPinned({ url, name: name.preview }, opening.source);
+    if (opening) openPinned(target, opening.source);
   };
 
   const handleItemRemove = () => {

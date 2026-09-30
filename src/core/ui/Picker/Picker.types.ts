@@ -13,6 +13,11 @@ export type PickerProps = {
   isDark: boolean;
 
   /**
+   * Корень слоя предпросмотра на странице: оверлей рисуется в него, вне панели.
+   */
+  previewRoot: ShadowRoot;
+
+  /**
    * Колбэк на закрытие пикера изнутри — по Escape.
    */
   onClose: () => void;

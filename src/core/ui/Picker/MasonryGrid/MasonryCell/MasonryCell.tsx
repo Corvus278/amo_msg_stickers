@@ -52,12 +52,15 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
   const name = gifCellName(gif);
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
-  const { openHold, openPinned } = usePreview();
+  const { openHold, swapHold, openPinned } = usePreview();
   const target = { url: gif.url, previewUrl, name: name.preview };
   const pressHandlers = usePressPreview({
     isDisabled: isBusy,
     onHold: (source) => {
       openHold(target, source);
+    },
+    onSwap: (source) => {
+      swapHold(target, source);
     },
   });
 

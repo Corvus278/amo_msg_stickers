@@ -22,6 +22,9 @@ import type {
  * переключении режима и при открытии экрана — обычные клики под подложкой закрыты, но
  * переключение идёт и с клавиатуры.
  *
+ * Пока кнопка зажата, курсор можно вести по другим ячейкам: `swapHold` подставляет ячейку
+ * под курсором без новой задержки, слушатели отпускания при этом остаются теми же.
+ *
  * Слушатели отпускания взводятся в `openHold` синхронно, а не эффектом после рендера:
  * `pointerup` в пределах кадра после срабатывания задержки в эффект бы не успел, и предпросмотр
  * остался бы открытым без кнопки.
@@ -55,6 +58,12 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
     [unwatchRelease, close]
   );
 
+  const swapHold = useCallback((target: PreviewTarget, source: HTMLElement) => {
+    setPreview((current) => {
+      return current?.mode === 'hold' ? { target, mode: 'hold', source } : current;
+    });
+  }, []);
+
   const openPinned = useCallback(
     (target: PreviewTarget, source: HTMLElement) => {
       unwatchRelease();
@@ -83,8 +92,8 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   }, [mode, screen, close]);
 
   const value = useMemo<PreviewContextValue>(() => {
-    return { preview, openHold, openPinned, close };
-  }, [preview, openHold, openPinned, close]);
+    return { preview, openHold, swapHold, openPinned, close };
+  }, [preview, openHold, swapHold, openPinned, close]);
 
   return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 };

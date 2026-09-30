@@ -109,4 +109,23 @@ describe('watchHoldRelease', () => {
     expect(target.listenerCount('pointercancel')).toBe(0);
     expect(dispatchClick(target).defaultPrevented).toBe(false);
   });
+
+  it('отменяет selectstart, пока кнопка зажата, и перестаёт после отпускания', () => {
+    const target = new CountingEventTarget();
+
+    watchHoldRelease(target, () => {});
+
+    const during = new Event('selectstart', { cancelable: true });
+
+    target.dispatchEvent(during);
+    expect(during.defaultPrevented).toBe(true);
+
+    target.dispatchEvent(new Event('pointerup'));
+
+    const after = new Event('selectstart', { cancelable: true });
+
+    target.dispatchEvent(after);
+    expect(after.defaultPrevented).toBe(false);
+    expect(target.listenerCount('selectstart')).toBe(0);
+  });
 });

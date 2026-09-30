@@ -8,6 +8,9 @@ const RELEASE_EVENTS = ['pointerup', 'pointercancel'] as const;
  * отпусканием `click` гасится — иначе отпущенная над ячейкой кнопка отправила бы стикер, на
  * котором только что держали предпросмотр.
  *
+ * Пока кнопка зажата, `selectstart` отменяется: протяжка курсора по ленте, заголовкам и
+ * странице не выделяет текст.
+ *
  * Слушатели висят на цели, а не на ячейке: ячейка под виртуализацией может размонтироваться, а
  * курсор — уйти из панели, отпускание всё равно доходит. Гасится ровно один `click` в фазе
  * перехвата; слушатель снимается и по таймеру (`setTimeout(0)`), потому что браузер не шлёт
@@ -49,6 +52,14 @@ export const watchHoldRelease = (target: EventTarget, onRelease: () => void) => 
     armClickSwallow();
     onRelease();
   };
+
+  target.addEventListener(
+    'selectstart',
+    (event) => {
+      event.preventDefault();
+    },
+    { signal }
+  );
 
   for (const type of RELEASE_EVENTS) {
     target.addEventListener(type, handleRelease, { signal });

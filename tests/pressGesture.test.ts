@@ -4,6 +4,7 @@ import {
   createPressGesture,
   HOLD_DELAY_MS,
   HOLD_SLOP_PX,
+  shouldSwapPreview,
 } from '../src/core/ui/Picker/pressGesture/pressGesture';
 import type { PressStart } from '../src/core/ui/Picker/pressGesture/pressGesture.types';
 
@@ -228,5 +229,29 @@ describe('createPressGesture', () => {
     vi.advanceTimersByTime(HOLD_DELAY_MS);
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('shouldSwapPreview', () => {
+  it.each([
+    ['mouse', 1],
+    ['pen', 1],
+    ['mouse', 3],
+    ['mouse', 5],
+  ])(
+    '%s с зажатой основной кнопкой (buttons=%i) переключает предпросмотр',
+    (type, buttons) => {
+      expect(shouldSwapPreview(type, buttons)).toBe(true);
+    }
+  );
+
+  it.each([
+    ['mouse', 0],
+    ['mouse', 2],
+    ['mouse', 4],
+    ['touch', 1],
+    ['', 1],
+  ])('%s с buttons=%i не переключает предпросмотр', (type, buttons) => {
+    expect(shouldSwapPreview(type, buttons)).toBe(false);
   });
 });

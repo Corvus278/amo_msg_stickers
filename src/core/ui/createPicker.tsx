@@ -21,6 +21,13 @@ import type { PickerCallbacks, PickerHandle } from './createPicker.types';
 const CLOSE_ANIMATION_MS = 200;
 
 /**
+ * Стиль хоста слоя предпросмотра: во всё окно, над любым слоем страницы. `all: initial` идёт
+ * первым — остальные свойства его переопределяют.
+ */
+const PREVIEW_HOST_STYLE =
+  'all: initial; position: fixed; inset: 0; z-index: 2147483647; pointer-events: none;';
+
+/**
  * Пикер в shadow root за императивным фасадом: `app.ts` живёт в DOM amo без Preact и
  * управляет попапом вызовами методов.
  *
@@ -47,6 +54,21 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
    * Ссылка на корень нужна только фасаду — она остаётся в замыкании.
    */
   const shadowRoot = element.attachShadow({ mode: 'closed' });
+
+  /**
+   * Слой предпросмотра: отдельный хост на всю страницу. `position: fixed` внутри пикера
+   * считается от контейнера поля ввода с transform, поэтому накрыть окно оверлеем из дерева
+   * панели нельзя. Хост лежит в `documentElement`, а не в `body`: слежение ядра и amo за
+   * `body` он не будит. Курсор хост не принимает — его включает только закреплённый слой.
+   */
+  const previewElement = document.createElement('div');
+
+  previewElement.setAttribute('data-amo-stickers-preview', '');
+  previewElement.style.cssText = PREVIEW_HOST_STYLE;
+
+  const previewRoot = previewElement.attachShadow({ mode: 'closed' });
+
+  document.documentElement.append(previewElement);
 
   /**
    * До первого открытия — наведение: оно ничего не делает с фокусом.
@@ -92,7 +114,12 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
           openedBy={openedBy}
           holds={holds}
         >
-          <Picker phase={phase} isDark={isDark} onClose={handlePickerClose} />
+          <Picker
+            phase={phase}
+            isDark={isDark}
+            previewRoot={previewRoot}
+            onClose={handlePickerClose}
+          />
         </PickerProvider>
       </>,
       shadowRoot
@@ -115,6 +142,7 @@ export const createPicker = (env: Host, callbacks: PickerCallbacks): PickerHandl
 
   return {
     element,
+    previewElement,
     get isOpen() {
       return panel.phase === 'open';
     },

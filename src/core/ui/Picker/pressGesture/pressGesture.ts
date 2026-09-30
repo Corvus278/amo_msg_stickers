@@ -30,6 +30,24 @@ const HOLD_POINTER_TYPES = new Set(['mouse', 'pen']);
 const PRIMARY_BUTTON = 0;
 
 /**
+ * Маска основной кнопки в `PointerEvent.buttons`: бит `1`.
+ */
+const PRIMARY_BUTTONS_MASK = 1;
+
+/**
+ * Переключает ли вход указателя на ячейку открытый удержанием предпросмотр: мышь или перо
+ * с зажатой основной кнопкой. Касание не удерживает, а без зажатой кнопки наведение
+ * предпросмотр не меняет.
+ *
+ * @param pointerType — вид указателя
+ * @param buttons — маска зажатых кнопок (`PointerEvent.buttons`)
+ * @returns `true` — показать ячейку, на которую вошёл указатель
+ */
+export const shouldSwapPreview = (pointerType: string, buttons: number) => {
+  return HOLD_POINTER_TYPES.has(pointerType) && (buttons & PRIMARY_BUTTONS_MASK) !== 0;
+};
+
+/**
  * Жест удержания без DOM. Точка нажатия и таймер живут в замыкании; таймер снимают отпускание,
  * сдвиг, уход и `dispose`, поэтому размонтированная ячейка предпросмотр не откроет.
  *

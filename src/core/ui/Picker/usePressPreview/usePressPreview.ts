@@ -1,7 +1,7 @@
 import type { TargetedPointerEvent } from 'preact';
 import { useEffect, useMemo, useRef } from 'preact/hooks';
 
-import { createPressGesture } from '../pressGesture/pressGesture';
+import { createPressGesture, shouldSwapPreview } from '../pressGesture/pressGesture';
 
 import type {
   PressPreviewHandlers,
@@ -13,11 +13,14 @@ import type {
  * удержания и закрытие предпросмотра здесь не обрабатываются — их держит провайдер
  * предпросмотра на `window`, поэтому ячейка не помнит, что её держали.
  *
- * Актуальные `onHold` и `isDisabled` читаются в момент нажатия и срабатывания из ref, так
+ * Вход указателя на другую ячейку при зажатой основной кнопке (`onSwap`) переключает уже
+ * открытый предпросмотр без новой задержки: провайдер сам решает, открыт ли он удержанием.
+ *
+ * Актуальные `onHold`, `onSwap` и `isDisabled` читаются в момент нажатия и срабатывания из ref, так
  * что жест не пересоздаётся при перерисовке ячейки и не теряет отсчёт. Таймер снимается при
  * размонтировании.
  *
- * @param options — колбэк удержания и признак занятой ячейки
+ * @param options — колбэки удержания и смены, признак занятой ячейки
  * @returns обработчики pointer-событий кнопки ячейки
  */
 export const usePressPreview = (
@@ -61,6 +64,14 @@ export const usePressPreview = (
     });
   };
 
+  const onPointerEnter = (event: TargetedPointerEvent<HTMLElement>) => {
+    const { pointerType, buttons, currentTarget } = event;
+
+    if (latestRef.current.isDisabled || !shouldSwapPreview(pointerType, buttons)) return;
+
+    latestRef.current.onSwap(currentTarget);
+  };
+
   const onPointerMove = ({ clientX, clientY }: TargetedPointerEvent<HTMLElement>) => {
     gesture.move(clientX, clientY);
   };
@@ -71,6 +82,7 @@ export const usePressPreview = (
 
   return {
     onPointerDown,
+    onPointerEnter,
     onPointerMove,
     onPointerLeave,
     onPointerUp: onPointerLeave,

@@ -17,6 +17,11 @@ export type PreviewTarget = {
   previewUrl?: string;
 
   /**
+   * Эмодзи стикера: показывается над картинкой. У стикера без эмодзи и у GIF его нет.
+   */
+  emoji?: string | undefined;
+
+  /**
    * Имя для скринридера: целая фраза словаря `CellNames.preview`.
    */
   name: string;
@@ -58,6 +63,12 @@ export type PreviewContextValue = {
    * Открывает предпросмотр на время удержания кнопки.
    */
   openHold: (target: PreviewTarget, source: HTMLElement) => void;
+
+  /**
+   * Переключает предпросмотр, открытый удержанием, на другую ячейку: указатель с зажатой
+   * кнопкой вошёл на неё. Закрытый и закреплённый предпросмотр не меняется.
+   */
+  swapHold: (target: PreviewTarget, source: HTMLElement) => void;
 
   /**
    * Открывает закреплённый предпросмотр.

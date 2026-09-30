@@ -19,6 +19,11 @@ export type StickerCellProps = {
   url: string;
 
   /**
+   * Эмодзи стикера: предпросмотр показывает его над картинкой. undefined — эмодзи нет.
+   */
+  emoji?: string | undefined;
+
+  /**
    * Доступные имена кнопки отправки и контекстного меню на языке интерфейса.
    */
   name: CellNames;

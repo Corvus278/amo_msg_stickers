@@ -10,6 +10,12 @@ export type UsePressPreviewOptions = {
   onHold: (source: HTMLElement) => void;
 
   /**
+   * Указатель с зажатой основной кнопкой вошёл на ячейку: предпросмотр, открытый удержанием,
+   * должен показать её; получает кнопку этой ячейки.
+   */
+  onSwap: (source: HTMLElement) => void;
+
+  /**
    * Ячейка занята (идёт отправка): удержание не запускается.
    */
   isDisabled: boolean;
@@ -23,6 +29,11 @@ export type PressPreviewHandlers = {
    * Нажатие: запускает отсчёт удержания.
    */
   onPointerDown: (event: TargetedPointerEvent<HTMLElement>) => void;
+
+  /**
+   * Вход указателя на ячейку при зажатой кнопке переключает предпросмотр на неё.
+   */
+  onPointerEnter: (event: TargetedPointerEvent<HTMLElement>) => void;
 
   /**
    * Движение: сдвиг дальше порога отменяет удержание.
