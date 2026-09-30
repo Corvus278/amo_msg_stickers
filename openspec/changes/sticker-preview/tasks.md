@@ -24,11 +24,11 @@
 
 ## 5. Доки и версия
 
-- [ ] 5.1 Ответ «Как рассмотреть стикер или GIF крупно» в `docs/content/faq.md` и `docs/content/en/faq.md` (удержание кнопки и пункт «Предпросмотр»; названия — строки словаря обоих языков), typograf по тексту; `pnpm docs:build` проходит, `tests/userDocsPages.test.ts` зелёный
-- [ ] 5.2 Обновить `CLAUDE.md`: раздел «Пикер» (жест, меню у всех GIF, причина удержания `preview`) и дерево «Структура» (`Preview/`, `cellName/`); в тексте нет путей и имён внутренностей amo
-- [ ] 5.3 Поднять версию до `0.16.0` в `package.json`, `src/extension/manifest.json`, `@version` в `build.mjs`; `node scripts/check-version.mjs` не падает
+- [x] 5.1 Ответ «Как рассмотреть стикер или GIF крупно» в `docs/content/faq.md` и `docs/content/en/faq.md` (удержание кнопки и пункт «Предпросмотр»; названия — строки словаря обоих языков), typograf по тексту; `pnpm docs:build` проходит, `tests/userDocsPages.test.ts` зелёный
+- [x] 5.2 Обновить `CLAUDE.md`: раздел «Пикер» (жест, меню у всех GIF, причина удержания `preview`) и дерево «Структура» (`Preview/`, `cellName/`); в тексте нет путей и имён внутренностей amo
+- [x] 5.3 Поднять версию до `0.16.0` в `package.json`, `src/extension/manifest.json`, `@version` в `build.mjs`; `node scripts/check-version.mjs` не падает
 
 ## 6. Итоговая проверка
 
-- [ ] 6.1 `pnpm lint` и `pnpm test` без ошибок и предупреждений; `pnpm build` собирает обе цели
+- [x] 6.1 `pnpm lint` и `pnpm test` без ошибок и предупреждений; `pnpm build` собирает обе цели
 - [ ] 6.2 Живой amo, по сценариям `specs/picker-states`: удержание и отпускание, быстрый клик, меню, Escape, клик по подложке, уход курсора, закрытие попапа, английский интерфейс
