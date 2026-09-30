@@ -1,30 +1,44 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC, TargetedFocusEvent } from 'preact';
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 
 import { t } from '../../../../i18n/translate';
 import { CloseIcon } from '../CloseIcon/CloseIcon';
 import { previewAttributes, shouldReturnFocus } from '../previewA11y/previewA11y';
 import type { PreviewCloseReason } from '../previewA11y/previewA11y.types';
 import { PreviewImage } from '../PreviewImage/PreviewImage';
+import { playPreviewClose, playPreviewOpen } from '../previewMotion/previewMotion';
+import type { PreviewState } from '../PreviewProvider.types';
 
 import type { PreviewLayerProps } from './PreviewLayer.types';
 
 /**
- * Слой на всю страницу: `absolute inset-0` от хоста слоя, а тот — `fixed` во всё окно. Подложка
- * полупрозрачная и размытая, чтобы страница читалась под предпросмотром.
+ * Слой на всю страницу: `absolute inset-0` от хоста слоя, а тот — `fixed` во всё окно.
  *
  * `pointer-events` задаются явно, а не наследуются: хост слоя курсор не принимает, и без
- * `pointer-events-auto` закреплённый слой клика бы не получил.
- *
- * Появление — переход из `@starting-style`: оверлей монтируется при открытии, закрытие его
- * размонтирует без ухода. Переход и длительность — под `motion-safe:`, стартовое состояние —
- * без варианта, как у меню и экрана: при уменьшении движения оверлей появляется сразу.
- *
- * Предпросмотр удержания не принимает курсор: отпускание ловит провайдер на `window`, а
- * оверлей под курсором не должен перехватывать его у ячейки.
+ * `pointer-events-auto` закреплённый слой клика бы не получил. Предпросмотр удержания курсор не
+ * принимает: отпускание ловит провайдер на `window`, а оверлей под курсором не должен
+ * перехватывать его у ячейки.
  */
-const overlayVariants = cva(
+const overlayVariants = cva('absolute inset-0', {
+  variants: {
+    mode: {
+      hold: 'pointer-events-none',
+      pinned: 'pointer-events-auto',
+    },
+  },
+});
+
+/**
+ * Подложка — полупрозрачная и размытая, чтобы страница читалась под предпросмотром. Прозрачность
+ * нарастает только у неё: картинка вылетает из ячейки сразу видимой (`previewMotion`), а не
+ * проявляется вместе с подложкой.
+ *
+ * Появление — переход из `@starting-style`, уход — тот же переход в обратную сторону: слой
+ * монтируется при открытии и снимается по концу ухода (`onLeaveEnd`). Переход и длительность — под `motion-safe:`, стартовое состояние —
+ * без варианта, как у меню и экрана: при уменьшении движения подложка появляется сразу.
+ */
+const backdropVariants = cva(
   [
     'absolute inset-0',
     'bg-white-0/90 backdrop-blur-sm dark:bg-gray-10/90',
@@ -32,9 +46,11 @@ const overlayVariants = cva(
   ],
   {
     variants: {
-      mode: {
-        hold: 'pointer-events-none',
-        pinned: 'pointer-events-auto',
+      /**
+       * Уходящий слой гасит подложку тем же переходом прозрачности, которым она появилась.
+       */
+      isLeaving: {
+        true: 'opacity-0',
       },
     },
   }
@@ -79,10 +95,75 @@ const CLOSE_BUTTON_CLASS = [
  * наружу закрывает без возврата фокуса. Удержание фокус не трогает.
  */
 export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
-  const { preview, onClose } = props;
+  const { preview, onClose, onLeaveEnd } = props;
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const flightRef = useRef<HTMLDivElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
+  const latestRef = useRef<PreviewState | null>(null);
   const mode = preview?.mode;
   const isPinned = mode === 'pinned';
+  const isLeaving = preview?.isLeaving ?? false;
+  const isShown = preview !== null && !isLeaving;
+
+  /**
+   * Состояние читают эффекты вылета и ухода ниже; эффекты идут в порядке объявления, поэтому к
+   * их запуску ref уже свежий. Сами они зависят только от `isShown` и `isLeaving`, а не от
+   * состояния: смена ячейки при удержании не должна запускать полёт заново.
+   */
+  useLayoutEffect(() => {
+    latestRef.current = preview;
+  }, [preview]);
+
+  /**
+   * Вылет запускается на открытие предпросмотра, а не на смену ячейки при удержании: слой
+   * остаётся смонтированным между ячейками, и `isShown` меняется только при появлении, в том
+   * числе при повторном открытии посреди ухода (очистка уже отменила его). Узлы уже в
+   * документе — это эффект после коммита.
+   */
+  useLayoutEffect(() => {
+    const source = latestRef.current?.source;
+    const flight = flightRef.current;
+
+    if (!isShown || !source || !flight) return;
+
+    playPreviewOpen({ source, flight, emoji: emojiRef.current });
+  }, [isShown]);
+
+  /**
+   * Уход: картинка возвращается в ячейку, по концу анимаций слой снимается. Без летящего узла
+   * анимировать нечего — слой снимается сразу, иначе уходящее состояние осталось бы навсегда.
+   * Повторное открытие меняет `isLeaving` и отменяет уход очисткой; запоздалый `onLeaveEnd`
+   * старого состояния провайдер игнорирует.
+   */
+  useLayoutEffect(() => {
+    const leaving = latestRef.current;
+    const flight = flightRef.current;
+
+    if (!isLeaving || !leaving) return;
+
+    if (!flight) {
+      onLeaveEnd(leaving);
+
+      return;
+    }
+
+    const leave = playPreviewClose({
+      source: leaving.source,
+      flight,
+      emoji: emojiRef.current,
+    });
+
+    const finish = async () => {
+      await leave.finished;
+      onLeaveEnd(leaving);
+    };
+
+    void finish();
+
+    return () => {
+      leave.cancel();
+    };
+  }, [isLeaving, onLeaveEnd]);
 
   /**
    * Фокус ставится после монтирования: меню, из которого открыт предпросмотр, к этому
@@ -95,6 +176,12 @@ export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
   if (!preview) return null;
 
   const { target, source } = preview;
+
+  /**
+   * Уходящий предпросмотр объявляется и ведёт себя как предпросмотр удержания: курсор и
+   * скринридер его уже не касаются, хотя слой ещё на экране.
+   */
+  const visibleMode = preview.isLeaving ? 'hold' : preview.mode;
 
   const closeWith = (reason: PreviewCloseReason) => {
     if (shouldReturnFocus(reason, source)) source.focus({ preventScroll: true });
@@ -127,9 +214,15 @@ export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
 
   return (
     <div
-      {...previewAttributes(preview.mode, target.name)}
-      className={overlayVariants({ mode: preview.mode })}
+      {...previewAttributes(visibleMode, target.name)}
+      inert={preview.isLeaving}
+      className={overlayVariants({ mode: visibleMode })}
     >
+      <div
+        aria-hidden="true"
+        className={backdropVariants({ isLeaving: preview.isLeaving })}
+      />
+
       <div
         role="presentation"
         tabIndex={isPinned ? -1 : undefined}
@@ -140,12 +233,14 @@ export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
       >
         <div className={CANVAS_CLASS}>
           {target.emoji && (
-            <div aria-hidden="true" className={EMOJI_CLASS}>
+            <div ref={emojiRef} aria-hidden="true" className={EMOJI_CLASS}>
               {target.emoji}
             </div>
           )}
 
-          <PreviewImage key={target.url} target={target} />
+          <div ref={flightRef} className="size-full">
+            <PreviewImage key={target.url} target={target} />
+          </div>
         </div>
 
         {isPinned && (

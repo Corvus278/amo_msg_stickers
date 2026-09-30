@@ -18,14 +18,14 @@ import type { PreviewOverlayProps } from './PreviewOverlay.types';
  */
 export const PreviewOverlay: FC<PreviewOverlayProps> = (props) => {
   const { container, isDark } = props;
-  const { preview, close } = usePreview();
+  const { preview, close, finishLeave } = usePreview();
 
   return (
     <PreviewPortal container={container}>
       <style>{css}</style>
 
       <div className={isDark ? 'dark' : undefined}>
-        <PreviewLayer preview={preview} onClose={close} />
+        <PreviewLayer preview={preview} onClose={close} onLeaveEnd={finishLeave} />
       </div>
     </PreviewPortal>
   );

@@ -34,7 +34,10 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   const { setHold } = usePicker();
   const { mode, screen } = usePickerView();
   const [preview, setPreview] = useState<PreviewState | null>(null);
-  const isOpen = preview !== null;
+  /**
+   * Уходящий предпросмотр считается закрытым: слой ещё на экране, но удержания попапа нет.
+   */
+  const isOpen = preview !== null && !preview.isLeaving;
   const isPanelClosed = phase === 'closed';
 
   const unwatchReleaseRef = useRef<(() => void) | null>(null);
@@ -44,30 +47,44 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
     unwatchReleaseRef.current = null;
   }, []);
 
+  /**
+   * Закрытие — не обнуление, а уход: слой доигрывает обратную анимацию и по её концу зовёт
+   * `finishLeave`. Закрытый предпросмотр остаётся `null`, уходящий — уходящим.
+   */
   const close = useCallback(() => {
     unwatchRelease();
-    setPreview(null);
+    setPreview((current) => {
+      return current && !current.isLeaving ? { ...current, isLeaving: true } : current;
+    });
   }, [unwatchRelease]);
+
+  const finishLeave = useCallback((leaving: PreviewState) => {
+    setPreview((current) => {
+      return current === leaving ? null : current;
+    });
+  }, []);
 
   const openHold = useCallback(
     (target: PreviewTarget, source: HTMLElement) => {
       unwatchRelease();
       unwatchReleaseRef.current = watchHoldRelease(window, close);
-      setPreview({ target, mode: 'hold', source });
+      setPreview({ target, mode: 'hold', source, isLeaving: false });
     },
     [unwatchRelease, close]
   );
 
   const swapHold = useCallback((target: PreviewTarget, source: HTMLElement) => {
     setPreview((current) => {
-      return current?.mode === 'hold' ? { target, mode: 'hold', source } : current;
+      return current?.mode === 'hold' && !current.isLeaving
+        ? { target, mode: 'hold', source, isLeaving: false }
+        : current;
     });
   }, []);
 
   const openPinned = useCallback(
     (target: PreviewTarget, source: HTMLElement) => {
       unwatchRelease();
-      setPreview({ target, mode: 'pinned', source });
+      setPreview({ target, mode: 'pinned', source, isLeaving: false });
     },
     [unwatchRelease]
   );
@@ -92,8 +109,8 @@ export const PreviewProvider: FC<PreviewProviderProps> = (props) => {
   }, [mode, screen, close]);
 
   const value = useMemo<PreviewContextValue>(() => {
-    return { preview, openHold, swapHold, openPinned, close };
-  }, [preview, openHold, swapHold, openPinned, close]);
+    return { preview, openHold, swapHold, openPinned, close, finishLeave };
+  }, [preview, openHold, swapHold, openPinned, close, finishLeave]);
 
   return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 };

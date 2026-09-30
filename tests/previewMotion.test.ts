@@ -1,0 +1,72 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  EMOJI_LEAVE_MS,
+  EMOJI_POP_DELAY_MS,
+  EMOJI_POP_MS,
+  flyTransform,
+  PREVIEW_FLY_MS,
+  PREVIEW_LEAVE_MS,
+} from '../src/core/ui/Picker/Preview/previewMotion/previewMotion';
+
+describe('flyTransform', () => {
+  it('ячейка 50×50 в левом верхнем углу → квадрат 400×400 по центру окна', () => {
+    const from = { left: 100, top: 200, width: 50, height: 50 };
+    const to = { left: 440, top: 200, width: 400, height: 400 };
+
+    // центры: (125, 225) и (640, 400)
+    expect(flyTransform(from, to)).toBe('translate(-515px, -175px) scale(0.125)');
+  });
+
+  it('совпавшие прямоугольники — тождественная трансформация', () => {
+    const rect = { left: 10, top: 20, width: 100, height: 100 };
+
+    expect(flyTransform(rect, rect)).toBe('translate(0px, 0px) scale(1)');
+  });
+
+  it('масштаб — по большей стороне ячейки: широкая GIF 180×120', () => {
+    const from = { left: 0, top: 0, width: 180, height: 120 };
+    const to = { left: 0, top: 0, width: 400, height: 400 };
+
+    expect(flyTransform(from, to)).toBe('translate(-110px, -140px) scale(0.45)');
+  });
+
+  it('высокая ячейка: масштаб по высоте', () => {
+    const from = { left: 0, top: 0, width: 120, height: 180 };
+    const to = { left: 0, top: 0, width: 400, height: 400 };
+
+    expect(flyTransform(from, to)).toBe('translate(-140px, -110px) scale(0.45)');
+  });
+
+  it.each([
+    ['ячейка без размера', { left: 0, top: 0, width: 0, height: 0 }],
+    ['ячейка нулевой ширины и высоты', { left: 5, top: 5, width: 0, height: 0 }],
+  ])('%s: полёта нет', (_name, from) => {
+    const to = { left: 0, top: 0, width: 400, height: 400 };
+
+    expect(flyTransform(from, to)).toBeNull();
+  });
+
+  it('квадрат предпросмотра без размера: полёта нет', () => {
+    const from = { left: 0, top: 0, width: 50, height: 50 };
+
+    expect(flyTransform(from, { left: 0, top: 0, width: 0, height: 0 })).toBeNull();
+  });
+});
+
+describe('тайминг открытия', () => {
+  it('вылет картинки укладывается в 300 мс спеки', () => {
+    expect(PREVIEW_FLY_MS).toBeLessThanOrEqual(300);
+  });
+
+  it('эмодзи стартует вслед за картинкой и не заканчивается позже 400 мс', () => {
+    expect(EMOJI_POP_DELAY_MS).toBeGreaterThan(0);
+    expect(EMOJI_POP_DELAY_MS + EMOJI_POP_MS).toBeLessThanOrEqual(400);
+  });
+
+  it('возврат в ячейку укладывается в 250 мс спеки и не длиннее вылета', () => {
+    expect(PREVIEW_LEAVE_MS).toBeLessThanOrEqual(250);
+    expect(PREVIEW_LEAVE_MS).toBeLessThanOrEqual(PREVIEW_FLY_MS);
+    expect(EMOJI_LEAVE_MS).toBeLessThanOrEqual(PREVIEW_LEAVE_MS);
+  });
+});
