@@ -47,10 +47,16 @@ export const createPressGesture = (options: PressGestureOptions): PressGesture =
     origin = null;
   };
 
-  const start = ({ button, pointerType, x, y }: PressStart) => {
+  const start = ({ button, pointerType, isCtrlPressed, x, y }: PressStart) => {
     cancel();
 
-    if (button !== PRIMARY_BUTTON || !HOLD_POINTER_TYPES.has(pointerType)) return;
+    if (
+      button !== PRIMARY_BUTTON ||
+      isCtrlPressed ||
+      !HOLD_POINTER_TYPES.has(pointerType)
+    ) {
+      return;
+    }
 
     origin = { x, y };
     cancelTimer = schedule(() => {

@@ -16,6 +16,12 @@ export type PressStart = {
   pointerType: string;
 
   /**
+   * На нажатии зажат Ctrl: на macOS Ctrl+клик — правый клик, он открывает контекстное меню
+   * и удержанием не считается.
+   */
+  isCtrlPressed: boolean;
+
+  /**
    * Горизонтальная координата нажатия.
    */
   x: number;

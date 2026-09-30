@@ -10,7 +10,13 @@ import type { PressStart } from '../src/core/ui/Picker/pressGesture/pressGesture
 /**
  * Основная кнопка мыши в точке (100, 100).
  */
-const MOUSE_PRESS: PressStart = { button: 0, pointerType: 'mouse', x: 100, y: 100 };
+const MOUSE_PRESS: PressStart = {
+  button: 0,
+  pointerType: 'mouse',
+  isCtrlPressed: false,
+  x: 100,
+  y: 100,
+};
 
 /**
  * Жест с записью числа удержаний.
@@ -139,6 +145,26 @@ describe('createPressGesture', () => {
     vi.advanceTimersByTime(HOLD_DELAY_MS);
 
     expect(holds()).toBe(0);
+  });
+
+  it('Ctrl+нажатие (правый клик на macOS) не запускает удержание', () => {
+    const { gesture, holds } = setup();
+
+    gesture.start({ ...MOUSE_PRESS, isCtrlPressed: true });
+    vi.advanceTimersByTime(HOLD_DELAY_MS * 2);
+
+    expect(holds()).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('обычное нажатие после Ctrl+нажатия удерживает', () => {
+    const { gesture, holds } = setup();
+
+    gesture.start({ ...MOUSE_PRESS, isCtrlPressed: true });
+    gesture.start(MOUSE_PRESS);
+    vi.advanceTimersByTime(HOLD_DELAY_MS);
+
+    expect(holds()).toBe(1);
   });
 
   it('касание не запускает удержание', () => {

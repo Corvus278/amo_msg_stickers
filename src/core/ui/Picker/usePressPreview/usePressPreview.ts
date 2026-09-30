@@ -47,12 +47,18 @@ export const usePressPreview = (
   }, [gesture]);
 
   const onPointerDown = (event: TargetedPointerEvent<HTMLElement>) => {
-    const { button, pointerType, clientX, clientY, currentTarget } = event;
+    const { button, pointerType, ctrlKey, clientX, clientY, currentTarget } = event;
 
     if (latestRef.current.isDisabled) return;
 
     sourceRef.current = currentTarget;
-    gesture.start({ button, pointerType, x: clientX, y: clientY });
+    gesture.start({
+      button,
+      pointerType,
+      isCtrlPressed: ctrlKey,
+      x: clientX,
+      y: clientY,
+    });
   };
 
   const onPointerMove = ({ clientX, clientY }: TargetedPointerEvent<HTMLElement>) => {

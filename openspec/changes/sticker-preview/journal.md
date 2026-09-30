@@ -43,3 +43,14 @@ CellMenu: onPreview обязательный, kind необязателен, с�
 G5 ok, аудит: 1 круг доработки (2 critical: 200 мс vs duration-base=175 мс в CLAUDE.md; typograf заголовков FAQ), второй круг ok, долг закрыт в том же круге.
 FAQ ru/en «Как рассмотреть стикер или GIF крупно» (удержание, «Предпросмотр» в меню, Escape/клик/«Закрыть предпросмотр», касание не открывает удержание). CLAUDE.md: Preview/, pressGesture/, usePressPreview/, причина удержания preview, меню у всех GIF. Версия 0.16.0 в трёх местах, check-version ok.
 6.1: pnpm lint, pnpm test (984 теста), pnpm build, docs:build — зелёные; 0.16.0 в dist.
+
+### Решение пользователя: Ctrl+клик
+
+Итоговый аудит (question): Ctrl+клик на macOS = pointerdown button 0 + contextmenu; удержание >300 мс открывало hold-предпросмотр поверх меню ячейки.
+Решено пользователем: Ctrl+клик удержанием не считать (жест не стартует при ctrlKey на pointerdown, остаётся только меню). Доработка — группа F1 (код + тест). Правка спеки picker-states — предложение для /opsx:update.
+
+### F1
+
+F1 ok: доработка по question итогового аудита (Ctrl+клик на macOS открывал hold-предпросмотр поверх меню). Решение пользователя: Ctrl+клик удержанием не считать.
+PressStart.isCtrlPressed (обязательное поле), start без таймера при нём, хук передаёт event.ctrlKey; тесты на фейковых таймерах. CLAUDE.md дополнен. Аудит: 1 круг доработки (critical — строка CLAUDE.md >120 знаков), второй ok.
+Долг: Ctrl+левый клик на Windows/Linux тоже не удержание — не отражено в FAQ ru/en и в спеке picker-states (спека — для /opsx:update).
