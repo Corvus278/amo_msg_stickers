@@ -45,10 +45,10 @@
   `src/core/sender.ts` — выбор пути и запасной путь (`app.ts` не меняется); `src/extension/manifest.json` и
   `build.mjs` — вторая точка входа MAIN и строка агента для userscript (фабрика виртуальных модулей вместо
   плагина `gif-worker`); `src/userscript/index.ts` — внедрение агента; `eslint.config.mjs` — границы `src/shared/` и
-  `src/page/`; `dev/harness.html` — поддельный `ReactClientContext`.
-- **Опора на код amo:** `ReactClientContext` (`web: src/reactClient/ReactClientProvider.jsx:25`), форма сообщения
-  `buildRegularMessages` (`web: src/state/modules/messages/operations.js:558-733`), `state.dialogs`,
-  `state.location`, `state.messages`. При их изменении в amo срабатывает запасной путь.
+  `src/page/`; `dev/harness.html` — поддельный провайдер `{ reduxStore, sendRequest }`.
+- **Опора на внутренности amo:** провайдер `{ reduxStore, sendRequest }` в дереве React, форма сообщения очереди,
+  `state.dialogs` и `state.location` — то, что видно в бандле и рантайме страницы. При их изменении в amo срабатывает
+  запасной путь.
 - **UI (`src/core/ui/**`):** не меняется — отправка, закрытие попапа и ошибки идут через существующий `onSend`.
   Новых строк словаря нет: отказ до приёма в очередь уводит на запасной путь с прежними ошибками, а ошибку после
   приёма показывает amo.
