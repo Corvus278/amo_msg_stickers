@@ -188,7 +188,7 @@ src/
                   страницы элементом `<script>`
   page/           агент в мире страницы — отправка стикера через очередь amo: index.ts — точка входа, agent.ts —
                   слушатель команд ядра, findClient.ts — `{ reduxStore, sendRequest }` amo по fiber от поля ввода,
-                  buildMessage.ts — сообщение по образцу `buildRegularMessages` amo, amo.types.ts — срез
+                  buildMessage.ts — сообщение как у очереди отправки amo, amo.types.ts — срез
                   внутренностей amo, field.ts — поле чужого объекта без доверия к форме
   shared/         чистые модули, общие для ядра, окружений и агента в мире страницы, без импортов извне `shared/`:
                   guards.ts — общий первый шаг гардов ответов API (`isObject`)
@@ -200,7 +200,7 @@ dev/harness.html  стенд: разметка инпута и сообщени�
                   вставка и «Отправить» замоканы — «Отправить» кладёт в ленту сообщение с картинкой, `alt` которой —
                   имя файла; переключатели «входящее» и «с именем автора», кнопки «картинка без метки» и «ответ с
                   цитатой», выбор «язык amo» — пишет `i18nextLng` и перезагружает стенд; поддельный
-                  `ReactClientContext` amo в `__reactFiber$harness` поля ввода — `sendRequest` кладёт картинку в
+                  провайдер amo `{ reduxStore, sendRequest }` в `__reactFiber$harness` поля ввода — `sendRequest` кладёт картинку в
                   ленту, не трогая поле; переключатель «очередь amo» (выключен — провайдера нет, работает запасной
                   путь). Агент на стенде внедряется `<script>`, как в userscript; MAIN-скрипт расширения — только
                   в живом amo
@@ -482,8 +482,8 @@ blob → File(image/gif, имя из sendFileName) → sendFile
 отправляет агент в мире страницы (`src/page/`): ядро помечает поле ввода и скрытый `<input type="file">` с файлом
 атрибутом с `id` команды и шлёт `CustomEvent` (`shared/pageBridge.ts`, клиент — `core/pageClient.ts`); `<input>` лежит
 в `documentElement`, а не в `body`, чтобы не будить `MutationObserver` ядра и amo. Агент находит
-`{ reduxStore, sendRequest }` amo по fiber от поля ввода (`findClient.ts`), собирает сообщение по образцу
-`buildRegularMessages` amo (`buildMessage.ts`: чат — из `state.location` и `state.dialogs`, фото с `localFlag:
+`{ reduxStore, sendRequest }` amo по fiber от поля ввода (`findClient.ts`), собирает сообщение так же, как страница
+кладёт в очередь опрос (`buildMessage.ts`: чат — из `state.location` и `state.dialogs`, фото с `localFlag:
 PREPARING`, без ответа), вызывает `sendRequest` и отвечает синхронно: `accepted` или `rejected` с причиной. Пометки и
 `<input>` клиент снимает сразу по ответу.
 
@@ -635,6 +635,13 @@ GIF-блобы; у своего стикера — ещё подпись `captio
   («Язык интерфейса»);
 - `file_path` Telegram — без `..`, иначе URL схлопнется и запрос с токеном уйдёт в другой метод Bot API;
 - `.tgs` распаковывается не больше 8 МБ и проходит `isLottieJson`; GIF из поиска перед вставкой — `inspectGif`.
+
+### Что писать об amo
+
+В публичных файлах (код, комментарии, тесты, дока, OpenSpec, CLAUDE.md) об amo — только наблюдаемое поведение страницы
+и то, что видно в её бандле и рантайме (`sendRequest`, `reduxStore`, `state.dialogs`, форма сообщения очереди): без
+путей к исходникам amo web и имён его внутренних функций. Заметки по исходникам — в `CLAUDE.local.md`, он в
+`.gitignore`.
 
 ## Тесты
 

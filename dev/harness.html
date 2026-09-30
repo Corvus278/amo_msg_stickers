@@ -389,9 +389,9 @@
       });
 
       /**
-       * Поддельный `ReactClientContext` amo (design.md change send-via-amo-queue, «Стенд»): агент в
-       * мире страницы ищет `{ reduxStore, sendRequest }` по fiber от поля ввода. `sendRequest`
-       * кладёт картинку сообщения в ленту, как amo после `sendMedia`; поле ввода не трогается.
+       * Поддельный провайдер amo (design.md change send-via-amo-queue, «Стенд»): агент в мире
+       * страницы ищет `{ reduxStore, sendRequest }` по fiber от поля ввода. `sendRequest` кладёт
+       * картинку сообщения в ленту, как amo после отправки; поле ввода не трогается.
        * «Очередь amo» выключена — провайдера нет, и стикер уходит запасным путём, вставкой.
        */
       const HARNESS_CHAT_ID = 'harness-chat';

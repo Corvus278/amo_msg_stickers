@@ -1,7 +1,7 @@
 import type { PageRejectReason } from '../shared/pageBridge.types';
 
 /**
- * Локальное медиа-фото amo до загрузки, как у `createPreparingLocalMediaWithFile`.
+ * Локальное медиа-фото до загрузки — как у фото, которое страница amo отдаёт в очередь.
  */
 export type AmoPhotoMedia = {
   /**
@@ -41,7 +41,7 @@ export type AmoPhotoMedia = {
   uploadedFileId: null;
 
   /**
-   * `MediaLocalFlags.PREPARING`: amo подготовит медиа сам — посчитает размеры.
+   * Медиа готовится: размеры очередь amo досчитает сама.
    */
   localFlag: 1;
 
@@ -72,9 +72,9 @@ export type AmoMember = {
 };
 
 /**
- * Сообщение для запроса `sendNewMessages` — объект `buildRegularMessages` amo без
- * упоминания, ответа и подписи. Ключ `[conversationType]: conversationId` amo тоже
- * требует — он добавляется при сборке.
+ * Сообщение для запроса `sendNewMessages` — как у страницы amo, без упоминания, ответа и
+ * подписи. Ключ `[conversationType]: conversationId` у таких сообщений тоже есть — он
+ * добавляется при сборке.
  */
 export type AmoStickerMessage = {
   /**
@@ -88,7 +88,7 @@ export type AmoStickerMessage = {
   conversationType: string;
 
   /**
-   * `MESSAGE_FLAGS.OUT` — исходящее.
+   * Флаг исходящего сообщения.
    */
   flags: [2];
 

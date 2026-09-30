@@ -20,7 +20,7 @@ export type AmoRequest = {
 };
 
 /**
- * Значение `ReactClientContext.Provider` amo — один объект на страницу.
+ * Значение React-контекста amo с очередью отправки и store — один объект на страницу.
  */
 export type AmoClient = {
   /**

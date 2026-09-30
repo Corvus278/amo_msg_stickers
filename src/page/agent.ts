@@ -58,7 +58,7 @@ const logOutcome = async (sending: Promise<unknown>) => {
 
 /**
  * Ответ уходит синхронно, до возврата из `dispatchEvent` ядра: вся работа до вызова
- * `sendRequest` синхронная, а канал amo принимает запрос сразу, до своего первого `await`.
+ * `sendRequest` синхронная, и ответ ядро получает до возврата из своей команды.
  *
  * @param doc — документ страницы
  * @param event — команда ядра

@@ -2,8 +2,8 @@ import type { AmoClient } from './amo.types';
 import { fieldOf } from './field';
 
 /**
- * `sendRequest` и `reduxStore` amo лежат в значении `ReactClientContext.Provider`, выше поля
- * ввода по дереву React. Добираемся до него от DOM-узла по fiber: это внутренности React, а
+ * `sendRequest` и `reduxStore` amo — одно значение React-контекста выше поля ввода по
+ * дереву React. Добираемся до него от DOM-узла по fiber: это внутренности React, а
  * не API, поэтому форма значения проверяется на каждом шаге, а не принимается на веру.
  */
 
