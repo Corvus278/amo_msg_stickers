@@ -21,24 +21,17 @@ export type PageRequest = {
  */
 export type PageRejectReason = (typeof PAGE_REJECT_REASONS)[number];
 
-export type PageResponse =
+/**
+ * Исход команды: принята очередью amo или отклонена с причиной.
+ */
+type PageResponseOutcome =
   | {
-      /**
-       * Идентификатор команды, на которую ответ.
-       */
-      id: string;
-
       /**
        * amo принял сообщение в очередь отправки: запасной путь для этой команды закрыт.
        */
       status: 'accepted';
     }
   | {
-      /**
-       * Идентификатор команды, на которую ответ.
-       */
-      id: string;
-
       /**
        * Сообщение не передано amo: можно отправлять запасным путём.
        */
@@ -49,3 +42,10 @@ export type PageResponse =
        */
       reason: PageRejectReason;
     };
+
+export type PageResponse = {
+  /**
+   * Идентификатор команды, на которую ответ.
+   */
+  id: string;
+} & PageResponseOutcome;
