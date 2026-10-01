@@ -2,15 +2,15 @@ import type {
   FunctionComponent as FC,
   TargetedKeyboardEvent,
   TargetedMouseEvent,
+  TargetedPointerEvent,
 } from 'preact';
 
 import { CellSpinner } from '../CellSpinner/CellSpinner';
 import { CellMenu } from '../Menu/CellMenu/CellMenu';
 import { isMenuKey } from '../Menu/menuKey/menuKey';
 import { useContextMenu } from '../Menu/useContextMenu/useContextMenu';
-import { usePreview } from '../Preview/usePreview';
+import { useCellPreview } from '../useCellPreview/useCellPreview';
 import { useCellSend } from '../useCellSend/useCellSend';
-import { usePressPreview } from '../usePressPreview/usePressPreview';
 
 import type { StickerCellProps } from './StickerCell.types';
 
@@ -42,16 +42,7 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
   const target = { url, emoji, name: name.preview };
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
-  const { openHold, swapHold, openPinned } = usePreview();
-  const pressHandlers = usePressPreview({
-    isDisabled: isBusy,
-    onHold: (source) => {
-      openHold(target, source);
-    },
-    onSwap: (source) => {
-      swapHold(target, source);
-    },
-  });
+  const preview = useCellPreview({ target, isBusy });
 
   const handleSendClick = () => {
     void sendItem();
@@ -75,8 +66,34 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
     close();
   };
 
+  const handleSendPointerDown = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    const { button, pointerType, ctrlKey, clientX, clientY, currentTarget } = event;
+
+    preview.start(
+      { button, pointerType, isCtrlPressed: ctrlKey, x: clientX, y: clientY },
+      currentTarget
+    );
+  };
+
+  const handleSendPointerEnter = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    const { pointerType, buttons, currentTarget } = event;
+
+    preview.enter({ pointerType, buttons }, currentTarget);
+  };
+
+  const handleSendPointerMove = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    preview.move(event.clientX, event.clientY);
+  };
+
+  /**
+   * Отпускание, уход с ячейки и отмена жеста браузером одинаково останавливают отсчёт.
+   */
+  const handleSendPointerEnd = () => {
+    preview.cancel();
+  };
+
   const handleMenuPreview = () => {
-    if (opening) openPinned(target, opening.source);
+    if (opening) preview.openPinned(opening.source);
   };
 
   const handleItemRemove = () => {
@@ -95,7 +112,12 @@ export const StickerCell: FC<StickerCellProps> = (props) => {
         onClick={handleSendClick}
         onContextMenu={handleSendContextMenu}
         onKeyDown={handleSendKeyDown}
-        {...pressHandlers}
+        onPointerDown={handleSendPointerDown}
+        onPointerEnter={handleSendPointerEnter}
+        onPointerMove={handleSendPointerMove}
+        onPointerLeave={handleSendPointerEnd}
+        onPointerUp={handleSendPointerEnd}
+        onPointerCancel={handleSendPointerEnd}
       >
         {/*
          * Без `loading="lazy"`: лента стикеров декодирует картинки окна заранее, до прыжка к

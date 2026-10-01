@@ -2,6 +2,7 @@ import type {
   FunctionComponent as FC,
   TargetedKeyboardEvent,
   TargetedMouseEvent,
+  TargetedPointerEvent,
 } from 'preact';
 
 import type { SendItem } from '../../../../db.types';
@@ -11,9 +12,8 @@ import { CellMenu } from '../../Menu/CellMenu/CellMenu';
 import type { CellMenuRemove } from '../../Menu/CellMenu/CellMenu.types';
 import { isMenuKey } from '../../Menu/menuKey/menuKey';
 import { useContextMenu } from '../../Menu/useContextMenu/useContextMenu';
-import { usePreview } from '../../Preview/usePreview';
+import { useCellPreview } from '../../useCellPreview/useCellPreview';
 import { useCellSend } from '../../useCellSend/useCellSend';
-import { usePressPreview } from '../../usePressPreview/usePressPreview';
 
 import type { MasonryCellProps } from './MasonryCell.types';
 
@@ -53,17 +53,8 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
   const name = gifCellName(gif);
   const { isBusy, sendItem } = useCellSend(item);
   const { opening, open, close } = useContextMenu();
-  const { openHold, swapHold, openPinned } = usePreview();
   const target = { url: gif.url, previewUrl, name: name.preview };
-  const pressHandlers = usePressPreview({
-    isDisabled: isBusy,
-    onHold: (source) => {
-      openHold(target, source);
-    },
-    onSwap: (source) => {
-      swapHold(target, source);
-    },
-  });
+  const preview = useCellPreview({ target, isBusy });
 
   const handleCellClick = () => {
     void sendItem();
@@ -87,8 +78,34 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
     close();
   };
 
+  const handleCellPointerDown = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    const { button, pointerType, ctrlKey, clientX, clientY, currentTarget } = event;
+
+    preview.start(
+      { button, pointerType, isCtrlPressed: ctrlKey, x: clientX, y: clientY },
+      currentTarget
+    );
+  };
+
+  const handleCellPointerEnter = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    const { pointerType, buttons, currentTarget } = event;
+
+    preview.enter({ pointerType, buttons }, currentTarget);
+  };
+
+  const handleCellPointerMove = (event: TargetedPointerEvent<HTMLButtonElement>) => {
+    preview.move(event.clientX, event.clientY);
+  };
+
+  /**
+   * Отпускание, уход с ячейки и отмена жеста браузером одинаково останавливают отсчёт.
+   */
+  const handleCellPointerEnd = () => {
+    preview.cancel();
+  };
+
   const handleMenuPreview = () => {
-    if (opening) openPinned(target, opening.source);
+    if (opening) preview.openPinned(opening.source);
   };
 
   const handleItemRemove = () => {
@@ -116,7 +133,12 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
         onClick={handleCellClick}
         onContextMenu={handleCellContextMenu}
         onKeyDown={handleCellKeyDown}
-        {...pressHandlers}
+        onPointerDown={handleCellPointerDown}
+        onPointerEnter={handleCellPointerEnter}
+        onPointerMove={handleCellPointerMove}
+        onPointerLeave={handleCellPointerEnd}
+        onPointerUp={handleCellPointerEnd}
+        onPointerCancel={handleCellPointerEnd}
       >
         <img
           src={previewUrl}
