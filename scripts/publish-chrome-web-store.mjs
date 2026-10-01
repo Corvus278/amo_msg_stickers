@@ -31,9 +31,8 @@ if (!serviceAccountKey || !publisherId) {
   process.exit(0);
 }
 
-const { version } = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'));
-
 try {
+  const { version } = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'));
   const result = await publishToChromeWebStore({
     serviceAccountKey,
     publisherId,
