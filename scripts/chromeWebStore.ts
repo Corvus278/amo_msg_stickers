@@ -36,6 +36,11 @@ const UPLOAD_POLL_ATTEMPTS = 24;
  */
 const ERROR_BODY_LIMIT = 500;
 
+/**
+ * Состояние, когда стор его не прислал, — значение по умолчанию перечисления `ItemState`.
+ */
+const UNSPECIFIED_STATE = 'ITEM_STATE_UNSPECIFIED';
+
 const PEM_BODY_PATTERN = /-----BEGIN PRIVATE KEY-----([\s\S]+?)-----END PRIVATE KEY-----/;
 
 /**
@@ -259,7 +264,7 @@ export const findRevisionState = (
     });
 
     if (hasVersion) {
-      return readString(revision, 'state') || 'ITEM_STATE_UNSPECIFIED';
+      return readString(revision, 'state') || UNSPECIFIED_STATE;
     }
   }
 
@@ -310,6 +315,10 @@ const uploadPackage = async (
   for (let attempt = 0; attempt <= UPLOAD_POLL_ATTEMPTS; attempt += 1) {
     switch (state) {
       case 'SUCCEEDED': {
+        /**
+         * Версию прочитанного пакета сообщает только синхронный ответ `upload`: у загрузки, законченной через
+         * опрос, `crxVersion` в нём нет, а `fetchStatus` версию черновика не отдаёт — тогда сверять не с чем.
+         */
         const crxVersion = readString(upload, 'crxVersion');
 
         if (crxVersion && crxVersion !== version) {
@@ -393,6 +402,6 @@ export const publishToChromeWebStore = async (
 
   return {
     outcome: 'submitted',
-    state: readString(published, 'state') || 'ITEM_STATE_UNSPECIFIED',
+    state: readString(published, 'state') || UNSPECIFIED_STATE,
   };
 };
