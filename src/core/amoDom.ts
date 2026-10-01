@@ -4,6 +4,8 @@
  * data-testid в amo нет: опираемся на aria-атрибуты и стабильные tailwind-классы.
  */
 
+import { tailwindConfig } from '../../tailwind.config';
+
 import type {
   Composer,
   QuoteLayout,
@@ -11,7 +13,6 @@ import type {
   SendComposer,
   ShownNode,
 } from './amoDom.types';
-import { BUBBLE_TOKENS } from './bubbleTokens';
 
 const EDITABLE_SELECTOR = 'div[contenteditable="true"][aria-placeholder]';
 const ROW_SELECTOR = 'div.flex.size-full';
@@ -173,8 +174,12 @@ const GIF_QUOTE_SELECTOR = `${QUOTE_SELECTOR}:not(:has(+ div ${STICKER_IMG_SELEC
 /**
  * Панель действий amo при наведении — слева от исходящего пузыря и справа от входящего, по
  * верху: там же, где плашка.
+ *
+ * Класс `top-0` обёртки панели — в субъекте селектора по той же причине, что `-mt-2` у плашки:
+ * голый `div` с `:has()` в субъекте проверялся бы на каждом `div` страницы при каждой правке
+ * ленты. Этот же класс правило и переопределяет.
  */
-const REPLY_CONTROLS_SELECTOR = `${REPLY_BUBBLE_SELECTOR} > div:has(> [class*="message_controls-"])`;
+const REPLY_CONTROLS_SELECTOR = `${REPLY_BUBBLE_SELECTOR} > div.top-0:has(> [class*="message_controls-"])`;
 
 /**
  * Ряд сообщения-ответа нашей картинкой — контейнер `REPLY_CONTAINER`: ширина плашки и переход
@@ -195,22 +200,26 @@ const OUTGOING_SELECTOR = '[class*="is_outgoing-"]';
  */
 const WITH_AVATAR_SELECTOR = `[class*="message_with_user-"]:not(${OUTGOING_SELECTOR})`;
 
+const { borderRadius } = tailwindConfig.theme.extend;
+const { boxShadow, colors } = tailwindConfig.theme;
+
 /**
  * Фон плашки — фон пузыря amo того же направления и темы: цвета текста цитаты amo подобраны под
- * него.
+ * него. Значения — из токенов классов пузыря: входящий — `from-gray-110 to-white-0`,
+ * `dark:bg-black-60`; исходящий — `from-flowerBlue-20 to-blue-120`, `dark:bg-beige-80`.
  */
 const BUBBLE_BACKGROUND = {
-  incoming: `linear-gradient(to top, ${BUBBLE_TOKENS['gray.110']}, ${BUBBLE_TOKENS['white.0']})`,
-  incomingDark: BUBBLE_TOKENS['black.60'],
-  outgoing: `linear-gradient(to top, ${BUBBLE_TOKENS['flowerBlue.20']}, ${BUBBLE_TOKENS['blue.120']})`,
-  outgoingDark: BUBBLE_TOKENS['beige.80'],
+  incoming: `linear-gradient(to top, ${colors.gray[110]}, ${colors.white[0]})`,
+  incomingDark: colors.black[60],
+  outgoing: `linear-gradient(to top, ${colors.flowerBlue[20]}, ${colors.blue[120]})`,
+  outgoingDark: colors.beige[80],
 };
 
 /**
  * Скругление и тень пузыря amo — `rounded-lgx` и `shadow-md`.
  */
-const BUBBLE_RADIUS = '10px';
-const BUBBLE_SHADOW = '0 1px 0 rgba(0,0,0,0.15)';
+const BUBBLE_RADIUS = borderRadius.lgx;
+const BUBBLE_SHADOW = boxShadow.md;
 
 /**
  * Плашка занимает свободное место ряда рядом с картинкой, но не шире 260 px; длинную цитату

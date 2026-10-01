@@ -88,8 +88,8 @@ const TAILWIND_CONFIG = 'tailwind.config.ts';
 
 /**
  * Компоненты, по классам которых Tailwind собирает CSS пикера. Вместе с
- * `tailwind.config.ts` они идут в `watchFiles`: конфиг в бандл не входит, и без
- * явной подписки новый токен не пересобрал бы CSS в `watch`.
+ * `tailwind.config.ts` они идут в `watchFiles`: CSS собирает плагин, а не граф модулей
+ * бандла, и без явной подписки новый токен не пересобрал бы CSS в `watch`.
  */
 const TAILWIND_WATCH_GLOB = 'src/core/ui/**/*.tsx';
 
