@@ -102,7 +102,7 @@ export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
   const latestRef = useRef<PreviewState | null>(null);
   const mode = preview?.mode;
   const isPinned = mode === 'pinned';
-  const isLeaving = preview?.isLeaving ?? false;
+  const isLeaving = preview?.isLeaving || false;
   const isShown = preview !== null && !isLeaving;
 
   /**
