@@ -1,3 +1,4 @@
+import { cva } from 'class-variance-authority';
 import type { FunctionComponent as FC } from 'preact';
 
 import css from '../../../picker.css';
@@ -7,6 +8,18 @@ import { PreviewPortal } from '../PreviewPortal/PreviewPortal';
 import { usePreview } from '../usePreview';
 
 import type { PreviewOverlayProps } from './PreviewOverlay.types';
+
+/**
+ * Обёртка темы: `dark:`-варианты Tailwind ищут класс `dark` у предка, поэтому он стоит на
+ * ней, а не на самом слое. Вариант `isDark` — как у панели (`panelVariants` в `Picker.tsx`).
+ */
+const themeVariants = cva('', {
+  variants: {
+    isDark: {
+      true: 'dark',
+    },
+  },
+});
 
 /**
  * Оверлей предпросмотра на всю страницу: один на панель, состояние берёт из
@@ -24,7 +37,7 @@ export const PreviewOverlay: FC<PreviewOverlayProps> = (props) => {
     <PreviewPortal container={container}>
       <style>{css}</style>
 
-      <div className={isDark ? 'dark' : undefined}>
+      <div className={themeVariants({ isDark })}>
         <PreviewLayer preview={preview} onClose={close} onLeaveEnd={finishLeave} />
       </div>
     </PreviewPortal>
