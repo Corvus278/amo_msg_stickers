@@ -4,11 +4,13 @@ How to update amo stickers depends on how you installed it.
 
 ## Extension from the Chrome Web Store
 
-The extension is under review in the Chrome Web Store right now. Once it is published, the browser will update it by
-itself — you won’t need to do anything.
+The browser updates the extension from the store by itself — you don’t need to do anything. A new version reaches
+the store after review, so it sometimes arrives later than the archive and the userscript.
 
-If you have the extension from the archive now, you can replace it with the extension from the store after it is
-published. The store installs it as a new extension, so you will have to enter the GIF keys and the bot token again.
+If you have the extension from the archive now, you can replace it with the extension from the store: remove
+the extension from the archive and install it
+from the [Chrome Web Store](https://chromewebstore.google.com/detail/amo-stickers/abjnjphijggkkdbbmkldhibgepgdcgip).
+You will have to enter the GIF keys and the bot token again; stickers and packs stay.
 
 ## Extension from the archive {#archive}
 
