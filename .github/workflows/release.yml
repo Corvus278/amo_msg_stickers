@@ -33,6 +33,7 @@ jobs:
     # прошлым прогоном и в стор отправлялась тогда же.
     outputs:
       released: ${{ steps.tag.outputs.exists == 'false' || steps.tag.outputs.sha == github.sha }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
 
@@ -88,29 +89,11 @@ jobs:
   # Отдельный job после релиза: его сбой виден красным в прогоне, а релиз на GitHub к
   # этому моменту уже выпущен. Упавший job перезапускается кнопкой «Re-run failed
   # jobs» — версию, которая в сторе уже на проверке или опубликована, скрипт второй
-  # раз не загружает.
+  # раз не загружает. Тот же workflow запускается и вручную.
   chrome-web-store:
     needs: release
     if: ${{ needs.release.outputs.released == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      # Только Node: скрипт без зависимостей, но импортирует .ts — нужен Node из .mise.toml.
-      - uses: jdx/mise-action@v4
-        with:
-          install_args: node
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: build
-          path: release
-
-      # Без секретов скрипт пропускает публикацию предупреждением, и job зелёный.
-      - env:
-          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
-          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
-          # ID карточки amo stickers в Chrome Web Store — тот же, что даёт `key` в manifest.
-          CWS_ITEM_ID: abjnjphijggkkdbbmkldhibgepgdcgip
-        run: node scripts/publish-chrome-web-store.mjs release/amo-stickers.zip
+    uses: ./.github/workflows/chrome-web-store.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit

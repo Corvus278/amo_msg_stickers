@@ -4,9 +4,12 @@
  * ID издателя; `CWS_ITEM_ID` — ID расширения. Без доступов публикация пропускается предупреждением и кодом 0:
  * релиз на GitHub от неё не зависит. Сбой — аннотация `::error::` и код 1.
  *
- * Запуск: `node scripts/publish-chrome-web-store.mjs <путь к zip>`.
+ * Версию передаёт workflow — из manifest в архиве, а не из checkout: ручной запуск публикует релиз, выпущенный
+ * раньше текущего `master`.
+ *
+ * Запуск: `node scripts/publish-chrome-web-store.mjs <путь к zip> <версия>`.
  */
-import { openAsBlob, readFileSync } from 'node:fs';
+import { openAsBlob } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import { publishToChromeWebStore } from './chromeWebStore.ts';
@@ -17,10 +20,10 @@ const {
   CWS_PUBLISHER_ID: publisherId,
   CWS_ITEM_ID: itemId,
 } = process.env;
-const [zipPath] = process.argv.slice(2);
+const [zipPath, version] = process.argv.slice(2);
 
-if (!zipPath || !itemId) {
-  console.error(toErrorAnnotation('Нужны путь к zip аргументом и CWS_ITEM_ID'));
+if (!zipPath || !version || !itemId) {
+  console.error(toErrorAnnotation('Нужны путь к zip и версия аргументами и CWS_ITEM_ID'));
   process.exit(1);
 }
 
@@ -32,7 +35,6 @@ if (!serviceAccountKey || !publisherId) {
 }
 
 try {
-  const { version } = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'));
   const result = await publishToChromeWebStore({
     serviceAccountKey,
     publisherId,

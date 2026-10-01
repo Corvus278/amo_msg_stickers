@@ -220,8 +220,9 @@ scripts/          скрипты CI: version.ts — чистая логика п
                   check-version.mjs — её запуск в CI; chromeWebStore.ts — клиент Chrome Web Store API (типы —
                   chromeWebStore.types.ts), publish-chrome-web-store.mjs — публикация пакета из релиза
 tests/            юнит-тесты, helpers/
-.github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; workflows/pages.yml —
-                  публикация доки; actions/setup — окружение
+.github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master;
+                  workflows/chrome-web-store.yml — публикация релиза в стор (за релизом и вручную);
+                  workflows/pages.yml — публикация доки; actions/setup — окружение
 openspec/         specs/ — действующие требования; changes/ — proposal, design, specs, tasks задачи;
                   changes/archive/ — закрытые
 local/            локальные заготовки под конкретное окружение; в .gitignore, eslint его не трогает
@@ -775,9 +776,12 @@ GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-actio
   предупреждением, прогон зелёный: PR без подъёма версии релиза не даёт. Если push мержа не создал прогона
   (GitHub изредка теряет событие), релиз запускается вручную — `gh workflow run release.yml --ref master`; с другой
   ветки прогон пропускается целиком.
-- **Chrome Web Store** (job `chrome-web-store` в `release.yml`): за новым релизом тот же `amo-stickers.zip` уходит
-  в стор и на проверку — Chrome Web Store API v2, вход сервисным аккаунтом (`scripts/publish-chrome-web-store.mjs`,
-  логика и подпись JWT — `scripts/chromeWebStore.ts`). Секреты — `CWS_SERVICE_ACCOUNT_KEY` (JSON-ключ) и
+- **Chrome Web Store** (`chrome-web-store.yml`, из `release.yml` — job `chrome-web-store`): за новым релизом его
+  `amo-stickers.zip` из GitHub Release уходит в стор и на проверку — Chrome Web Store API v2, вход сервисным
+  аккаунтом (`scripts/publish-chrome-web-store.mjs`, логика и подпись JWT — `scripts/chromeWebStore.ts`). Версия —
+  из manifest в архиве. Вручную — `gh workflow run chrome-web-store.yml --ref master [-f tag=v<версия>]`, без тега —
+  последний релиз: версия, выпущенная без публикации, или повтор после отказа стора. Запуски идут по одному
+  (`concurrency`), с другой ветки job пропускается. Секреты — `CWS_SERVICE_ACCOUNT_KEY` (JSON-ключ) и
   `CWS_PUBLISHER_ID`; без них job пропускает публикацию предупреждением и остаётся зелёным. Сбой загрузки — красный
   job при уже выпущенном релизе; «Re-run failed jobs» безопасен: версию, которая уже в сторе на проверке или
   опубликована, скрипт не загружает. Job идёт за релизом этого коммита — и тогда, когда тег создала прошлая попытка
