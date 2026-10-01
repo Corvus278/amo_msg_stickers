@@ -1,5 +1,7 @@
 import type { PageRejectReason } from '../shared/pageBridge.types';
 
+import type { AmoQuotedMessage } from './refersTo.types';
+
 /**
  * Локальное медиа-фото до загрузки — как у фото, которое страница amo отдаёт в очередь.
  */
@@ -72,9 +74,9 @@ export type AmoMember = {
 };
 
 /**
- * Сообщение для запроса `sendNewMessages` — как у страницы amo, без упоминания, ответа и
- * подписи. Ключ `[conversationType]: conversationId` у таких сообщений тоже есть — он
- * добавляется при сборке.
+ * Сообщение для запроса `sendNewMessages` — как у страницы amo, без упоминания и подписи.
+ * Ключ `[conversationType]: conversationId` у таких сообщений тоже есть — он добавляется при
+ * сборке.
  */
 export type AmoStickerMessage = {
   /**
@@ -128,6 +130,12 @@ export type AmoStickerMessage = {
   message: '';
 
   /**
+   * Сообщение, на которое отвечает стикер; поля нет — стикер без ответа. Кладёт `attachReply`
+   * (`refersTo.ts`).
+   */
+  refersTo?: AmoQuotedMessage;
+
+  /**
    * uuid v1 в формате amo.
    */
   id: string;
@@ -163,6 +171,16 @@ export type AmoStickerMessage = {
   type: 'regular';
 };
 
+/**
+ * Сообщение не собрано: открыт не чат или его вид amo не отправляет.
+ */
+export type BuildMessageFailure = {
+  /**
+   * Причина, по которой сообщение не собрано.
+   */
+  reason: Extract<PageRejectReason, 'no-conversation' | 'unsupported-conversation'>;
+};
+
 export type BuildMessageResult =
   | {
       /**
@@ -170,12 +188,7 @@ export type BuildMessageResult =
        */
       message: AmoStickerMessage;
     }
-  | {
-      /**
-       * Причина, по которой сообщение не собрано.
-       */
-      reason: Extract<PageRejectReason, 'no-conversation' | 'unsupported-conversation'>;
-    };
+  | BuildMessageFailure;
 
 /**
  * Открытый чат, в который уходит сообщение.

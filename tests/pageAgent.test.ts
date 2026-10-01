@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { startAgent } from '../src/page/agent';
@@ -17,11 +18,46 @@ import { makeGif } from './helpers/makeGif';
 const CHAT_ID = 'chat-1';
 const DRAFT_TEXT = 'привет, это черновик';
 
+const REPLY_ID = 'msg-1';
+
 const amoState = () => {
   return {
     location: { type: 'conversation', payload: { selectedConversationId: CHAT_ID } },
     dialogs: { [CHAT_ID]: { id: CHAT_ID, conversationType: 'chat' } },
   };
+};
+
+/**
+ * Состояние с активным ответом; `refersTo: null` — store уже снял ответ.
+ */
+const replyState = (refersTo: string | null = REPLY_ID) => {
+  return {
+    ...amoState(),
+    conversationDraughts: { [CHAT_ID]: { id: CHAT_ID, refersTo, value: DRAFT_TEXT } },
+    messages: {
+      [REPLY_ID]: { id: REPLY_ID, conversationId: CHAT_ID, conversationType: 'chat' },
+    },
+  };
+};
+
+const CLEAR_REQUEST = {
+  type: 'updateConversationDraughtRefersToId',
+  payload: { conversationId: CHAT_ID, refersToId: null },
+};
+
+const requestTypes = (sendRequest: Mock<(request: AmoRequest) => Promise<unknown>>) => {
+  return sendRequest.mock.calls.map(([request]) => {
+    return request.type;
+  });
+};
+
+/**
+ * Макрозадача, а не пара микрозадач: исход снятия проходит через несколько `await`.
+ */
+const flush = async () => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
 };
 
 type Setup = {
@@ -45,6 +81,16 @@ const setup = (options: Setup = {}) => {
   const sendRequest = vi.fn(async (_request: AmoRequest): Promise<unknown> => {
     return undefined;
   });
+  let current: unknown = amoState();
+
+  const state = () => {
+    return current;
+  };
+
+  const setState = (next: unknown) => {
+    current = next;
+  };
+
   const client =
     'client' in options
       ? options.client
@@ -52,7 +98,7 @@ const setup = (options: Setup = {}) => {
           sendRequest,
           reduxStore: {
             getState: () => {
-              return 'state' in options ? options.state : amoState();
+              return 'state' in options ? options.state : state();
             },
           },
         };
@@ -83,12 +129,27 @@ const setup = (options: Setup = {}) => {
     );
   };
 
-  return { doc, file, host, input, rawDetails, responses, send, sendRequest, target };
+  return {
+    doc,
+    file,
+    host,
+    input,
+    rawDetails,
+    responses,
+    send,
+    sendRequest,
+    setState,
+    target,
+  };
 };
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
+
+const noop = () => {
+  return undefined;
+};
 
 describe('startAgent', () => {
   it('отправляет файл в открытый чат и отвечает accepted синхронно', () => {
@@ -250,5 +311,185 @@ describe('startAgent', () => {
       '[amo-stickers] amo rejected sticker send:',
       'aborted on signOut'
     );
+  });
+});
+
+describe('startAgent: ответ на сообщение', () => {
+  it('отправляет стикер ответом и снимает ответ после отправки, accepted синхронно', () => {
+    const { responses, send, sendRequest, setState } = setup();
+
+    setState(replyState());
+    send();
+
+    expect(responses).toEqual([{ id: 'cmd-1', status: 'accepted' }]);
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
+    expect(sendRequest).toHaveBeenNthCalledWith(1, {
+      type: 'sendNewMessages',
+      payload: {
+        messages: [
+          expect.objectContaining({
+            refersTo: expect.objectContaining({ id: REPLY_ID }),
+          }),
+        ],
+      },
+    });
+    expect(sendRequest).toHaveBeenNthCalledWith(2, CLEAR_REQUEST);
+  });
+
+  it.each([
+    ['без ответа', amoState()],
+    ['сообщение ответа не загружено', { ...replyState(), messages: {} }],
+  ])('%s — один запрос, без снятия', (_case, state) => {
+    const { responses, send, sendRequest, setState } = setup();
+
+    setState(state);
+    send();
+
+    expect(responses).toEqual([{ id: 'cmd-1', status: 'accepted' }]);
+    expect(requestTypes(sendRequest)).toEqual(['sendNewMessages']);
+  });
+
+  it('в ответе на странице только id и статус, без сообщения ответа', () => {
+    const { rawDetails, send, setState } = setup();
+
+    setState(replyState());
+    send();
+
+    expect(rawDetails).toEqual([JSON.stringify({ id: 'cmd-1', status: 'accepted' })]);
+  });
+
+  it('снятие бросило — accepted, стикер отправлен один раз', () => {
+    vi.spyOn(console, 'warn').mockImplementation(noop);
+
+    const { responses, send, sendRequest, setState } = setup();
+
+    sendRequest.mockImplementation(async (request) => {
+      if (request.type === CLEAR_REQUEST.type) throw new Error('не дошло');
+
+      return undefined;
+    });
+    setState(replyState());
+    send();
+
+    expect(responses).toEqual([{ id: 'cmd-1', status: 'accepted' }]);
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
+  });
+
+  it('отправка бросила — rejected send-threw, ответ не снимается', () => {
+    vi.spyOn(console, 'warn').mockImplementation(noop);
+
+    const { responses, send, sendRequest, setState } = setup();
+
+    sendRequest.mockImplementation(() => {
+      throw new Error('канал закрыт');
+    });
+    setState(replyState());
+    send();
+
+    expect(responses).toEqual([
+      { id: 'cmd-1', status: 'rejected', reason: 'send-threw' },
+    ]);
+    expect(requestTypes(sendRequest)).toEqual(['sendNewMessages']);
+  });
+
+  it('второй стикер, пока store показывает тот же ответ, — без цитаты и без второго снятия', () => {
+    const { send, sendRequest, setState } = setup();
+
+    setState(replyState());
+    send('cmd-1');
+    send('cmd-2');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+    ]);
+    expect(sendRequest.mock.calls[2]?.[0]).toEqual({
+      type: 'sendNewMessages',
+      payload: {
+        messages: [expect.not.objectContaining({ refersTo: expect.anything() })],
+      },
+    });
+  });
+
+  it('после завершения снятия новый ответ на то же сообщение уходит с цитатой', async () => {
+    const { send, sendRequest, setState } = setup();
+
+    setState(replyState());
+    send('cmd-1');
+    await flush();
+    send('cmd-2');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
+  });
+
+  it('после того как store снял ответ, ответ на то же сообщение снова уходит с цитатой', () => {
+    const { send, sendRequest, setState } = setup();
+
+    setState(replyState());
+    send('cmd-1');
+    setState(replyState(null));
+    send('cmd-2');
+    setState(replyState());
+    send('cmd-3');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
+  });
+
+  it.each([
+    [
+      'бросило',
+      () => {
+        throw new Error('не дошло');
+      },
+    ],
+    [
+      'отказ промиса',
+      async () => {
+        throw new Error('aborted');
+      },
+    ],
+    [
+      'Error в результате',
+      async () => {
+        return new Error('aborted on signOut');
+      },
+    ],
+  ])('снятие не удалось (%s) — следующий стикер снова ответом', async (_case, clear) => {
+    vi.spyOn(console, 'warn').mockImplementation(noop);
+
+    const { send, sendRequest, setState } = setup();
+
+    sendRequest.mockImplementation(async (request) => {
+      return request.type === CLEAR_REQUEST.type ? clear() : undefined;
+    });
+    setState(replyState());
+    send('cmd-1');
+    await flush();
+    send('cmd-2');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
   });
 });
