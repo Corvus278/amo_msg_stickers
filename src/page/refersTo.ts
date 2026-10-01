@@ -2,12 +2,7 @@ import { isObject } from '../shared/guards';
 
 import type { AmoStickerMessage } from './buildMessage.types';
 import { fieldOf } from './field';
-import type {
-  AmoQuotedMessage,
-  AmoReplyRef,
-  AttachedReply,
-  ReplyLookup,
-} from './refersTo.types';
+import type { AmoQuotedMessage, AmoReplyRef, AttachedReply } from './refersTo.types';
 import { isQuotedMessage } from './refersTo.types';
 
 /**
@@ -21,34 +16,23 @@ import { isQuotedMessage } from './refersTo.types';
 const FLAG_FORWARDED = 128;
 
 /**
- * Снятие ответа доходит до store не сразу, и стикер, отправленный в это окно, прочитал бы
- * тот же ответ — вторую цитату того же сообщения. Ответ, который агент уже снимает,
- * пропускается, пока черновик показывает его же; другой ответ или его отсутствие значит,
- * что store догнал, и помнить больше нечего.
- *
  * @param state — состояние store amo
  * @param conversationId — id открытого чата
- * @param pendingClear — ответ, снятие которого ещё идёт; null — не идёт
- * @returns ответ для стикера и что помнить дальше
+ * @returns id сообщения, на которое отвечают в черновике чата; null — ответа нет
  */
-export const draughtReplyOf = (
-  state: unknown,
-  conversationId: string,
-  pendingClear: AmoReplyRef | null
-): ReplyLookup => {
+export const draughtReplyIdOf = (state: unknown, conversationId: string) => {
   const draught = fieldOf(fieldOf(state, 'conversationDraughts'), conversationId);
   const refersTo = fieldOf(draught, 'refersTo');
-  const replyId = typeof refersTo === 'string' && refersTo ? refersTo : null;
 
-  if (
-    replyId &&
-    pendingClear?.conversationId === conversationId &&
-    pendingClear.messageId === replyId
-  ) {
-    return { replyId: null, pendingClear };
-  }
+  return typeof refersTo === 'string' && refersTo ? refersTo : null;
+};
 
-  return { replyId, pendingClear: null };
+/**
+ * @param reply — ответ в черновике
+ * @returns ключ ответа в наборе снимаемых агентом
+ */
+export const replyKey = ({ conversationId, messageId }: AmoReplyRef) => {
+  return `${conversationId}:${messageId}`;
 };
 
 /**
@@ -92,27 +76,31 @@ export const quotedMessageOf = (
  * Ответ, чьё сообщение страница не загрузила, не снимается: стикер уходит без цитаты, а
  * плашка остаётся, чтобы ответ не пропал молча.
  *
+ * Снятие ответа доходит до store не сразу, и стикер, отправленный в это окно, прочитал бы тот
+ * же ответ — вторую цитату того же сообщения. Поэтому ответ, снятие которого агент ещё не
+ * дождался, пропускается: стикер уходит без цитаты, как второе сообщение после картинки из
+ * поля.
+ *
  * @param state — состояние store amo
  * @param message — собранное сообщение стикера
- * @param pendingClear — ответ, снятие которого ещё идёт; null — не идёт
- * @returns сообщение с ответом из черновика его чата, что снять и что помнить дальше
+ * @param clearingReplies — ключи (`replyKey`) ответов, снятие которых ещё идёт
+ * @returns сообщение с ответом из черновика его чата и ответ, который после отправки снять
  */
 export const attachReply = (
   state: unknown,
   message: AmoStickerMessage,
-  pendingClear: AmoReplyRef | null
+  clearingReplies: ReadonlySet<string>
 ): AttachedReply => {
   const { conversationId } = message;
-  const lookup = draughtReplyOf(state, conversationId, pendingClear);
-  const quoted = lookup.replyId ? quotedMessageOf(state, lookup.replyId) : null;
+  const replyId = draughtReplyIdOf(state, conversationId);
+  const isClearing =
+    replyId && clearingReplies.has(replyKey({ conversationId, messageId: replyId }));
+  const quoted = replyId && !isClearing ? quotedMessageOf(state, replyId) : null;
 
-  if (!quoted) {
-    return { message, replyToClear: null, pendingClear: lookup.pendingClear };
-  }
+  if (!quoted) return { message, replyToClear: null };
 
   return {
     message: { ...message, refersTo: quoted },
     replyToClear: { conversationId, messageId: quoted.id },
-    pendingClear: lookup.pendingClear,
   };
 };

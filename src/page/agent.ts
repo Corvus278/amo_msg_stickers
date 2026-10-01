@@ -18,7 +18,7 @@ import type { AmoClient } from './amo.types';
 import { buildMessage } from './buildMessage';
 import { fieldOf } from './field';
 import { findClient } from './findClient';
-import { attachReply } from './refersTo';
+import { attachReply, replyKey } from './refersTo';
 import type { AmoReplyRef } from './refersTo.types';
 
 const SEND_REQUEST_TYPE = 'sendNewMessages';
@@ -71,38 +71,50 @@ const logOutcome = async (pending: Promise<unknown>, what: string) => {
 };
 
 /**
+ * Снимаемым ответ остаётся до конца запроса снятия при любом его исходе.
+ *
+ * @param request — промис запроса снятия
+ * @param key — ключ снимаемого ответа
+ * @param clearingReplies — ключи ответов, снятие которых ещё идёт
+ */
+const forgetWhenSettled = async (
+  request: Promise<unknown>,
+  key: string,
+  clearingReplies: Set<string>
+) => {
+  await logOutcome(request, 'reply clear');
+  clearingReplies.delete(key);
+};
+
+/**
  * Снятие ответа — после постановки стикера в очередь: стикер уже ушёл, и никакой исход
- * снятия не должен вести ко второй отправке. Снимаемый ответ агент помнит, пока запрос
- * снятия не завершился: после этого плашки нет, и новый ответ на то же сообщение — новый
- * выбор пользователя, а если снятие не удалось, плашка осталась, и следующий стикер, как
- * картинка из поля, уйдёт ответом.
+ * снятия не должен вести ко второй отправке. Ответ помнится снимаемым, пока запрос не
+ * завершился: к его концу store уже без ответа, а если снятие не удалось, плашка осталась, и
+ * следующий стикер, как картинка из поля, уйдёт ответом.
  *
  * @param client — `{ reduxStore, sendRequest }` amo
  * @param reply — снимаемый ответ
- * @param memory — память агента о снимаемом ответе
+ * @param clearingReplies — ключи ответов, снятие которых ещё идёт
  */
-const clearReply = (client: AmoClient, reply: AmoReplyRef, memory: AgentMemory) => {
-  const forget = () => {
-    if (memory.pendingClear === reply) memory.pendingClear = null;
-  };
+const clearReply = (
+  client: AmoClient,
+  reply: AmoReplyRef,
+  clearingReplies: Set<string>
+) => {
+  const key = replyKey(reply);
 
-  const forgetWhenSettled = async (request: Promise<unknown>) => {
-    await logOutcome(request, 'reply clear');
-    forget();
-  };
-
-  memory.pendingClear = reply;
+  clearingReplies.add(key);
 
   try {
-    void forgetWhenSettled(
-      client.sendRequest({
-        type: CLEAR_REPLY_REQUEST_TYPE,
-        payload: { conversationId: reply.conversationId, refersToId: null },
-      })
-    );
+    const request = client.sendRequest({
+      type: CLEAR_REPLY_REQUEST_TYPE,
+      payload: { conversationId: reply.conversationId, refersToId: null },
+    });
+
+    void forgetWhenSettled(request, key, clearingReplies);
   } catch (error) {
     console.warn('[amo-stickers] reply clear threw:', error);
-    forget();
+    clearingReplies.delete(key);
   }
 };
 
@@ -153,7 +165,9 @@ const handleRequest = (doc: AgentDocument, event: Event, memory: AgentMemory) =>
     const built = buildMessage(state, file, Date.now(), Math.random);
 
     prepared =
-      'reason' in built ? built : attachReply(state, built.message, memory.pendingClear);
+      'reason' in built
+        ? built
+        : attachReply(state, built.message, memory.clearingReplies);
   } catch (error) {
     console.warn('[amo-stickers] amo state unreadable:', error);
 
@@ -162,9 +176,7 @@ const handleRequest = (doc: AgentDocument, event: Event, memory: AgentMemory) =>
 
   if ('reason' in prepared) return reject(prepared.reason);
 
-  const { message, replyToClear, pendingClear } = prepared;
-
-  memory.pendingClear = pendingClear;
+  const { message, replyToClear } = prepared;
 
   let sending: Promise<unknown>;
 
@@ -181,7 +193,7 @@ const handleRequest = (doc: AgentDocument, event: Event, memory: AgentMemory) =>
 
   void logOutcome(sending, 'sticker send');
 
-  if (replyToClear) clearReply(client, replyToClear, memory);
+  if (replyToClear) clearReply(client, replyToClear, memory.clearingReplies);
 
   respond({ id, status: 'accepted' });
 };
@@ -200,7 +212,7 @@ export const startAgent = (
 ) => {
   if (host.__amoStickersPage) return;
 
-  const memory: AgentMemory = { pendingClear: null };
+  const memory: AgentMemory = { clearingReplies: new Set() };
 
   host.__amoStickersPage = true;
   doc.addEventListener(PAGE_REQUEST_EVENT, (event) => {

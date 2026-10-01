@@ -434,25 +434,6 @@ describe('startAgent: ответ на сообщение', () => {
     ]);
   });
 
-  it('после того как store снял ответ, ответ на то же сообщение снова уходит с цитатой', () => {
-    const { send, sendRequest, setState } = setup();
-
-    setState(replyState());
-    send('cmd-1');
-    setState(replyState(null));
-    send('cmd-2');
-    setState(replyState());
-    send('cmd-3');
-
-    expect(requestTypes(sendRequest)).toEqual([
-      'sendNewMessages',
-      'updateConversationDraughtRefersToId',
-      'sendNewMessages',
-      'sendNewMessages',
-      'updateConversationDraughtRefersToId',
-    ]);
-  });
-
   it.each([
     [
       'бросило',

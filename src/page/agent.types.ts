@@ -1,5 +1,5 @@
 import type { BuildMessageFailure } from './buildMessage.types';
-import type { AmoReplyRef, AttachedReply } from './refersTo.types';
+import type { AttachedReply } from './refersTo.types';
 
 /**
  * Узел DOM, как его читает агент: атрибут пометки и, у `<input>`, файлы.
@@ -36,10 +36,10 @@ export type AgentDocument = {
  */
 export type AgentMemory = {
   /**
-   * Ответ, снятие которого ещё идёт: пока черновик в store показывает его же, стикер уходит без
-   * цитаты; null — снятие не идёт.
+   * Ключи (`replyKey`) ответов, снятие которых агент запросил и ещё не дождался: стикер в это
+   * окно уходит без цитаты, а не второй цитатой того же сообщения.
    */
-  pendingClear: AmoReplyRef | null;
+  clearingReplies: Set<string>;
 };
 
 /**

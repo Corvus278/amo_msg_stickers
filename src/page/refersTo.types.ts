@@ -45,22 +45,7 @@ export type AmoReplyRef = {
 };
 
 /**
- * Активный ответ с учётом ответа, снятие которого ещё идёт.
- */
-export type ReplyLookup = {
-  /**
-   * Id сообщения, на которое должен ответить стикер; null — без ответа.
-   */
-  replyId: string | null;
-
-  /**
-   * Ответ, снятие которого ещё идёт и который агенту помнить дальше; null — помнить нечего.
-   */
-  pendingClear: AmoReplyRef | null;
-};
-
-/**
- * Сообщение с ответом из черновика и что агенту делать с ответом дальше.
+ * Сообщение с ответом из черновика и ответ, который агенту снять после отправки.
  */
 export type AttachedReply = {
   /**
@@ -73,11 +58,6 @@ export type AttachedReply = {
    * стикер без ответа.
    */
   replyToClear: AmoReplyRef | null;
-
-  /**
-   * Ответ, снятие которого ещё идёт и который агенту помнить дальше; null — помнить нечего.
-   */
-  pendingClear: AmoReplyRef | null;
 };
 
 const isFilledString = (value: unknown): value is string => {

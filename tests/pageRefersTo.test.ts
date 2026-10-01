@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AmoStickerMessage } from '../src/page/buildMessage.types';
-import { attachReply, draughtReplyOf, quotedMessageOf } from '../src/page/refersTo';
+import {
+  attachReply,
+  draughtReplyIdOf,
+  quotedMessageOf,
+  replyKey,
+} from '../src/page/refersTo';
 
 const CHAT_ID = 'chat-1';
 const REPLY_ID = 'msg-1';
 const FORWARDED = 128;
+const NONE_CLEARING: ReadonlySet<string> = new Set();
 const RECEIVED = 4;
 
 const message = (fields: Record<string, unknown> = {}) => {
@@ -28,12 +34,9 @@ const stateWith = (refersTo: unknown, messages: unknown = { [REPLY_ID]: message(
   };
 };
 
-describe('draughtReplyOf', () => {
+describe('draughtReplyIdOf', () => {
   it('берёт id ответа из черновика открытого чата', () => {
-    expect(draughtReplyOf(stateWith(REPLY_ID), CHAT_ID, null)).toEqual({
-      replyId: REPLY_ID,
-      pendingClear: null,
-    });
+    expect(draughtReplyIdOf(stateWith(REPLY_ID), CHAT_ID)).toBe(REPLY_ID);
   });
 
   it.each([
@@ -47,40 +50,7 @@ describe('draughtReplyOf', () => {
     ['refersTo не строка', stateWith(42)],
     ['состояние не объект', null],
   ])('без ответа: %s', (_case, state) => {
-    expect(draughtReplyOf(state, CHAT_ID, null)).toEqual({
-      replyId: null,
-      pendingClear: null,
-    });
-  });
-
-  it('пропускает ответ, который агент уже снимает, и помнит его', () => {
-    const pendingClear = { conversationId: CHAT_ID, messageId: REPLY_ID };
-
-    expect(draughtReplyOf(stateWith(REPLY_ID), CHAT_ID, pendingClear)).toEqual({
-      replyId: null,
-      pendingClear,
-    });
-  });
-
-  it.each([
-    ['ответа в черновике больше нет', stateWith(null), null],
-    ['в черновике другой ответ', stateWith('msg-2'), 'msg-2'],
-  ])('забывает снимаемый ответ, когда store догнал: %s', (_case, state, replyId) => {
-    const pendingClear = { conversationId: CHAT_ID, messageId: REPLY_ID };
-
-    expect(draughtReplyOf(state, CHAT_ID, pendingClear)).toEqual({
-      replyId,
-      pendingClear: null,
-    });
-  });
-
-  it('снимаемый ответ другого чата не пропускает ответ открытого', () => {
-    const pendingClear = { conversationId: 'chat-2', messageId: REPLY_ID };
-
-    expect(draughtReplyOf(stateWith(REPLY_ID), CHAT_ID, pendingClear)).toEqual({
-      replyId: REPLY_ID,
-      pendingClear: null,
-    });
+    expect(draughtReplyIdOf(state, CHAT_ID)).toBeNull();
   });
 });
 
@@ -187,38 +157,46 @@ describe('attachReply', () => {
     const result = attachReply(
       stateWith(REPLY_ID, { [REPLY_ID]: record }),
       sticker(),
-      null
+      NONE_CLEARING
     );
 
     expect(result.message.refersTo).toBe(record);
     expect(result.message).toMatchObject({ id: 'sticker-1', conversationId: CHAT_ID });
     expect(result.replyToClear).toEqual({ conversationId: CHAT_ID, messageId: REPLY_ID });
-    expect(result.pendingClear).toBeNull();
   });
 
   it('без ответа — сообщение то же, снимать нечего', () => {
     const plain = sticker();
 
-    expect(attachReply({}, plain, null)).toEqual({
+    expect(attachReply({}, plain, NONE_CLEARING)).toEqual({
       message: plain,
       replyToClear: null,
-      pendingClear: null,
     });
   });
 
   it('сообщение ответа не загружено — без refersTo, ответ не снимается', () => {
-    const result = attachReply(stateWith(REPLY_ID, {}), sticker(), null);
+    const result = attachReply(stateWith(REPLY_ID, {}), sticker(), NONE_CLEARING);
 
     expect(result.message).not.toHaveProperty('refersTo');
     expect(result.replyToClear).toBeNull();
   });
 
   it('ответ, снятие которого идёт, — без refersTo и без второго снятия', () => {
-    const pendingClear = { conversationId: CHAT_ID, messageId: REPLY_ID };
-    const result = attachReply(stateWith(REPLY_ID), sticker(), pendingClear);
+    const clearing = new Set([
+      replyKey({ conversationId: CHAT_ID, messageId: REPLY_ID }),
+    ]);
+    const result = attachReply(stateWith(REPLY_ID), sticker(), clearing);
 
     expect(result.message).not.toHaveProperty('refersTo');
     expect(result.replyToClear).toBeNull();
-    expect(result.pendingClear).toBe(pendingClear);
+  });
+
+  it('снимаемый ответ другого чата не мешает ответу открытого', () => {
+    const clearing = new Set([
+      replyKey({ conversationId: 'chat-2', messageId: REPLY_ID }),
+    ]);
+    const result = attachReply(stateWith(REPLY_ID), sticker(), clearing);
+
+    expect(result.replyToClear).toEqual({ conversationId: CHAT_ID, messageId: REPLY_ID });
   });
 });
