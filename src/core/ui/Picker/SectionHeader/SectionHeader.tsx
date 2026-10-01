@@ -1,8 +1,5 @@
 import type { FunctionComponent as FC } from 'preact';
 
-import { packLink } from '../../../packLink';
-import { usePicker } from '../PickerProvider/usePicker';
-
 import { ClearRecentButton } from './ClearRecentButton/ClearRecentButton';
 import { headerAction } from './headerAction/headerAction';
 import { PackMenuButton } from './PackMenuButton/PackMenuButton';
@@ -18,12 +15,7 @@ const TITLE_CLASS =
  * Название сжимается многоточием, а действие не сжимается: длинное название его не сдвигает.
  */
 export const SectionHeader: FC<SectionHeaderProps> = (props) => {
-  const { sectionId, title, top, height, onPackDelete, onRecentClear } = props;
-  const { packs } = usePicker();
-  const pack = packs.find(({ id }) => {
-    return id === sectionId;
-  });
-  const link = pack ? packLink(pack) : null;
+  const { sectionId, title, link, top, height, onPackDelete, onRecentClear } = props;
 
   const handleClearConfirm = () => {
     onRecentClear();
