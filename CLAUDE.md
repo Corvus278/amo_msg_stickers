@@ -217,7 +217,8 @@ docs/             дока пользователя — отдельный па�
                   по-английски с теми же путями, _parts/ — общие фрагменты страниц (_parts/en/ — английские),
                   img/ — скрины и демо, общие для обоих языков; public/ — логотип
 scripts/          скрипты CI: version.ts — чистая логика проверки версии (типы — version.types.ts);
-                  check-version.mjs — её запуск в CI
+                  check-version.mjs — её запуск в CI; chromeWebStore.ts — клиент Chrome Web Store API (типы —
+                  chromeWebStore.types.ts), publish-chrome-web-store.mjs — публикация пакета из релиза
 tests/            юнит-тесты, helpers/
 .github/          workflows/ci.yml — проверки PR; workflows/release.yml — релиз из master; workflows/pages.yml —
                   публикация доки; actions/setup — окружение
@@ -774,6 +775,13 @@ GitHub Actions, Node и pnpm ставятся из `.mise.toml` (`jdx/mise-actio
   предупреждением, прогон зелёный: PR без подъёма версии релиза не даёт. Если push мержа не создал прогона
   (GitHub изредка теряет событие), релиз запускается вручную — `gh workflow run release.yml --ref master`; с другой
   ветки прогон пропускается целиком.
+- **Chrome Web Store** (job `chrome-web-store` в `release.yml`): за новым релизом тот же `amo-stickers.zip` уходит
+  в стор и на проверку — Chrome Web Store API v2, вход сервисным аккаунтом (`scripts/publish-chrome-web-store.mjs`,
+  логика и подпись JWT — `scripts/chromeWebStore.ts`). Секреты — `CWS_SERVICE_ACCOUNT_KEY` (JSON-ключ) и
+  `CWS_PUBLISHER_ID`; без них job пропускает публикацию предупреждением и остаётся зелёным. Сбой загрузки — красный
+  job при уже выпущенном релизе; «Re-run failed jobs» безопасен: версию, которая уже в сторе на проверке или
+  опубликована, скрипт не загружает. Job идёт за релизом этого коммита — и тогда, когда тег создала прошлая попытка
+  того же прогона, упавшая позже; тег на другом коммите (PR без подъёма версии) стор не трогает.
 - **Дока** (`pages.yml`): пуш в `master`, меняющий `docs/**` (или окружение, корневой `package.json` со скриптом
   `docs:build` и сам workflow), собирает сайт и публикует его на GitHub Pages без релиза и подъёма версии; упавшая
   сборка до деплоя не доходит. Идущая публикация не отменяется.

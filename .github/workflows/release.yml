@@ -27,6 +27,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Публикация в стор идёт за релизом этого коммита: созданным сейчас или прошлой
+    # попыткой того же прогона, упавшей после создания тега, — иначе перезапуск такой
+    # попытки потерял бы версию для стора. Тег на другом коммите — версия выпущена
+    # прошлым прогоном и в стор отправлялась тогда же.
+    outputs:
+      released: ${{ steps.tag.outputs.exists == 'false' || steps.tag.outputs.sha == github.sha }}
     steps:
       - uses: actions/checkout@v7
 
@@ -38,7 +44,9 @@ jobs:
         env:
           TAG: v${{ steps.version.outputs.version }}
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+          sha=$(git ls-remote --tags origin "refs/tags/${TAG}" | cut -f1)
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          if [ -n "${sha}" ]; then
             echo "::warning::Версия ${TAG} уже выпущена — релиз не создаётся"
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -76,3 +84,33 @@ jobs:
           latest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1000 \
             --json tagName --jq '.[].tagName' | sort -V | tail -n 1)
           gh release edit "${latest}" --latest
+
+  # Отдельный job после релиза: его сбой виден красным в прогоне, а релиз на GitHub к
+  # этому моменту уже выпущен. Упавший job перезапускается кнопкой «Re-run failed
+  # jobs» — версию, которая в сторе уже на проверке или опубликована, скрипт второй
+  # раз не загружает.
+  chrome-web-store:
+    needs: release
+    if: ${{ needs.release.outputs.released == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # Только Node: скрипт без зависимостей, но импортирует .ts — нужен Node из .mise.toml.
+      - uses: jdx/mise-action@v4
+        with:
+          install_args: node
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: release
+
+      # Без секретов скрипт пропускает публикацию предупреждением, и job зелёный.
+      - env:
+          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          # ID карточки amo stickers в Chrome Web Store — тот же, что даёт `key` в manifest.
+          CWS_ITEM_ID: abjnjphijggkkdbbmkldhibgepgdcgip
+        run: node scripts/publish-chrome-web-store.mjs release/amo-stickers.zip
