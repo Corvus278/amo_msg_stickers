@@ -85,7 +85,9 @@ export const flyTransform = (from: RectLike, to: RectLike): string | null => {
 
 /**
  * Держит анимацию на паузе, пока картинка не декодирована, но не дольше `IMAGE_WAIT_MS`, и
- * запускает её. Ошибка декодирования не мешает полёту.
+ * запускает её. Ошибка декодирования не мешает полёту. Пока шло ожидание, анимацию могли
+ * отменить (закрытие или повторное открытие): `play()` на отменённой запустил бы её с нуля,
+ * поэтому возобновляется только анимация, всё ещё стоящая на паузе.
  *
  * @param animation — полёт, начальное состояние которого уже показано (`fill: 'backwards'`)
  * @param image — картинка внутри летящего узла
@@ -100,7 +102,8 @@ const playAfterImage = async (animation: Animation, image: HTMLImageElement) => 
 
   animation.pause();
   await Promise.race([decoded, timeout]);
-  animation.play();
+
+  if (animation.playState === 'paused') animation.play();
 };
 
 /**
