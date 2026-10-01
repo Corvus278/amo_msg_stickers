@@ -84,6 +84,17 @@ export const flyTransform = (from: RectLike, to: RectLike): string | null => {
 };
 
 /**
+ * Прямоугольник картинки ячейки-источника: то, что видит пользователь. У кнопки вокруг неё
+ * есть отступ, поэтому берётся `img` внутри, а сама кнопка — только если картинки нет.
+ *
+ * @param source — кнопка ячейки
+ * @returns прямоугольник относительно окна
+ */
+const sourceImageRect = (source: HTMLElement) => {
+  return (source.querySelector('img') || source).getBoundingClientRect();
+};
+
+/**
  * Держит анимацию на паузе, пока картинка не декодирована, но не дольше `IMAGE_WAIT_MS`, и
  * запускает её. Ошибка декодирования не мешает полёту. Пока шло ожидание, анимацию могли
  * отменить (закрытие или повторное открытие): `play()` на отменённой запустил бы её с нуля,
@@ -126,11 +137,7 @@ export const playPreviewOpen = (targets: PreviewOpenTargets) => {
 
   if (isMotionReduced()) return;
 
-  /**
-   * Картинка внутри ячейки — то, что видит пользователь; у кнопки вокруг неё есть отступ.
-   */
-  const fromRect = (source.querySelector('img') ?? source).getBoundingClientRect();
-  const from = flyTransform(fromRect, flight.getBoundingClientRect());
+  const from = flyTransform(sourceImageRect(source), flight.getBoundingClientRect());
 
   if (from) {
     const flyAnimation = flight.animate([{ transform: from }, { transform: 'none' }], {
@@ -199,10 +206,9 @@ export const playPreviewClose = (targets: PreviewOpenTargets): PreviewLeave => {
   if (!isMotionReduced()) {
     const flightFrom = currentTransform(flight);
     const emojiFrom = emoji ? currentTransform(emoji) : 'none';
-    const canvas = flight.parentElement ?? flight;
-    const fromRect = (source.querySelector('img') ?? source).getBoundingClientRect();
+    const canvas = flight.parentElement || flight;
     const to = source.isConnected
-      ? flyTransform(fromRect, canvas.getBoundingClientRect())
+      ? flyTransform(sourceImageRect(source), canvas.getBoundingClientRect())
       : null;
 
     flight.getAnimations().forEach((animation) => {
