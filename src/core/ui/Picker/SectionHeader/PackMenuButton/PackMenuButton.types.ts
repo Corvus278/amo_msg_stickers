@@ -5,6 +5,11 @@ export type PackMenuButtonProps = {
   title: string;
 
   /**
+   * Ссылка на пак для пункта «Копировать ссылку». `null` — у пака ссылки нет, пункта нет.
+   */
+  link: string | null;
+
+  /**
    * Колбэк на подтверждённое удаление пака.
    */
   onDelete: () => void;

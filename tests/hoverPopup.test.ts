@@ -427,11 +427,12 @@ describe('createPopupHolds', () => {
     expect(holds.isHeld()).toBe(false);
   });
 
-  it('releasePanel снимает фокус и диалог файла, но не импорт и конвертацию', () => {
+  it('releasePanel снимает фокус, диалог файла и предпросмотр, но не импорт и конвертацию', () => {
     const holds = createPopupHolds();
 
     holds.set('field', true);
     holds.set('fileDialog', true);
+    holds.set('preview', true);
     holds.releasePanel();
     expect(holds.isHeld()).toBe(false);
 
@@ -443,6 +444,19 @@ describe('createPopupHolds', () => {
     holds.set('conversion', true);
     holds.releasePanel();
     expect(holds.isHeld()).toBe(true);
+  });
+
+  it('закрытая панель снимает причину preview и сообщает о снятии', () => {
+    let released = 0;
+    const holds = createPopupHolds(() => {
+      released += 1;
+    });
+
+    holds.set('preview', true);
+    expect(holds.isHeld()).toBe(true);
+    holds.releasePanel();
+    expect(holds.isHeld()).toBe(false);
+    expect(released).toBe(1);
   });
 
   it('onRelease зовётся, когда снята последняя причина, и только тогда', () => {

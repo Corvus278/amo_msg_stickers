@@ -15,7 +15,7 @@ const TITLE_CLASS =
  * Название сжимается многоточием, а действие не сжимается: длинное название его не сдвигает.
  */
 export const SectionHeader: FC<SectionHeaderProps> = (props) => {
-  const { sectionId, title, top, height, onPackDelete, onRecentClear } = props;
+  const { sectionId, title, link, top, height, onPackDelete, onRecentClear } = props;
 
   const handleClearConfirm = () => {
     onRecentClear();
@@ -32,7 +32,7 @@ export const SectionHeader: FC<SectionHeaderProps> = (props) => {
       }
 
       case 'menu': {
-        return <PackMenuButton title={title} onDelete={handlePackDelete} />;
+        return <PackMenuButton title={title} link={link} onDelete={handlePackDelete} />;
       }
 
       default: {

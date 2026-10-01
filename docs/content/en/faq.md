@@ -61,3 +61,26 @@ The browser tells extensions from an archive apart by the folder they are lo
 into a different folder, the browser installs it as a new extension — with empty “Settings”. Enter the GIF keys and
 the bot token again, and from then on update the extension in the same folder — following the steps in
 [“Updating”](./update#archive). Stickers and packs aren’t lost: they are stored on the amo site, not in the extension.
+
+## How to view a sticker or GIF larger
+
+Press and hold the main mouse button on a sticker or GIF in the feed for more than 300 ms: an enlarged picture appears
+over the whole page, and animation plays. Without releasing the button, move the cursor over other stickers or GIFs:
+the preview immediately shows the one under the cursor. Release the button, and the preview closes without sending
+the sticker or GIF. A short click sends it as usual. A finger touch doesn’t open the preview by holding:
+on a touchscreen, use the menu.
+
+Another way: right-click a sticker or GIF (or press the context menu key or Shift+F10), then choose “Preview”. This
+preview doesn’t close on its own. Close it with the Escape key, by clicking anywhere on the page or with the “Close
+preview” button. Escape closes only the preview, and the panel stays open. You can’t switch stickers with the cursor
+in this preview: that needs the hold.
+
+If holding doesn’t open the preview, keep the cursor still while you hold the button: moving it by more than 6
+px cancels the hold. The right and middle mouse buttons don’t open the preview.
+
+## How to share a pack from Telegram
+
+Click “…” in the pack header above its stickers and choose “Copy link”: a link like t.me/addstickers/Name goes
+to the clipboard, and “Pack link copied” appears at the bottom of the panel. You can send it in a chat or paste it into
+“Add stickers” on another device. “My stickers” has no menu, and a pack without a Telegram set name has no “Copy link”
+item.

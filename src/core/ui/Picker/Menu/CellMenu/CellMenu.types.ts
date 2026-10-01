@@ -5,16 +5,40 @@ import type { MenuOpening } from '../Menu.types';
  */
 export type CellRemoveKind = 'sticker' | 'recent';
 
-export type CellMenuProps = {
+/**
+ * Удаление в меню: `kind` и `onRemove` задаются только вместе, поэтому тип связывает их, а не
+ * держит независимо необязательными. Нет удаления — нет и пункта: у найденной GIF в меню один
+ * «Предпросмотр».
+ */
+export type CellMenuRemove =
+  | {
+      /**
+       * Что убирает пункт удаления.
+       */
+      kind: CellRemoveKind;
+
+      /**
+       * Колбэк на выбор пункта удаления: элемент ячейки убирается.
+       */
+      onRemove: () => void;
+    }
+  | {
+      /**
+       * Удаления нет: нет и `kind`.
+       */
+      kind?: undefined;
+
+      /**
+       * Удаления нет: нет и колбэка.
+       */
+      onRemove?: undefined;
+    };
+
+export type CellMenuProps = CellMenuRemove & {
   /**
    * Название меню на языке интерфейса: «Действия: стикер 😀».
    */
   label: string;
-
-  /**
-   * Что убирает пункт меню.
-   */
-  kind: CellRemoveKind;
 
   /**
    * Где открыто меню и куда вернуть фокус.
@@ -27,7 +51,8 @@ export type CellMenuProps = {
   onClose: () => void;
 
   /**
-   * Колбэк на выбор пункта: элемент ячейки убирается.
+   * Колбэк на выбор пункта «Предпросмотр» — после закрытия меню. Читает источник из
+   * `opening.source` тот, кто открыл меню.
    */
-  onRemove: () => void;
+  onPreview: () => void;
 };

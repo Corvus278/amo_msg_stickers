@@ -215,7 +215,16 @@ export const start = (host: Host) => {
 
   const handleDocumentMouseDown = (event: MouseEvent) => {
     if (!hoverPopup.isOpen || !activeButton) return;
-    if (!event.composedPath().includes(activeButton)) hoverPopup.dismiss();
+
+    const path = event.composedPath();
+
+    /**
+     * Клик по закреплённому предпросмотру: слой лежит вне кнопки, но закрывает только
+     * предпросмотр, попап остаётся.
+     */
+    if (path.includes(activeButton) || path.includes(picker.previewElement)) return;
+
+    hoverPopup.dismiss();
   };
 
   /**

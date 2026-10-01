@@ -3,7 +3,7 @@ import type { HoldReason, PopupHolds } from './hoverPopup.types';
 /**
  * Причины, которые пишет DOM панели: у скрытой панели их некому снять.
  */
-const PANEL_REASONS: HoldReason[] = ['field', 'fileDialog'];
+const PANEL_REASONS: HoldReason[] = ['field', 'fileDialog', 'preview'];
 
 const NO_RELEASE = () => {};
 
