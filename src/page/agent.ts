@@ -71,7 +71,17 @@ const logOutcome = async (pending: Promise<unknown>, what: string) => {
 };
 
 /**
- * Снимаемым ответ остаётся до конца запроса снятия при любом его исходе.
+ * Дольше этого снимаемый ответ не помнится, даже если запрос снятия так и не завершился: иначе
+ * зависший запрос оставил бы ответ снимаемым до перезагрузки, и каждый следующий стикер на ту
+ * же плашку уходил бы без цитаты. В живом amo снятие завершается за доли секунды, первое за
+ * сессию — около секунды.
+ */
+const CLEARING_REPLY_MAX_MS = 10_000;
+
+/**
+ * Снимаемым ответ остаётся до конца запроса снятия при любом его исходе, но не дольше
+ * `CLEARING_REPLY_MAX_MS`. Запрос, завершившийся после этого срока, ключ уже не трогает: за это
+ * время тот же ответ мог стать снимаемым снова — следующим стикером.
  *
  * @param request — промис запроса снятия
  * @param key — ключ снимаемого ответа
@@ -82,7 +92,18 @@ const forgetWhenSettled = async (
   key: string,
   clearingReplies: Set<string>
 ) => {
+  let isExpired = false;
+
+  const timer = setTimeout(() => {
+    isExpired = true;
+    clearingReplies.delete(key);
+  }, CLEARING_REPLY_MAX_MS);
+
   await logOutcome(request, 'reply clear');
+
+  if (isExpired) return;
+
+  clearTimeout(timer);
   clearingReplies.delete(key);
 };
 

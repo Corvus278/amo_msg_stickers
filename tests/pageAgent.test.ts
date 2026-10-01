@@ -144,6 +144,7 @@ const setup = (options: Setup = {}) => {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -431,6 +432,62 @@ describe('startAgent: ответ на сообщение', () => {
       'updateConversationDraughtRefersToId',
       'sendNewMessages',
       'updateConversationDraughtRefersToId',
+    ]);
+  });
+
+  it('снятие зависло — через 10 с новый стикер снова ответом', async () => {
+    vi.useFakeTimers();
+
+    const { send, sendRequest, setState } = setup();
+
+    sendRequest.mockImplementation(async (request) => {
+      return request.type === CLEAR_REQUEST.type ? new Promise(noop) : undefined;
+    });
+    setState(replyState());
+    send('cmd-1');
+    await vi.advanceTimersByTimeAsync(9999);
+    send('cmd-2');
+    await vi.advanceTimersByTimeAsync(1);
+    send('cmd-3');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+    ]);
+  });
+
+  it('снятие завершилось после 10 с — не сбрасывает снятие следующего стикера', async () => {
+    vi.useFakeTimers();
+
+    const { send, sendRequest, setState } = setup();
+    const settles: (() => void)[] = [];
+
+    sendRequest.mockImplementation(async (request) => {
+      if (request.type !== CLEAR_REQUEST.type) return undefined;
+
+      return new Promise((resolve) => {
+        settles.push(() => {
+          resolve(undefined);
+        });
+      });
+    });
+    setState(replyState());
+    send('cmd-1');
+    await vi.advanceTimersByTimeAsync(10_000);
+    send('cmd-2');
+    settles[0]?.();
+    await vi.advanceTimersByTimeAsync(0);
+    send('cmd-3');
+
+    expect(requestTypes(sendRequest)).toEqual([
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
+      'updateConversationDraughtRefersToId',
+      'sendNewMessages',
     ]);
   });
 
