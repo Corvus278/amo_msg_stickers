@@ -8,7 +8,10 @@ import {
 } from '../scripts/chromeWebStore';
 import type { PublishOptions } from '../scripts/chromeWebStore.types';
 
+import { fromBase64Url } from './helpers/fromBase64Url';
 import { mockResponse } from './helpers/mockResponse';
+import { privateKeyPem } from './helpers/privateKeyPem';
+import { routedFetch } from './helpers/routedFetch';
 
 const ITEM = { publisherId: 'pub-1', itemId: 'abjnjphijggkkdbbmkldhibgepgdcgip' };
 
@@ -32,54 +35,12 @@ let keyPair: CryptoKeyPair;
 let serviceAccountKey: string;
 
 /**
- * @param bytes — байты
- * @returns base64 со строками по 64 символа, как в PEM
- */
-const toPem = (bytes: ArrayBuffer) => {
-  const base64 = btoa(String.fromCodePoint(...new Uint8Array(bytes)));
-  const lines = base64.match(/.{1,64}/g) || [];
-
-  return `-----BEGIN PRIVATE KEY-----\n${lines.join('\n')}\n-----END PRIVATE KEY-----\n`;
-};
-
-/**
- * @param segment — сегмент JWT в base64url
- * @returns байты сегмента
- */
-const fromBase64Url = (segment: string) => {
-  const base64 = segment.replaceAll('-', '+').replaceAll('_', '/');
-
-  return Uint8Array.from(atob(base64), (char) => {
-    return char.codePointAt(0) || 0;
-  });
-};
-
-/**
  * @param body — объект ответа
  * @param status — HTTP-статус
  * @returns ответ API с JSON-телом
  */
 const json = (body: object, status = 200) => {
   return mockResponse(JSON.stringify(body), { status });
-};
-
-/**
- * `fetch`, который отвечает по адресу из очереди ответов этого адреса и пишет вызовы.
- *
- * @param routes — очереди ответов по адресам
- * @returns мок `fetch`
- */
-const routedFetch = (routes: Record<string, Response[]>) => {
-  return vi.fn<typeof fetch>(async (input) => {
-    const url = String(input);
-    const response = routes[url]?.shift();
-
-    if (!response) {
-      throw new Error(`Неожиданный запрос ${url}`);
-    }
-
-    return response;
-  });
 };
 
 /**
@@ -127,7 +88,9 @@ beforeAll(async () => {
   serviceAccountKey = JSON.stringify({
     type: 'service_account',
     client_email: 'publisher@project.iam.gserviceaccount.com',
-    private_key: toPem(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey)),
+    private_key: privateKeyPem(
+      await crypto.subtle.exportKey('pkcs8', keyPair.privateKey)
+    ),
   });
 });
 
