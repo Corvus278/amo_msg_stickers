@@ -167,11 +167,14 @@ export const PreviewLayer: FC<PreviewLayerProps> = (props) => {
 
   /**
    * Фокус ставится после монтирования: меню, из которого открыт предпросмотр, к этому
-   * моменту уже вернуло фокус на источник.
+   * моменту уже вернуло фокус на источник. `isLeaving` в зависимостях: закреплённый
+   * предпросмотр, открытый заново посреди ухода, не меняет `isPinned`, но слой уже тот же и
+   * кнопка «Закрыть предпросмотр» на месте — без этого фокус на неё не встал бы, и Escape не
+   * закрыл бы диалог.
    */
   useEffect(() => {
-    if (isPinned) closeButtonRef.current?.focus({ preventScroll: true });
-  }, [isPinned]);
+    if (isPinned && !isLeaving) closeButtonRef.current?.focus({ preventScroll: true });
+  }, [isPinned, isLeaving]);
 
   if (!preview) return null;
 
