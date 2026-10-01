@@ -29,6 +29,13 @@ export type PickerHandle = {
   element: HTMLElement;
 
   /**
+   * Хост слоя предпросмотра на всю страницу. Фасад вставляет его в `documentElement` сам;
+   * вызывающая сторона узнаёт по нему клики в слое, которые не считаются кликами вне
+   * попапа.
+   */
+  previewElement: HTMLElement;
+
+  /**
    * Открыт ли пикер сейчас.
    */
   readonly isOpen: boolean;

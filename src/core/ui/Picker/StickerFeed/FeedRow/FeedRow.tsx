@@ -59,6 +59,7 @@ export const FeedRow: FC<FeedRowProps> = (props) => {
             id={cellId(sectionId, key)}
             item={item}
             url={urlOf(sticker.id, sticker.blob)}
+            emoji={sticker.emoji}
             name={name}
             removeKind={removeKind}
             onRemove={handleCellRemove}

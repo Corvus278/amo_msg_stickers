@@ -9,6 +9,8 @@ import { Footer } from './Footer/Footer';
 import { GifView } from './GifView/GifView';
 import { ModePanel } from './ModePanel/ModePanel';
 import { usePicker } from './PickerProvider/usePicker';
+import { PreviewOverlay } from './Preview/PreviewOverlay/PreviewOverlay';
+import { PreviewProvider } from './Preview/PreviewProvider';
 import { Screen } from './Screen/Screen';
 import { SettingsView } from './SettingsView/SettingsView';
 import { StatusBar } from './StatusBar/StatusBar';
@@ -112,7 +114,7 @@ const isTextField = (target: EventTarget | null) => {
 };
 
 export const Picker: FC<PickerProps> = (props) => {
-  const { phase, isDark, onClose } = props;
+  const { phase, isDark, previewRoot, onClose } = props;
   const { setHold } = usePicker();
   const { mode, screen } = usePickerView();
   /**
@@ -153,24 +155,28 @@ export const Picker: FC<PickerProps> = (props) => {
       onFocusIn={handlePanelFocusIn}
       onFocusOut={handlePanelFocusOut}
     >
-      <div className={BODY_CLASS}>
-        <ModePanel mode="stickers" isActive={mode === 'stickers'} isInert={isCovered}>
-          <StickersMode isOpen={isOpen} />
-        </ModePanel>
+      <PreviewProvider phase={phase}>
+        <div className={BODY_CLASS}>
+          <ModePanel mode="stickers" isActive={mode === 'stickers'} isInert={isCovered}>
+            <StickersMode isOpen={isOpen} />
+          </ModePanel>
 
-        <ModePanel mode="gifs" isActive={mode === 'gifs'} isInert={isCovered}>
-          <GifView isOpen={isOpen} />
-        </ModePanel>
+          <ModePanel mode="gifs" isActive={mode === 'gifs'} isInert={isCovered}>
+            <GifView isOpen={isOpen} />
+          </ModePanel>
 
-        {/*
-         * `key` — смена экрана на экран монтирует новый, и появление проигрывается снова.
-         */}
-        {screen && <Screen key={screen}>{renderScreen(screen)}</Screen>}
+          {/*
+           * `key` — смена экрана на экран монтирует новый, и появление проигрывается снова.
+           */}
+          {screen && <Screen key={screen}>{renderScreen(screen)}</Screen>}
 
-        <StatusBar />
-      </div>
+          <StatusBar />
+        </div>
 
-      <Footer />
+        <Footer />
+
+        <PreviewOverlay container={previewRoot} isDark={isDark} />
+      </PreviewProvider>
     </dialog>
   );
 };
