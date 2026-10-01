@@ -51,7 +51,7 @@
 
 ## 5. Версия и проверки
 
-- [x] 5.1 Версия 0.16.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка —
+- [x] 5.1 Версия 0.17.0 в `package.json`, `src/extension/manifest.json` и `@version` в `build.mjs`; проверка —
   `node scripts/check-version.mjs --base origin/master` зелёный
 - [x] 5.2 `pnpm lint`, `pnpm test`, `pnpm build` зелёные, вывод приведён; `openspec validate sticker-reply --strict`
   проходит; self-review диффа по `.claude/rules`; поиск кириллицы вне комментариев в `src/` не находит новых строк
