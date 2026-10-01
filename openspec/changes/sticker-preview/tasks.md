@@ -53,6 +53,6 @@
 - [x] 8.1 Словарь: `pack.copyLink`, `status.packLinkCopied`, `error.copyLink` в `messages.ru.ts` и `messages.en.ts` (typograf по тексту); `pnpm typecheck` проходит
 - [x] 8.2 `packLink(pack)` — чистая функция с тестом: пак Telegram с именем, без имени, свой пак, имя с недопустимыми символами
 - [x] 8.3 `copyText(text)` — запись в буфер без исключений наружу (`true`/`false`); тест на успех, отказ и отсутствие API
-- [x] 8.4 `PackMenuButton`: пункт «Копировать ссылку» первым при наличии ссылки; `SectionHeader` берёт пак из `usePicker().packs`; меню закрывается, статус успеха и ошибки
+- [x] 8.4 `PackMenuButton`: пункт «Копировать ссылку» первым при наличии ссылки; `StickerFeed` считает `packLink(pack)` и передаёт `SectionHeader` пропсом `link`; меню закрывается, статус успеха и ошибки
 - [x] 8.5 Стенд `dev/harness.html`: пункт в меню пака, статус, отказ записи, английский интерфейс; доки: FAQ ru/en и `CLAUDE.md`
 

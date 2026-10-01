@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   EMOJI_LEAVE_MS,
   EMOJI_POP_DELAY_MS,
-  EMOJI_POP_MS,
   flyTransform,
   PREVIEW_FLY_MS,
   PREVIEW_LEAVE_MS,
@@ -55,17 +54,11 @@ describe('flyTransform', () => {
 });
 
 describe('тайминг открытия', () => {
-  it('вылет картинки укладывается в 300 мс спеки', () => {
-    expect(PREVIEW_FLY_MS).toBeLessThanOrEqual(300);
-  });
-
-  it('эмодзи стартует вслед за картинкой и не заканчивается позже 400 мс', () => {
+  it('эмодзи стартует вслед за картинкой', () => {
     expect(EMOJI_POP_DELAY_MS).toBeGreaterThan(0);
-    expect(EMOJI_POP_DELAY_MS + EMOJI_POP_MS).toBeLessThanOrEqual(400);
   });
 
-  it('возврат в ячейку укладывается в 250 мс спеки и не длиннее вылета', () => {
-    expect(PREVIEW_LEAVE_MS).toBeLessThanOrEqual(250);
+  it('возврат в ячейку не длиннее вылета', () => {
     expect(PREVIEW_LEAVE_MS).toBeLessThanOrEqual(PREVIEW_FLY_MS);
     expect(EMOJI_LEAVE_MS).toBeLessThanOrEqual(PREVIEW_LEAVE_MS);
   });

@@ -4,7 +4,7 @@ import type { Pack } from './db.types';
 /**
  * Начало ссылки на набор стикеров в Telegram: к нему дописывается имя набора.
  */
-export const TG_STICKERS_LINK_PREFIX = 'https://t.me/addstickers/';
+const TG_STICKERS_LINK_PREFIX = 'https://t.me/addstickers/';
 
 /**
  * Ссылка на пак в Telegram — та же, по которой пак импортируется.

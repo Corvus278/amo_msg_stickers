@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { packLink, TG_STICKERS_LINK_PREFIX } from '../src/core/packLink';
+import { packLink } from '../src/core/packLink';
 
 describe('packLink', () => {
   it('у пака Telegram с именем набора — ссылка на добавление', () => {
     expect(packLink({ source: 'telegram', sourceRef: 'Gachi_Pack' })).toBe(
       'https://t.me/addstickers/Gachi_Pack'
     );
-  });
-
-  it('префикс — адрес ссылки добавления набора', () => {
-    expect(TG_STICKERS_LINK_PREFIX).toBe('https://t.me/addstickers/');
   });
 
   it('пак Telegram без имени набора ссылки не имеет', () => {

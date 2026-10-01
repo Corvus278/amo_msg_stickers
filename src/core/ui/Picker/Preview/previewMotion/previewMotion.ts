@@ -29,7 +29,8 @@ export const PREVIEW_LEAVE_MS = 220;
 export const EMOJI_LEAVE_MS = 160;
 
 /**
- * Кривая возврата: симметричная, без резкого старта — картинка сразу видимо трогается с места.
+ * Кривая возврата: стандартное замедление к концу — картинка сразу видимо трогается с места и
+ * мягко садится в ячейку.
  */
 const LEAVE_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -104,8 +105,9 @@ const sourceImageRect = (source: HTMLElement) => {
  * @param image — картинка внутри летящего узла
  */
 const playAfterImage = async (animation: Animation, image: HTMLImageElement) => {
+  let timerId = 0;
   const timeout = new Promise<void>((resolve) => {
-    setTimeout(resolve, IMAGE_WAIT_MS);
+    timerId = window.setTimeout(resolve, IMAGE_WAIT_MS);
   });
   const decoded = image.decode().catch(() => {
     return undefined;
@@ -113,6 +115,7 @@ const playAfterImage = async (animation: Animation, image: HTMLImageElement) => 
 
   animation.pause();
   await Promise.race([decoded, timeout]);
+  window.clearTimeout(timerId);
 
   if (animation.playState === 'paused') animation.play();
 };

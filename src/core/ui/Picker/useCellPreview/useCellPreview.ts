@@ -14,14 +14,19 @@ import type { CellPreview, UseCellPreviewOptions } from './useCellPreview.types'
 export const useCellPreview = (options: UseCellPreviewOptions): CellPreview => {
   const { target, isBusy } = options;
   const { openHold, swapHold, openPinned } = usePreview();
+
+  const handleCellHold = (source: HTMLElement) => {
+    openHold(target, source);
+  };
+
+  const handleCellSwap = (source: HTMLElement) => {
+    swapHold(target, source);
+  };
+
   const press = usePressPreview({
     isDisabled: isBusy,
-    onHold: (source) => {
-      openHold(target, source);
-    },
-    onSwap: (source) => {
-      swapHold(target, source);
-    },
+    onHold: handleCellHold,
+    onSwap: handleCellSwap,
   });
 
   const openCellPinned = (source: HTMLElement) => {
