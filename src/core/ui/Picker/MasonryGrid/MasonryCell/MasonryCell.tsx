@@ -8,6 +8,7 @@ import type { SendItem } from '../../../../db.types';
 import { gifCellName } from '../../cellName/cellName';
 import { CellSpinner } from '../../CellSpinner/CellSpinner';
 import { CellMenu } from '../../Menu/CellMenu/CellMenu';
+import type { CellMenuRemove } from '../../Menu/CellMenu/CellMenu.types';
 import { isMenuKey } from '../../Menu/menuKey/menuKey';
 import { useContextMenu } from '../../Menu/useContextMenu/useContextMenu';
 import { usePreview } from '../../Preview/usePreview';
@@ -94,6 +95,14 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
     onRemove?.(gif);
   };
 
+  /**
+   * У найденной GIF удаления нет, у недавней — «Убрать из недавних»: `kind` и колбэк идут в меню
+   * только вместе.
+   */
+  const removal: CellMenuRemove = onRemove
+    ? { kind: 'recent', onRemove: handleItemRemove }
+    : {};
+
   return (
     <>
       <button
@@ -125,11 +134,10 @@ export const MasonryCell: FC<MasonryCellProps> = (props) => {
         <CellMenu
           key={opening.seq}
           label={name.menu}
-          kind={onRemove ? 'recent' : undefined}
           opening={opening}
           onClose={handleMenuClose}
           onPreview={handleMenuPreview}
-          onRemove={handleItemRemove}
+          {...removal}
         />
       )}
     </>

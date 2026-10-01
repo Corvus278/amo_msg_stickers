@@ -24,7 +24,7 @@ export const CellMenu: FC<CellMenuProps> = (props) => {
           }
 
           case 'remove': {
-            if (!kind || !onRemove) return null;
+            if (!kind) return null;
 
             return <RemoveItem key={item} kind={kind} onRemove={onRemove} />;
           }
