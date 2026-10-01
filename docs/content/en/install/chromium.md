@@ -5,21 +5,22 @@ extension from the Chrome Web Store (recommended), the extension from an arch
 
 ::::tabs
 == Chrome Web Store
-The recommended way is the extension from the Chrome Web Store: from the store it installs in a couple of clicks and
-updates by itself. The extension is under review in the Chrome Web Store right now — the link will appear here once
-it is published.
+The recommended way is the extension from the Chrome Web Store: from the store it installs in a couple of clicks
+and updates by itself.
 
-Until then, install it in one of the other two ways — the tabs above:
+1. Open the amo stickers page in the Chrome Web Store:
+   [amo stickers](https://chromewebstore.google.com/detail/amo-stickers/abjnjphijggkkdbbmkldhibgepgdcgip).
+2. Click “Add to Chrome” and confirm the installation. In other browsers the button may be named differently.
+3. Open or reload the amo tab: the sticker button will appear in the message input next to the emoji button.
 
-- **“Archive”** — the same extension, but you will have to update it manually;
-- **“Userscript”** — if you have the Tampermonkey script manager or are ready to install it.
+In Edge, first click “Allow extensions from other stores” on the Chrome Web Store page; in Opera, install the “Install
+Chrome Extensions” extension — otherwise the browser won’t let you install an extension from the Chrome Web Store.
 
-Once the extension is in the store: in Edge, click “Allow extensions from other stores” on the Chrome Web Store page;
-in Opera, first install the “Install Chrome Extensions” extension — otherwise the browser won’t let you install an
-extension from the Chrome Web Store.
+If you already have the extension from the archive, remove it before installing from the store. You will have to enter
+the GIF keys and the bot token again; stickers and packs stay: they are stored on the amo site, not in the extension.
 == Archive
-The archive is the same extension that will be in the Chrome Web Store, except that the browser loads it from a folder
-on your computer.
+The archive is the same extension as in the Chrome Web Store, except that the browser loads it from a folder on your
+computer.
 
 ::: warning The archive doesn’t update by itself
 You need to install new versions manually — see below. Keep the extension in the same folder: if you unpack a new
