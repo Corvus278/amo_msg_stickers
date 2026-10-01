@@ -1,27 +1,27 @@
 ## 1. Ответ в сообщении
 
-- [x] 1.1 Типы `AmoQuotedMessage`, `AmoReplyRef`, `ReplyLookup`, `AttachedReply` и гард `isQuotedMessage` в
+- [x] 1.1 Типы `AmoQuotedMessage`, `AmoReplyRef`, `AttachedReply` и гард `isQuotedMessage` в
   `src/page/refersTo.types.ts`, необязательное поле `refersTo` у `AmoStickerMessage`; модуль `src/page/refersTo.ts` —
-  `draughtReplyOf`, `quotedMessageOf` по design.md, п. 2–3: id ответа из `state.conversationDraughts`, сообщение из
+  `draughtReplyIdOf`, `quotedMessageOf`, `replyKey` по design.md, п. 2–3: id ответа из `state.conversationDraughts`, сообщение из
   `state.messages`, разворот пересланного; проверка — `tests/pageRefersTo.test.ts`: обычное сообщение уходит тем же
   объектом; пересланное (`flags: [128 | 4]`) — поля вложенного сообщения поверх `id`, `conversationId`,
   `conversationType`, `toMember`, `to` пересланного и `flags` без `128`; пересланное без объекта `refersTo` и с
   `refersTo: null` — как есть; null — нет черновика, черновик другого чата, `refersTo` пуст или не строка, сообщения
   нет в `messages`, `messages` нет, `id` записи не совпадает, нет `conversationId` или `conversationType`
-- [x] 1.2 `attachReply` в `refersTo.ts` — сообщение с `refersTo` при найденном ответе, `replyToClear` и `pendingClear`;
+- [x] 1.2 `attachReply` в `refersTo.ts` — сообщение с `refersTo` при найденном ответе и `replyToClear`; снимаемые ответы (`clearingReplies`) пропускаются;
   `buildMessage` об ответе не знает (сигнатура и тесты — как до задачи), комментарий в шапке `buildMessage.ts` —
   ответ добавляет `attachReply`; проверка — `tests/pageRefersTo.test.ts`: с ответом — `refersTo` и `replyToClear`;
   без ответа — сообщение то же; сообщение не загружено — ключа `refersTo` нет, `replyToClear: null`; ответ, снятие
-  которого идёт, — без `refersTo`, `pendingClear` сохранён; `tests/pageBuildMessage.test.ts` — без изменений
+  которого идёт, — без `refersTo`; снимаемый ответ другого чата не мешает; `tests/pageBuildMessage.test.ts` — без изменений
 
 ## 2. Снятие ответа агентом
 
 - [x] 2.1 `src/page/agent.ts`: после `sendNewMessages` без исключения и при `replyToClear` — запрос
   `updateConversationDraughtRefersToId` с `{ conversationId, refersToId: null }`; исключение, отказ промиса и `Error`
-  в результате — `console.warn`, ответ `accepted`; по design.md, п. 4; память снимаемого ответа по п. 5 (`pendingClear`) — сравнение в `refersTo.ts`, память в замыкании `startAgent`; проверка — `tests/pageAgent.test.ts`: с ответом
+  в результате — `console.warn`, ответ `accepted`; по design.md, п. 4; набор снимаемых ответов по п. 5 (`clearingReplies`) — в замыкании `startAgent`, ключ удаляется по завершении запроса снятия; проверка — `tests/pageAgent.test.ts`: с ответом
   — два вызова `sendRequest` в порядке «отправка, снятие», `accepted` до возврата `dispatchEvent`; без ответа и при
   ненайденном сообщении — один вызов; снятие бросает — `accepted`, стикер отправлен один раз; отправка бросает —
-  `rejected` `send-threw`, снятия нет; в ответе только `id` и `status`; второй стикер до завершения снятия — без `refersTo` и без второго снятия; после завершения снятия и после того, как черновик показал «нет ответа», ответ на то же сообщение снова уходит с цитатой; после неудачного снятия (бросок, отказ промиса, `Error`) следующий стикер — с цитатой
+  `rejected` `send-threw`, снятия нет; в ответе только `id` и `status`; второй стикер до завершения снятия — без `refersTo` и без второго снятия; после завершения снятия ответ на то же сообщение снова уходит с цитатой; после неудачного снятия (бросок, отказ промиса, `Error`) следующий стикер — с цитатой
 - [x] 2.2 CLAUDE.md, «Отправка»: сообщение собирается с ответом из черновика открытого чата, после приёма агент снимает
   ответ; без ответа или без найденного сообщения — без цитаты; `CLAUDE.local.md` — ссылки на исходники amo по ответу и
   итог проверки в живом amo 2026-10-01; проверка — `grep -n "без ответа" CLAUDE.md` не находит описание отправки,

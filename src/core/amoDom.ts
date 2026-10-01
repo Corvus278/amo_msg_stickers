@@ -4,7 +4,13 @@
  * data-testid в amo нет: опираемся на aria-атрибуты и стабильные tailwind-классы.
  */
 
-import type { Composer, SendComposer, ShownNode } from './amoDom.types';
+import type {
+  Composer,
+  QuoteLayout,
+  QuoteRoom,
+  SendComposer,
+  ShownNode,
+} from './amoDom.types';
 import { BUBBLE_TOKENS } from './bubbleTokens';
 
 const EDITABLE_SELECTOR = 'div[contenteditable="true"][aria-placeholder]';
@@ -148,8 +154,14 @@ const REPLY_BUBBLE_SELECTOR = `${MESSAGE_SELECTOR}[class*="message_with_reply-"]
 /**
  * Плашка цитаты — блок пузыря прямо перед обёрткой содержимого с нашим медиа. Строка автора
  * лежит на том же месте у сообщения без ответа, но у неё кнопка имени — она не плашка.
+ *
+ * Класс `-mt-2` блока цитаты amo — в субъекте селектора: правило с голым `div` в субъекте
+ * браузер проверял бы на каждом `div` страницы при каждой правке ленты, и добавление
+ * сообщения в длинную ленту замедлялось бы в десятки раз (замер на стенде: 2,3 с против
+ * 0,06 с на 800 сообщений). С классом проверяются только блоки с ним.
  */
-const QUOTE_SELECTOR = `${REPLY_BUBBLE_SELECTOR} > div:not(:has(> button)):has(+ div > ${MEDIA_SELECTOR})`;
+const QUOTE_CLASS_SELECTOR = '.\\-mt-2';
+const QUOTE_SELECTOR = `${REPLY_BUBBLE_SELECTOR} > div${QUOTE_CLASS_SELECTOR}:not(:has(> button)):has(+ div > ${MEDIA_SELECTOR})`;
 
 /**
  * Плашка у стикера и у GIF считает место рядом по-разному: пузырь стикера не шире стикера с
@@ -232,48 +244,75 @@ const STICKER_BUBBLE_MAX_PX = STICKER_MAX_SIDE_PX + 2 * MEDIA_INSET_PX;
 const GIF_FREE_ROW_SHARE = 35;
 
 /**
- * @param reservePx — что ещё занимает ряд рядом с пузырём
- * @returns ширина плашки у GIF: не больше доли ряда, которую оставляет пузырь GIF
+ * Варианты плашки по осям «стикер или GIF» и «есть ли в ряду аватар»: у каждого своё место
+ * рядом с картинкой и свой порог узкого ряда.
  */
-const gifQuoteMaxWidth = (reservePx: number) => {
-  return `min(${QUOTE_MAX_WIDTH_PX}px, calc(${GIF_FREE_ROW_SHARE}cqw - ${reservePx}px))`;
-};
+const QUOTE_LAYOUTS: QuoteLayout[] = [
+  { selector: GIF_QUOTE_SELECTOR, media: 'gif', reservePx: ROW_RESERVE_PX },
+  { selector: STICKER_QUOTE_SELECTOR, media: 'sticker', reservePx: ROW_RESERVE_PX },
+  {
+    selector: `${WITH_AVATAR_SELECTOR}${GIF_QUOTE_SELECTOR}`,
+    media: 'gif',
+    reservePx: AVATAR_ROW_RESERVE_PX,
+  },
+  {
+    selector: `${WITH_AVATAR_SELECTOR}${STICKER_QUOTE_SELECTOR}`,
+    media: 'sticker',
+    reservePx: AVATAR_ROW_RESERVE_PX,
+  },
+];
 
 /**
- * @param reservePx — что ещё занимает ряд рядом с пузырём
- * @returns ширина плашки у стикера: ряд минус пузырь стикера
- */
-const stickerQuoteMaxWidth = (reservePx: number) => {
-  return `min(${QUOTE_MAX_WIDTH_PX}px, calc(100cqw - ${STICKER_BUBBLE_MAX_PX + reservePx}px))`;
-};
-
-/**
- * @param reservePx — что ещё занимает ряд рядом с пузырём
- * @returns ширина ряда, уже которой плашка у GIF была бы уже `QUOTE_MIN_WIDTH_PX`
- */
-const gifNarrowRowPx = (reservePx: number) => {
-  return Math.ceil(((QUOTE_MIN_WIDTH_PX + reservePx) * 100) / GIF_FREE_ROW_SHARE);
-};
-
-/**
- * @param reservePx — что ещё занимает ряд рядом с пузырём
- * @returns ширина ряда, уже которой плашка у стикера была бы уже `QUOTE_MIN_WIDTH_PX`
- */
-const stickerNarrowRowPx = (reservePx: number) => {
-  return QUOTE_MIN_WIDTH_PX + STICKER_BUBBLE_MAX_PX + reservePx;
-};
-
-/**
- * Узкий ряд: плашка встаёт над картинкой шириной с неё — `width: 0` не даёт ей растянуть
- * пузырь, `min-width` растягивает по картинке, которая выходит за отступ пузыря на
- * `MEDIA_INSET_PX` с каждой стороны. `min-width` сильнее `max-width` бокового режима.
+ * Пузырь стикера не шире стикера с отступами, и место рядом — ряд минус пузырь; пузырь GIF —
+ * доля ряда, и рядом остаётся `GIF_FREE_ROW_SHARE`. Порог узкого ряда — ширина, при которой
+ * это место стало бы уже `QUOTE_MIN_WIDTH_PX`.
  *
- * @param selector — плашки, к которым относится порог
- * @param rowPx — ширина ряда, уже которой плашка встаёт над картинкой
- * @returns правило container query
+ * @param layout — вариант плашки
+ * @returns свободное место рядом с картинкой (выражение `calc`) и порог узкого ряда, px
  */
-const narrowQuoteRule = (selector: string, rowPx: number) => {
-  return `@container ${REPLY_CONTAINER} (width < ${rowPx}px) {
+const quoteRoomOf = ({ media, reservePx }: QuoteLayout): QuoteRoom => {
+  switch (media) {
+    case 'gif': {
+      return {
+        freeCalc: `${GIF_FREE_ROW_SHARE}cqw - ${reservePx}px`,
+        narrowRowPx: Math.ceil(
+          ((QUOTE_MIN_WIDTH_PX + reservePx) * 100) / GIF_FREE_ROW_SHARE
+        ),
+      };
+    }
+
+    case 'sticker': {
+      return {
+        freeCalc: `100cqw - ${STICKER_BUBBLE_MAX_PX + reservePx}px`,
+        narrowRowPx: QUOTE_MIN_WIDTH_PX + STICKER_BUBBLE_MAX_PX + reservePx,
+      };
+    }
+
+    default: {
+      const unknownMedia: never = media;
+
+      throw new Error(`Unknown quote media: ${String(unknownMedia)}`);
+    }
+  }
+};
+
+/**
+ * Сбоку плашка не шире свободного места; в узком ряду встаёт над картинкой шириной с неё —
+ * `width: 0` не даёт ей растянуть пузырь, `min-width` растягивает по картинке, которая
+ * выходит за отступ пузыря на `MEDIA_INSET_PX` с каждой стороны. `min-width` сильнее
+ * `max-width` бокового режима.
+ *
+ * @param layout — вариант плашки
+ * @returns CSS ширины плашки и её узкого режима
+ */
+const quoteLayoutCss = (layout: QuoteLayout) => {
+  const { selector } = layout;
+  const { freeCalc, narrowRowPx } = quoteRoomOf(layout);
+
+  return `${selector} {
+  max-width: min(${QUOTE_MAX_WIDTH_PX}px, calc(${freeCalc}));
+}
+@container ${REPLY_CONTAINER} (width < ${narrowRowPx}px) {
   ${selector} {
     position: static;
     width: 0;
@@ -331,7 +370,6 @@ ${QUOTE_SELECTOR} {
   left: calc(100% + ${QUOTE_GAP_PX}px);
   z-index: ${QUOTE_Z_INDEX};
   width: max-content;
-  max-width: ${gifQuoteMaxWidth(ROW_RESERVE_PX)};
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -341,15 +379,6 @@ ${QUOTE_SELECTOR} {
 }
 html.dark ${QUOTE_SELECTOR} {
   background: ${BUBBLE_BACKGROUND.incomingDark};
-}
-${STICKER_QUOTE_SELECTOR} {
-  max-width: ${stickerQuoteMaxWidth(ROW_RESERVE_PX)};
-}
-${WITH_AVATAR_SELECTOR}${QUOTE_SELECTOR} {
-  max-width: ${gifQuoteMaxWidth(AVATAR_ROW_RESERVE_PX)};
-}
-${WITH_AVATAR_SELECTOR}${STICKER_QUOTE_SELECTOR} {
-  max-width: ${stickerQuoteMaxWidth(AVATAR_ROW_RESERVE_PX)};
 }
 ${OUTGOING_SELECTOR}${QUOTE_SELECTOR} {
   left: auto;
@@ -362,10 +391,7 @@ html.dark ${OUTGOING_SELECTOR}${QUOTE_SELECTOR} {
 ${REPLY_ROW_SELECTOR} {
   container: ${REPLY_CONTAINER} / inline-size;
 }
-${narrowQuoteRule(GIF_QUOTE_SELECTOR, gifNarrowRowPx(ROW_RESERVE_PX))}
-${narrowQuoteRule(STICKER_QUOTE_SELECTOR, stickerNarrowRowPx(ROW_RESERVE_PX))}
-${narrowQuoteRule(`${WITH_AVATAR_SELECTOR}${GIF_QUOTE_SELECTOR}`, gifNarrowRowPx(AVATAR_ROW_RESERVE_PX))}
-${narrowQuoteRule(`${WITH_AVATAR_SELECTOR}${STICKER_QUOTE_SELECTOR}`, stickerNarrowRowPx(AVATAR_ROW_RESERVE_PX))}
+${QUOTE_LAYOUTS.map(quoteLayoutCss).join('\n')}
 ${REPLY_CONTROLS_SELECTOR} {
   top: auto;
   bottom: 0;
