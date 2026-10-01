@@ -83,7 +83,7 @@ describe('createPressGesture', () => {
     expect(holds()).toBe(1);
   });
 
-  it('отпускание до срока отменяет удержание', () => {
+  it('отпускание или уход с ячейки до срока отменяют удержание', () => {
     const { gesture, holds } = setup();
 
     gesture.start(MOUSE_PRESS);
@@ -124,17 +124,6 @@ describe('createPressGesture', () => {
     vi.advanceTimersByTime(HOLD_DELAY_MS);
 
     expect(holds()).toBe(1);
-  });
-
-  it('уход с ячейки отменяет удержание', () => {
-    const { gesture, holds } = setup();
-
-    gesture.start(MOUSE_PRESS);
-    vi.advanceTimersByTime(100);
-    gesture.cancel();
-    vi.advanceTimersByTime(HOLD_DELAY_MS);
-
-    expect(holds()).toBe(0);
   });
 
   it('правая и средняя кнопки не запускают удержание', () => {
