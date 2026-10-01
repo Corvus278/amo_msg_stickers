@@ -40,7 +40,8 @@
 ## Impact
 
 - **Код:** `src/page/refersTo.ts` (новый) — чтение ответа и сообщения из состояния amo, разворот пересланного;
-  `src/page/buildMessage.ts` и его типы — поле `refersTo` сообщения; `src/page/agent.ts` — снятие ответа после
+  `src/page/buildMessage.types.ts` — необязательное поле `refersTo` у сообщения (сам `buildMessage` об ответе не знает);
+  `src/page/agent.ts` — снятие ответа после
   постановки стикера в очередь и память снимаемого ответа. Протокол ядра и агента (`src/shared/pageBridge*.ts`),
   клиент (`src/core/pageClient*.ts`), `src/core/sender.ts` и `app.ts` не меняются. `src/core/amoDom.ts` — CSS ленты:
   ответ не исключается из стиля, цитата — плашкой рядом с картинкой.
