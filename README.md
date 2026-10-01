@@ -17,6 +17,7 @@
 [documentation](https://mcar2107.github.io/amo_msg_stickers/en/)
 
 Прямые ссылки на последнюю версию:
+[расширение в Chrome Web Store](https://chromewebstore.google.com/detail/amo-stickers/abjnjphijggkkdbbmkldhibgepgdcgip) ·
 [скачать архив расширения](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.zip) ·
 [установить userscript](https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js).
 
@@ -41,6 +42,31 @@ pnpm docs:dev          # сайт доки локально (исходники 
 
 Pre-commit гоняет lint-staged, typecheck и тесты по изменённым файлам. На каждый PR в `master` CI проверяет линт,
 типы, тесты, сборку, сборку доки и версию, а после мержа выпускает релиз.
+
+**Публикация в Chrome Web Store.** Релиз сам загружает новую версию в стор и отправляет её на проверку. Доступ —
+сервисный аккаунт Google Cloud, настраивается один раз:
+
+1. В [Google Cloud Console](https://console.cloud.google.com/) включите в проекте Chrome Web Store API.
+2. [Создайте сервисный аккаунт](https://console.cloud.google.com/iam-admin/serviceaccounts) без ролей и скачайте его
+   ключ JSON: Keys → Add key → JSON.
+3. В [Developer Dashboard](https://chrome.google.com/webstore/devconsole/) добавьте почту аккаунта в разделе Account
+   → Service accounts и скопируйте ID издателя из Publisher → Settings.
+4. Положите ключ и ID в секреты репозитория:
+
+   ```bash
+   gh secret set CWS_SERVICE_ACCOUNT_KEY < key.json
+   gh secret set CWS_PUBLISHER_ID --body '<ID издателя>'
+   ```
+
+Без секретов релиз выходит на GitHub как обычно, а публикация пропускается с предупреждением. Сбой загрузки в стор
+виден красным job-ом `chrome-web-store` в прогоне релиза, сам релиз на GitHub к этому моменту уже выпущен.
+
+Вручную публикация запускается из Actions, workflow «Chrome Web Store»: в поле тега — релиз, например `v0.16.0`,
+пустое — последний релиз. Версия, которая уже на проверке или опубликована, повторно не загружается.
+
+```bash
+gh workflow run chrome-web-store.yml --ref master -f tag=v0.16.0
+```
 
 **Стенд.** `dev/harness.html` повторяет разметку поля ввода и ленты amo; вставка и «Отправить» в нём замоканы. Для
 стилей положите CSS страницы amo в `dev/amo.css` (в git не лежит).

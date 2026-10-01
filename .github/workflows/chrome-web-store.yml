@@ -1,0 +1,63 @@
+name: Chrome Web Store
+
+on:
+  # Ручной запуск: версия, выпущенная на GitHub без публикации в стор, или повтор
+  # после отказа стора по временной причине.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Тег релиза, например v0.16.0; пусто — последний релиз
+        required: false
+        type: string
+  # Вызов из release.yml за новым релизом.
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    # Ручной запуск с другой ветки взял бы её скрипт публикации — с секретами стора.
+    if: ${{ github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Группы concurrency нет намеренно: GitHub держит в группе лишь один ожидающий
+    # запуск и заменяет его новым — ручной запуск старого тега отменил бы ждущую
+    # публикацию новой версии из релиза. Версию, которая уже в сторе, скрипт не
+    # загружает, а отказ стора на одновременной загрузке — красный job для перезапуска.
+    steps:
+      - uses: actions/checkout@v7
+
+      # Только Node: скрипт без зависимостей, но импортирует .ts — нужен Node из .mise.toml.
+      - uses: jdx/mise-action@v4
+        with:
+          install_args: node
+
+      # В стор уходит архив из GitHub Release, а не новая сборка: тот, что прошёл
+      # проверки и лежит у пользователей. Версия — из manifest в архиве: в этом
+      # checkout может быть уже другая.
+      - id: package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [ -z "${TAG}" ]; then
+            TAG=$(gh release view --json tagName --jq .tagName)
+          fi
+          gh release download "${TAG}" --pattern amo-stickers.zip --dir release
+          version=$(unzip -p release/amo-stickers.zip manifest.json | jq -r .version)
+          echo "Публикуется ${TAG}, версия ${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      # Без секретов скрипт пропускает публикацию предупреждением, и job зелёный.
+      - env:
+          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          # ID карточки amo stickers в Chrome Web Store — тот же, что даёт `key` в manifest.
+          CWS_ITEM_ID: abjnjphijggkkdbbmkldhibgepgdcgip
+          VERSION: ${{ steps.package.outputs.version }}
+        run: node scripts/publish-chrome-web-store.mjs release/amo-stickers.zip "${VERSION}"

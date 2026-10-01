@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { packLink } from '../../../packLink';
 import { SectionHeader } from '../SectionHeader/SectionHeader';
 import { FEED_PANEL_ID, sectionTabId } from '../SectionTabs/sectionTabIds';
 import type { RowRange, StickerRow } from '../stickerLayout/stickerLayout.types';
@@ -50,7 +51,7 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
   const renderRange = (rows: StickerRow<FeedSticker>[], [from, to]: RowRange) => {
     return rows.slice(from, to).map((row, offset) => {
       const { kind, sectionId, top, height } = row;
-      const { title = '', hint = '' } = byId.get(sectionId) || {};
+      const { title = '', hint = '', pack = null } = byId.get(sectionId) || {};
 
       const handleCellDelete = (cell: FeedSticker) => {
         onCellDelete(sectionId, cell);
@@ -63,6 +64,7 @@ export const StickerFeed: FC<StickerFeedProps> = (props) => {
               key={from + offset}
               sectionId={sectionId}
               title={title}
+              link={pack ? packLink(pack) : null}
               top={top}
               height={height}
               onPackDelete={onPackDelete}

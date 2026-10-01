@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="dark">
   <head>
     <meta charset="utf-8" />
     <title>amo stickers — стенд</title>
@@ -129,12 +129,119 @@
         border-radius: 4px;
       }
       #tools {
+        --tools-bg: rgb(255, 255, 255);
+        --tools-fg: #2b2f36;
+        --tools-muted: #7a828e;
+        --tools-line: rgba(0, 0, 0, 0.12);
+        --tools-hover: rgba(0, 0, 0, 0.06);
+        --tools-accent: #3d6cf4;
         position: fixed;
         top: 8px;
         left: 8px;
         z-index: 5;
         display: flex;
+        flex-direction: column;
         gap: 6px;
+        max-width: 300px;
+        padding: 8px;
+        border: 1px solid var(--tools-line);
+        border-radius: 10px;
+        background: var(--tools-bg);
+        color: var(--tools-fg);
+        font:
+          12px/16px 'Helvetica Neue',
+          arial,
+          sans-serif;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+        will-change: transform;
+      }
+      .dark #tools {
+        --tools-bg: rgb(38, 38, 38);
+        --tools-fg: #ececec;
+        --tools-muted: #8d8d8d;
+        --tools-line: rgba(255, 255, 255, 0.14);
+        --tools-hover: rgba(255, 255, 255, 0.08);
+        --tools-accent: #f3cf9e;
+      }
+      #tools-handle {
+        margin: -2px -2px 0;
+        padding: 2px 4px 6px;
+        border-bottom: 1px solid var(--tools-line);
+        color: var(--tools-muted);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+      }
+      #tools.is-dragging #tools-handle {
+        cursor: grabbing;
+      }
+      #tools.is-dragging * {
+        transition: none;
+      }
+      #tools .group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+      }
+      #tools .group + .group {
+        padding-top: 6px;
+        border-top: 1px solid var(--tools-line);
+      }
+      #tools .group-title {
+        width: 100%;
+        color: var(--tools-muted);
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      #tools button,
+      #tools select,
+      #tools .toggle {
+        box-sizing: border-box;
+        height: 26px;
+        padding: 0 10px;
+        border: 1px solid var(--tools-line);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        transition: background-color 0.12s;
+      }
+      #tools button:hover,
+      #tools select:hover,
+      #tools .toggle:hover {
+        background: var(--tools-hover);
+      }
+      #tools .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        user-select: none;
+      }
+      #tools .toggle input {
+        margin: 0;
+        accent-color: var(--tools-accent);
+      }
+      #tools .toggle:has(input:checked) {
+        border-color: var(--tools-accent);
+      }
+      #tools .toggle select {
+        height: 20px;
+        padding: 0 2px;
+        border: 0;
+        background-color: transparent;
+        color: var(--tools-fg);
+        -webkit-text-fill-color: var(--tools-fg);
+        appearance: auto;
+      }
+      #tools .toggle select option {
+        background: var(--tools-bg);
+        color: var(--tools-fg);
       }
       #attachments {
         display: flex;
@@ -152,26 +259,52 @@
   </head>
   <body class="bg-white-0 dark:bg-black-70">
     <div id="tools">
-      <button id="theme">тема</button>
-      <label>
-        язык amo
-        <select id="locale">
-          <option value="ru">ru</option>
-          <option value="en">en</option>
-        </select>
-      </label>
-      <label><input type="checkbox" id="queue" checked /> очередь amo</label>
-      <label><input type="checkbox" id="slow" /> медленная загрузка</label>
-      <label><input type="checkbox" id="incoming" /> входящее</label>
-      <label><input type="checkbox" id="author" /> с именем автора</label>
-      <button id="plain">картинка без метки</button>
-      <button id="reply">ответ с цитатой</button>
-      <button id="reply-to">ответить</button>
-      <label
-        ><input type="checkbox" id="reply-missing" /> сообщение ответа не загружено</label
-      >
-      <label><input type="checkbox" id="slow-clear" /> медленное снятие ответа</label>
-      <button id="library">20×120 паков</button>
+      <div id="tools-handle" title="Потяните, чтобы переместить">⠿ Стенд</div>
+      <div class="group">
+        <span class="group-title">Вид</span>
+        <button id="theme">Тема</button>
+        <label class="toggle">
+          Язык amo
+          <select id="locale">
+            <option value="">авто</option>
+            <option value="ru">ru</option>
+            <option value="en">en</option>
+          </select>
+        </label>
+      </div>
+      <div class="group">
+        <span class="group-title">Режим</span>
+        <label class="toggle"
+          ><input type="checkbox" id="queue" checked /> очередь amo</label
+        >
+        <label class="toggle"
+          ><input type="checkbox" id="slow" /> медленная загрузка</label
+        >
+      </div>
+      <div class="group">
+        <span class="group-title">Сообщения</span>
+        <label class="toggle"><input type="checkbox" id="incoming" /> входящее</label>
+        <label class="toggle"
+          ><input type="checkbox" id="author" /> с именем автора</label
+        >
+        <button id="plain">Картинка без метки</button>
+        <button id="reply">Ответ с цитатой</button>
+      </div>
+      <div class="group">
+        <span class="group-title">Ответ</span>
+        <button id="reply-to">Ответить</button>
+        <label class="toggle"
+          ><input type="checkbox" id="reply-missing" /> сообщение ответа не
+          загружено</label
+        >
+        <label class="toggle"
+          ><input type="checkbox" id="slow-clear" /> медленное снятие ответа</label
+        >
+      </div>
+      <div class="group">
+        <span class="group-title">Библиотека</span>
+        <button id="library">20×120 паков</button>
+      </div>
     </div>
     <div class="relative h-screen">
       <div id="chat"></div>
@@ -599,10 +732,17 @@
       const localeSelect = document.getElementById('locale');
       // без ключа пикер берёт язык браузера, и переключатель ничего не выбирает
       const storedLocale = (localStorage.getItem(LOCALE_KEY) || '').toLowerCase();
-      localeSelect.value = storedLocale.startsWith('en') ? 'en' : 'ru';
-      if (!storedLocale) localeSelect.selectedIndex = -1;
+      localeSelect.value = storedLocale
+        ? storedLocale.startsWith('en')
+          ? 'en'
+          : 'ru'
+        : '';
       localeSelect.onchange = () => {
-        localStorage.setItem(LOCALE_KEY, localeSelect.value);
+        if (localeSelect.value) {
+          localStorage.setItem(LOCALE_KEY, localeSelect.value);
+        } else {
+          localStorage.removeItem(LOCALE_KEY);
+        }
         location.reload();
       };
 
@@ -671,6 +811,86 @@
         for (const record of records) tx.objectStore('stickers').put(record);
         tx.oncomplete = () => location.reload();
       };
+
+      // --- перетаскивание панели: положение помнится между перезагрузками ---
+      {
+        const POSITION_KEY = 'harness:tools-position';
+        const tools = document.getElementById('tools');
+        const handle = document.getElementById('tools-handle');
+
+        const clampToViewport = (left, top) => ({
+          left: Math.min(
+            Math.max(0, left),
+            Math.max(0, window.innerWidth - tools.offsetWidth)
+          ),
+          top: Math.min(
+            Math.max(0, top),
+            Math.max(0, window.innerHeight - tools.offsetHeight)
+          ),
+        });
+        const place = (left, top) => {
+          const position = clampToViewport(left, top);
+          tools.style.left = `${position.left}px`;
+          tools.style.top = `${position.top}px`;
+          return position;
+        };
+
+        try {
+          const saved = JSON.parse(localStorage.getItem(POSITION_KEY) || 'null');
+          if (saved) place(saved.left, saved.top);
+        } catch {
+          // битое значение — остаётся положение по умолчанию
+        }
+
+        // Во время перетаскивания панель двигает только transform: left/top и чтение размеров
+        // на каждом событии гоняли бы раскладку страницы. Размеры читаются один раз на нажатии,
+        // transform пишется раз за кадр, а left/top — один раз на отпускании.
+        handle.addEventListener('pointerdown', (event) => {
+          if (event.button !== 0) return;
+          const startLeft = tools.offsetLeft;
+          const startTop = tools.offsetTop;
+          const maxLeft = Math.max(0, window.innerWidth - tools.offsetWidth);
+          const maxTop = Math.max(0, window.innerHeight - tools.offsetHeight);
+          const originX = event.clientX;
+          const originY = event.clientY;
+          let shiftX = 0;
+          let shiftY = 0;
+          let frame = 0;
+          handle.setPointerCapture(event.pointerId);
+          tools.classList.add('is-dragging');
+
+          const paint = () => {
+            frame = 0;
+            tools.style.transform = `translate3d(${shiftX}px, ${shiftY}px, 0)`;
+          };
+          const handleMove = (moveEvent) => {
+            shiftX = Math.min(
+              Math.max(-startLeft, moveEvent.clientX - originX),
+              maxLeft - startLeft
+            );
+            shiftY = Math.min(
+              Math.max(-startTop, moveEvent.clientY - originY),
+              maxTop - startTop
+            );
+            if (!frame) frame = requestAnimationFrame(paint);
+          };
+          const handleUp = () => {
+            handle.removeEventListener('pointermove', handleMove);
+            handle.removeEventListener('pointerup', handleUp);
+            handle.removeEventListener('pointercancel', handleUp);
+            cancelAnimationFrame(frame);
+            tools.style.transform = '';
+            tools.classList.remove('is-dragging');
+            const position = place(startLeft + shiftX, startTop + shiftY);
+            localStorage.setItem(POSITION_KEY, JSON.stringify(position));
+          };
+          handle.addEventListener('pointermove', handleMove);
+          handle.addEventListener('pointerup', handleUp);
+          handle.addEventListener('pointercancel', handleUp);
+        });
+
+        window.addEventListener('resize', () => place(tools.offsetLeft, tools.offsetTop));
+      }
     </script>
     <script src="../dist/amo-stickers.user.js"></script>
   </body>
