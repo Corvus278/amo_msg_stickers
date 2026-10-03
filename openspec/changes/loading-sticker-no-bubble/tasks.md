@@ -6,7 +6,7 @@
   `gh issue view 48` — исполнитель стоит
 - [x] 1.2 Ветка `fix/48-loading-sticker-no-bubble` от свежего `master`, файлы change переносятся в неё; проверка:
   `git log origin/master..HEAD` — только коммиты change
-- [ ] 1.3 Версия `0.17.1` в `package.json` (`pnpm version 0.17.1 --no-git-tag-version`),
+- [x] 1.3 Версия `0.17.1` в `package.json` (`pnpm version 0.17.1 --no-git-tag-version`),
   `src/extension/manifest.json` и `@version` в `build.mjs`; проверка:
   `node scripts/check-version.mjs --base origin/master` — код 0
 
