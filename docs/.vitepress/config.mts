@@ -35,8 +35,19 @@ export default defineConfig({
   /**
    * Иконка вкладки — под тему системы: у браузера нет темы сайта, переключатель VitePress
    * до вкладки не доходит.
+   *
+   * `google-site-verification` подтверждает сайт в Google Search Console: без этого Chrome Web
+   * Store не даёт выбрать его официальным сайтом расширения. Мета-тег нельзя убирать и после
+   * подтверждения — Google перепроверяет его.
    */
   head: [
+    [
+      'meta',
+      {
+        name: 'google-site-verification',
+        content: '_0GcT4tbg4ngK03cHgwp-Q1SUH9P6nRsrvEm3cDFL3c',
+      },
+    ],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${BASE}logo-light.svg` }],
     [
       'link',
