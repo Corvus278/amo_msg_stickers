@@ -409,8 +409,10 @@
       </div>
     </div>
     <script>
-      // --- разметка amo: стабильная — те же классы и структура плюс атрибуты amo web perf-master
-      // (спека dom-markers); выбор — с перезагрузкой, как язык ---
+      /**
+       * Разметка amo: стабильная — те же классы и структура плюс атрибуты `data-*`, которые новая
+       * amo ставит для внешних скриптов; выбор — с перезагрузкой, как язык.
+       */
       const MARKUP_KEY = 'harness:markup';
       const isStableMarkup = localStorage.getItem(MARKUP_KEY) === 'stable';
       const markupSelect = document.getElementById('markup');
@@ -757,9 +759,13 @@
         attachments.replaceChildren();
         editable.textContent = '';
         syncSend();
+        /**
+         * Последний файл — до ожидания загрузки картинки: сообщение уже в ленте с заглушкой, и
+         * «Ответ с цитатой» и «Картинка без метки» должны брать его, а не прежний.
+         */
         for (const f of sent) {
-          await sendMedia(f, f.name, makeQuote());
           lastFile = { file: f, name: f.name };
+          await sendMedia(f, f.name, makeQuote());
         }
         if (text) sendText(text, makeQuote());
       });
@@ -805,12 +811,12 @@
             case 'sendNewMessages':
               for (const { media, refersTo } of payload.messages) {
                 await slowDelay();
+                lastFile = { file: media.file, name: media.fileName };
                 await sendMedia(
                   media.file,
                   media.fileName,
                   refersTo ? quoteOf(refersTo) : null
                 );
-                lastFile = { file: media.file, name: media.fileName };
               }
               return undefined;
             case 'updateConversationDraughtRefersToId':

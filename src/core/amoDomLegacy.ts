@@ -8,6 +8,7 @@
 
 import type { AmoMarkup, Composer, ShownNode } from './amoDom.types';
 import { STABLE_COMPOSE_INPUT_ATTR, STABLE_MESSAGE_ATTR } from './amoDomStable';
+import { MARKER_NAME_PART, STICKER_NAME_PART } from './fileName';
 
 const EDITABLE_SELECTOR = `div[contenteditable="true"][aria-placeholder]:not([${STABLE_COMPOSE_INPUT_ATTR}])`;
 const ROW_SELECTOR = 'div.flex.size-full';
@@ -73,9 +74,12 @@ const findComposers = (root: ParentNode): Composer[] => {
  * Классы CSS-модулей amo — `<имя>-<хэш>`, хэш меняется от сборки к сборке, поэтому
  * селекторы держатся за основу `[class*="<имя>-"]`, `id` корня сообщения, структуру и `alt`.
  *
- * Исключён и заголовок, где имя — не кнопка, а простой `div`, как у пересылки в «Избранное». Там
- * у пересылки нет ни блока «Forwarded from», ни `forwarded-` на обёртке медиа, и заголовок с
- * именем — единственный её признак: без пузыря он повис бы над стикером.
+ * Корень со стабильным маркером исключён: такое сообщение стилизует `amoDomStable.ts`, а все
+ * селекторы этой разметки отсчитаны от корня, поэтому исключения в нём одном достаточно.
+ *
+ * Исключено и сообщение с заголовком, где имя — не кнопка, а простой `div`, как у пересылки в
+ * «Избранное». Там у пересылки нет ни блока «Forwarded from», ни `forwarded-` на обёртке медиа, и
+ * заголовок с именем — единственный её признак: без пузыря он повис бы над стикером.
  */
 const MESSAGE_SELECTOR = `[id^="message+"]:not([${STABLE_MESSAGE_ATTR}]):not(:has(> div > div > div:first-child:not([class]) > div))`;
 
@@ -87,8 +91,8 @@ const MEDIA_SELECTOR =
   '[class*="media_wrapper_photo-"]:only-child:not([class*="forwarded-"]):not([class*="media_wrapper_with_text-"])';
 
 const MEDIA_CONTAINER_SELECTOR = '[class*="photo_media_container-"]';
-const OUR_IMG_SELECTOR = 'img[alt*="amostk."]';
-const STICKER_IMG_SELECTOR = `${OUR_IMG_SELECTOR}[alt*=".k-sticker."]`;
+const OUR_IMG_SELECTOR = `img[alt*="${MARKER_NAME_PART}"]`;
+const STICKER_IMG_SELECTOR = `${OUR_IMG_SELECTOR}[alt*="${STICKER_NAME_PART}"]`;
 
 /**
  * Путь от корня сообщения до обёртки медиа: ряд → пузырь → обёртка содержимого → медиа.

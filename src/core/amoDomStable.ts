@@ -1,10 +1,11 @@
 /**
  * Стабильная разметка amo web — атрибуты `data-compose-*`, `data-feed-*` и `data-photo-*`, которые
- * amo ставит как контракт для внешних скриптов (amo-messenger/web, спека `dom-markers`). Классы и
- * структура дерева здесь не используются: от правки вёрстки amo атрибуты не меняются.
+ * amo ставит как контракт для внешних скриптов. Классы и структура дерева здесь не используются:
+ * от правки вёрстки amo атрибуты не меняются.
  */
 
 import type { AmoMarkup, Composer, ShownNode } from './amoDom.types';
+import { MARKER_NAME_PART, STICKER_NAME_PART } from './fileName';
 
 /**
  * Корни поиска стабильной разметки. Прежняя разметка исключает узлы с ними
@@ -39,8 +40,8 @@ const MEDIA =
  * Наш контейнер картинки узнаётся по имени файла на нём самом: атрибут стоит и в заглушке, пока
  * `img` нет, и после загрузки, на одном элементе.
  */
-const OUR_FRAME = '[data-photo-frame][data-file-name*="amostk."]';
-const STICKER_FRAME = `${OUR_FRAME}[data-file-name*=".k-sticker."]`;
+const OUR_FRAME = `[data-photo-frame][data-file-name*="${MARKER_NAME_PART}"]`;
+const STICKER_FRAME = `${OUR_FRAME}[data-file-name*="${STICKER_NAME_PART}"]`;
 
 /**
  * Содержимое пузыря с нашей картинкой, от обёртки содержимого до контейнера картинки.
