@@ -18,16 +18,17 @@ describe('readTelegramToken', () => {
   it.each(['bad', '123456', 'abc:def', '123:abc def', ':abc', '123:'])(
     'отклоняет «%s» без самого значения в тексте ошибки',
     (value) => {
-      expect(() => {
-        return readTelegramToken(value);
-      }).toThrow(/формат/);
+      let error: unknown;
 
       try {
         readTelegramToken(value);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect(String(error)).not.toContain(value);
+      } catch (caught) {
+        error = caught;
       }
+
+      expect(error).toBeInstanceOf(Error);
+      expect(String(error)).toMatch(/формат/);
+      expect(String(error)).not.toContain(value);
     }
   );
 });
