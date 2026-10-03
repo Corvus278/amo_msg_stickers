@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_SETTINGS } from '../src/core/host';
+import { setLocale } from '../src/core/i18n/translate';
 import { BYTES_IN_MB as MB } from '../src/core/net';
 import { fetchGifs } from '../src/core/sources/gifs';
 
@@ -80,7 +81,7 @@ const klipyWeighted = (sizes: Sizes, extra: Record<string, unknown> = {}) => {
 };
 
 const sentUrl = async (json: unknown, feed: 'giphy-gifs' | 'klipy') => {
-  const { items } = await fetchGifs(fakeHost({ json }), SETTINGS, feed, '', null);
+  const { items } = await fetchGifs(fakeHost({ json }), SETTINGS, feed, '', null, 'ru');
 
   return items[0]?.url;
 };
@@ -100,7 +101,7 @@ describe('fetchGifs: GIPHY', () => {
       ]),
     });
 
-    const page = await fetchGifs(host, SETTINGS, 'giphy-gifs', '', null);
+    const page = await fetchGifs(host, SETTINGS, 'giphy-gifs', '', null, 'ru');
 
     expect(page).toEqual({
       items: [
@@ -127,7 +128,14 @@ describe('fetchGifs: GIPHY', () => {
       ]),
     });
 
-    const { items } = await fetchGifs(host, SETTINGS, 'giphy-stickers', 'кот', null);
+    const { items } = await fetchGifs(
+      host,
+      SETTINGS,
+      'giphy-stickers',
+      'кот',
+      null,
+      'ru'
+    );
 
     expect(
       items.map(({ id }) => {
@@ -146,7 +154,7 @@ describe('fetchGifs: GIPHY', () => {
     'html',
   ])('битый ответ %j — ошибка источника', async (json) => {
     await expect(
-      fetchGifs(fakeHost({ json }), SETTINGS, 'giphy-gifs', '', null)
+      fetchGifs(fakeHost({ json }), SETTINGS, 'giphy-gifs', '', null, 'ru')
     ).rejects.toThrow('GIPHY: неожиданный ответ');
   });
 });
@@ -259,7 +267,7 @@ describe('fetchGifs: KLIPY', () => {
       },
     });
 
-    const page = await fetchGifs(host, SETTINGS, 'klipy', '', null);
+    const page = await fetchGifs(host, SETTINGS, 'klipy', '', null, 'ru');
 
     expect(page).toEqual({
       items: [
@@ -292,17 +300,24 @@ describe('fetchGifs: KLIPY', () => {
       },
     });
 
-    const page = await fetchGifs(host, SETTINGS, 'klipy', 'кот', 'CURSOR');
+    const page = await fetchGifs(host, SETTINGS, 'klipy', 'кот', 'CURSOR', 'ru');
 
     expect(page).toEqual({ items: [], next: null });
   });
 
   it('битый ответ — ошибка источника', async () => {
     await expect(
-      fetchGifs(fakeHost({ json: { results: {} } }), SETTINGS, 'klipy', '', null)
+      fetchGifs(fakeHost({ json: { results: {} } }), SETTINGS, 'klipy', '', null, 'ru')
     ).rejects.toThrow('KLIPY: неожиданный ответ');
   });
 
+  it('в английском интерфейсе битый ответ — английский текст', async () => {
+    setLocale('en');
+
+    await expect(
+      fetchGifs(fakeHost({ json: { results: {} } }), SETTINGS, 'klipy', '', null, 'en')
+    ).rejects.toThrow('KLIPY: unexpected response');
+  });
   it('запрашивает все форматы-кандидаты', async () => {
     const urls: string[] = [];
     const host = fakeHost({
@@ -313,7 +328,7 @@ describe('fetchGifs: KLIPY', () => {
       },
     });
 
-    await fetchGifs(host, SETTINGS, 'klipy', 'кот', null);
+    await fetchGifs(host, SETTINGS, 'klipy', 'кот', null, 'ru');
 
     expect(new URL(urls[0] || '').searchParams.get('media_filter')).toBe(
       'gif,mediumgif,tinygif,nanogif'
@@ -376,6 +391,63 @@ describe('fetchGifs: версия KLIPY для отправки по весу', 
       const json = klipyWeighted({ mediumgif: size, tinygif: size });
 
       expect(await sentUrl(json, 'klipy')).toBe('https://static.klipy.com/w/tinygif.gif');
+    }
+  );
+});
+
+afterEach(() => {
+  setLocale('ru');
+});
+
+describe('fetchGifs: язык выдачи', () => {
+  /**
+   * Параметры первого запроса к источнику.
+   *
+   * @param host — фейковое окружение после запроса
+   * @returns параметры адреса запроса
+   */
+  const requestParams = (host: ReturnType<typeof fakeHost>) => {
+    const [[url]] = vi.mocked(host.fetchJson).mock.calls as [[string]];
+
+    return new URL(url).searchParams;
+  };
+
+  it.each([
+    ['ru', 'ru'],
+    ['en', 'en'],
+  ] as const)('поиск GIPHY GIF и стикеров уходит с lang=%s', async (locale, lang) => {
+    const gifsHost = fakeHost({ json: giphyPage([]) });
+    const stickersHost = fakeHost({ json: giphyPage([]) });
+
+    await fetchGifs(gifsHost, SETTINGS, 'giphy-gifs', 'кот', null, locale);
+    await fetchGifs(stickersHost, SETTINGS, 'giphy-stickers', 'кот', null, locale);
+
+    expect(requestParams(gifsHost).get('lang')).toBe(lang);
+    expect(requestParams(stickersHost).get('lang')).toBe(lang);
+  });
+
+  it('тренды GIPHY уходят без lang: у trending параметра языка нет', async () => {
+    const host = fakeHost({ json: giphyPage([]) });
+
+    await fetchGifs(host, SETTINGS, 'giphy-gifs', '', null, 'en');
+
+    expect(requestParams(host).has('lang')).toBe(false);
+  });
+
+  it.each([
+    ['ru', 'ru_RU'],
+    ['en', 'en_US'],
+  ] as const)(
+    'поиск и тренды KLIPY при языке %s уходят с locale=%s',
+    async (locale, klipyLocale) => {
+      const searchHost = fakeHost({ json: { results: [] } });
+      const featuredHost = fakeHost({ json: { results: [] } });
+
+      await fetchGifs(searchHost, SETTINGS, 'klipy', 'кот', null, locale);
+      await fetchGifs(featuredHost, SETTINGS, 'klipy', '', null, locale);
+
+      expect(requestParams(searchHost).get('locale')).toBe(klipyLocale);
+      expect(requestParams(featuredHost).get('locale')).toBe(klipyLocale);
     }
   );
 });

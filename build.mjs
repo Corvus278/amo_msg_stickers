@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { glob, readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -15,10 +15,41 @@ const isWatch = process.argv.includes('--watch');
 const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
 const devMatches = isWatch ? DEV_MATCHES : [];
 
+/**
+ * Файл userscript последнего релиза: `latest` — всегда наибольшая версия, и менеджер
+ * находит по этому адресу каждое следующее обновление.
+ */
+const LATEST_USERSCRIPT_URL =
+  'https://github.com/mcar2107/amo_msg_stickers/releases/latest/download/amo-stickers.user.js';
+
+/**
+ * Автообновление — только у боевой сборки: userscript из `pnpm watch` менеджер
+ * заменил бы версией из релиза.
+ */
+const updateDirectives = isWatch
+  ? []
+  : [
+      `// @updateURL    ${LATEST_USERSCRIPT_URL}`,
+      `// @downloadURL  ${LATEST_USERSCRIPT_URL}`,
+    ];
+
+/**
+ * Иконка userscript в менеджере — та же, что у расширения, встроенная data URI: адрес файла
+ * в репозитории зависел бы от ветки и пути, а менеджер ходил бы за ним в сеть.
+ */
+const USERSCRIPT_ICON = `data:image/png;base64,${readFileSync('src/extension/icons/icon48.png').toString('base64')}`;
+
 const USERSCRIPT_BANNER = [
   '// ==UserScript==',
   '// @name         amo stickers',
-  '// @version      0.11.1',
+  /**
+   * Описание без суффикса языка менеджер показывает по умолчанию, `:en` — браузеру на
+   * английском; название одно на все языки.
+   */
+  '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
+  '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
+  '// @version      0.17.0',
+  `// @icon         ${USERSCRIPT_ICON}`,
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
   }),
@@ -39,6 +70,7 @@ const USERSCRIPT_BANNER = [
   '// @sandbox      DOM',
   '// @inject-into  content',
   '// @run-at       document-idle',
+  ...updateDirectives,
   '// ==/UserScript==',
 ].join('\n');
 
@@ -56,8 +88,8 @@ const TAILWIND_CONFIG = 'tailwind.config.ts';
 
 /**
  * Компоненты, по классам которых Tailwind собирает CSS пикера. Вместе с
- * `tailwind.config.ts` они идут в `watchFiles`: конфиг в бандл не входит, и без
- * явной подписки новый токен не пересобрал бы CSS в `watch`.
+ * `tailwind.config.ts` они идут в `watchFiles`: CSS собирает плагин, а не граф модулей
+ * бандла, и без явной подписки новый токен не пересобрал бы CSS в `watch`.
  */
 const TAILWIND_WATCH_GLOB = 'src/core/ui/**/*.tsx';
 
@@ -133,48 +165,65 @@ const tailwindPlugin = {
   },
 };
 
-const GIF_WORKER_MODULE = 'gif-worker:code';
-const GIF_WORKER_NAMESPACE = 'gif-worker';
-const GIF_WORKER_ENTRY = 'src/core/gifWorkerEntry.ts';
-
 /**
- * Код Worker-а кодирования GIF приходит в ядро строкой из виртуального модуля
- * `gif-worker:code` (`GIF_WORKER_CODE`): ядро запускает Worker из blob URL, отдельный
- * файл Worker-а userscript подключить не может. Бандл Worker-а собирается отдельным
- * вызовом esbuild на каждую сборку, его входы идут в `watchFiles` — правка кодировщика
- * в `pnpm watch` пересобирает и код Worker-а внутри ядра.
+ * Плагин виртуального модуля, который отдаёт код отдельного бандла строкой: модуль
+ * `<name>:code` экспортирует `exportName`. Бандл собирается отдельным вызовом esbuild на
+ * каждую сборку, его входы идут в `watchFiles` — правка любого из них в `pnpm watch`
+ * пересобирает и строку внутри того, кто её импортирует.
+ *
+ * - `gif-worker:code` (`GIF_WORKER_CODE`) — Worker кодирования GIF: ядро запускает его из
+ *   blob URL, отдельный файл Worker-а userscript подключить не может;
+ * - `page-agent:code` (`PAGE_AGENT_CODE`) — агент в мире страницы: userscript вставляет его
+ *   элементом `<script>`.
  */
-const gifWorkerPlugin = {
-  name: 'gif-worker',
-  setup(build) {
-    build.onResolve({ filter: /^gif-worker:code$/ }, () => {
-      return { path: GIF_WORKER_MODULE, namespace: GIF_WORKER_NAMESPACE };
-    });
+const bundleCodePlugin = ({ name, entry, exportName }) => {
+  const module = `${name}:code`;
 
-    build.onLoad({ filter: /.*/, namespace: GIF_WORKER_NAMESPACE }, async () => {
-      const { outputFiles, metafile } = await esbuild.build({
-        entryPoints: [GIF_WORKER_ENTRY],
-        bundle: true,
-        write: false,
-        metafile: true,
-        format: 'iife',
-        target: 'chrome120',
-        minify: !isWatch,
-        sourcemap: isWatch ? 'inline' : false,
-        legalComments: 'none',
+  return {
+    name,
+    setup(build) {
+      build.onResolve({ filter: new RegExp(`^${module}$`) }, () => {
+        return { path: module, namespace: name };
       });
-      const [output] = outputFiles;
 
-      return {
-        contents: `export const GIF_WORKER_CODE = ${JSON.stringify(output.text)};`,
-        loader: 'js',
-        watchFiles: Object.keys(metafile.inputs).map((file) => {
-          return resolve(file);
-        }),
-      };
-    });
-  },
+      build.onLoad({ filter: /.*/, namespace: name }, async () => {
+        const { outputFiles, metafile } = await esbuild.build({
+          entryPoints: [entry],
+          bundle: true,
+          write: false,
+          metafile: true,
+          format: 'iife',
+          target: 'chrome120',
+          minify: !isWatch,
+          sourcemap: isWatch ? 'inline' : false,
+          legalComments: 'none',
+        });
+        const [output] = outputFiles;
+
+        return {
+          contents: `export const ${exportName} = ${JSON.stringify(output.text)};`,
+          loader: 'js',
+          watchFiles: Object.keys(metafile.inputs).map((file) => {
+            return resolve(file);
+          }),
+        };
+      });
+    },
+  };
 };
+
+const PAGE_AGENT_ENTRY = 'src/page/index.ts';
+
+const gifWorkerPlugin = bundleCodePlugin({
+  name: 'gif-worker',
+  entry: 'src/core/gifWorkerEntry.ts',
+  exportName: 'GIF_WORKER_CODE',
+});
+const pageAgentPlugin = bundleCodePlugin({
+  name: 'page-agent',
+  entry: PAGE_AGENT_ENTRY,
+  exportName: 'PAGE_AGENT_CODE',
+});
 
 const common = {
   bundle: true,
@@ -202,8 +251,17 @@ const configs = [
   },
   {
     ...common,
+    entryPoints: [PAGE_AGENT_ENTRY],
+    outfile: 'dist/extension/page.js',
+  },
+  {
+    ...common,
     entryPoints: ['src/userscript/index.ts'],
     outfile: 'dist/amo-stickers.user.js',
+    /**
+     * Строку агента импортирует только userscript: расширению агент нужен файлом `page.js`.
+     */
+    plugins: [...common.plugins, pageAgentPlugin],
     banner: { js: `${USERSCRIPT_BANNER}\n${USERSCRIPT_WRAP_START}` },
     footer: { js: USERSCRIPT_WRAP_END },
   },
@@ -214,6 +272,15 @@ const manifest = JSON.parse(readFileSync('src/extension/manifest.json', 'utf8'))
 
 for (const script of manifest.content_scripts) script.matches.push(...devMatches);
 writeFileSync('dist/extension/manifest.json', `${JSON.stringify(manifest, null, 2)}\n`);
+/**
+ * Переводы описания: manifest ссылается на них через `__MSG_extDescription__`, и без
+ * каталога Chrome не загрузит расширение.
+ */
+cpSync('src/extension/_locales', 'dist/extension/_locales', { recursive: true });
+/**
+ * Иконки из `icons` manifest: без файла по пути Chrome не загрузит расширение.
+ */
+cpSync('src/extension/icons', 'dist/extension/icons', { recursive: true });
 
 if (isWatch) {
   for (const config of configs) {

@@ -1,5 +1,7 @@
 import type { RemoteGif } from '../db.types';
 import type { Host, Settings } from '../host.types';
+import type { Locale, MessageKey } from '../i18n/i18n.types';
+import { t } from '../i18n/translate';
 import { isAllowedUrl } from '../net';
 import { MAX_GIF_BYTES } from '../sidePick';
 
@@ -18,10 +20,14 @@ import {
   type TenorMedia,
 } from './gifs.types';
 
-export const FEED_LABELS: Record<GifFeed, string> = {
-  'giphy-gifs': 'GIPHY',
-  'giphy-stickers': 'GIPHY стикеры',
-  klipy: 'KLIPY',
+/**
+ * Ключи словаря, а не тексты: модуль загружается до выбора языка, и готовая строка осталась бы
+ * на языке по умолчанию.
+ */
+export const FEED_LABELS: Record<GifFeed, MessageKey> = {
+  'giphy-gifs': 'gifs.feed.giphyGifs',
+  'giphy-stickers': 'gifs.feed.giphyStickers',
+  klipy: 'gifs.feed.klipy',
 };
 
 export const availableFeeds = ({ giphyKey, klipyKey }: Settings): GifFeed[] => {
@@ -50,6 +56,11 @@ const KLIPY_CLIENT_KEY = 'amo-stickers';
  */
 const KLIPY_MEDIA_FILTER = 'gif,mediumgif,tinygif,nanogif';
 const KLIPY_CONTENT_FILTER = 'medium';
+
+/**
+ * Tenor v2 ждёт локаль с регионом: язык без региона KLIPY не документирует.
+ */
+const KLIPY_LOCALES: Record<Locale, string> = { ru: 'ru_RU', en: 'en_US' };
 
 /**
  * Рендишны по убыванию предпочтения: превью и отправка, когда выдача не сообщила вес ни
@@ -171,7 +182,8 @@ const giphy = async (
   key: string,
   kind: GiphyKind,
   q: string,
-  next: string | null
+  next: string | null,
+  locale: Locale
 ): Promise<GifPage> => {
   const params = new URLSearchParams({
     api_key: key,
@@ -180,11 +192,19 @@ const giphy = async (
     rating: GIPHY_RATING,
   });
 
-  if (q) params.set('q', q);
+  /**
+   * Язык — только у поиска: у `trending` GIPHY параметра языка нет, тренды общие.
+   */
+  if (q) {
+    params.set('q', q);
+    params.set('lang', locale);
+  }
+
   const endpoint = q ? 'search' : 'trending';
   const response = await host.fetchJson(`${GIPHY_BASE}/${kind}/${endpoint}?${params}`);
 
-  if (!isGiphyResponse(response)) throw new Error('GIPHY: неожиданный ответ');
+  if (!isGiphyResponse(response))
+    throw new Error(t('error.source.badResponse', { source: 'GIPHY' }));
   const { data, pagination } = response;
 
   const items = data.reduce<RemoteGif[]>((acc, item) => {
@@ -217,7 +237,8 @@ const klipy = async (
   host: Host,
   key: string,
   q: string,
-  next: string | null
+  next: string | null,
+  locale: Locale
 ): Promise<GifPage> => {
   const params = new URLSearchParams({
     key,
@@ -225,6 +246,7 @@ const klipy = async (
     limit: String(PAGE_SIZE),
     media_filter: KLIPY_MEDIA_FILTER,
     contentfilter: KLIPY_CONTENT_FILTER,
+    locale: KLIPY_LOCALES[locale],
   });
 
   if (q) params.set('q', q);
@@ -232,7 +254,8 @@ const klipy = async (
   const endpoint = q ? 'search' : 'featured';
   const response = await host.fetchJson(`${KLIPY_BASE}/${endpoint}?${params}`);
 
-  if (!isTenorResponse(response)) throw new Error('KLIPY: неожиданный ответ');
+  if (!isTenorResponse(response))
+    throw new Error(t('error.source.badResponse', { source: 'KLIPY' }));
   const { results, next: nextPos } = response;
 
   const items = results.reduce<RemoteGif[]>((acc, result) => {
@@ -268,19 +291,20 @@ export const fetchGifs = (
   { giphyKey, klipyKey }: Settings,
   feed: GifFeed,
   q: string,
-  next: string | null
+  next: string | null,
+  locale: Locale
 ): Promise<GifPage> => {
   switch (feed) {
     case 'giphy-gifs': {
-      return giphy(host, giphyKey, 'gifs', q, next);
+      return giphy(host, giphyKey, 'gifs', q, next, locale);
     }
 
     case 'giphy-stickers': {
-      return giphy(host, giphyKey, 'stickers', q, next);
+      return giphy(host, giphyKey, 'stickers', q, next, locale);
     }
 
     case 'klipy': {
-      return klipy(host, klipyKey, q, next);
+      return klipy(host, klipyKey, q, next, locale);
     }
 
     default: {

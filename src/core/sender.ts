@@ -1,6 +1,8 @@
+import { t } from './i18n/translate';
 import { isDraftEmpty, isEditing } from './amoDom';
-import type { Composer } from './amoDom.types';
+import type { SendComposer } from './amoDom.types';
 import { inspectGif } from './gif';
+import type { PageClient } from './pageClient.types';
 
 export class SendError extends Error {}
 
@@ -31,17 +33,14 @@ const waitFor = async (check: () => boolean, timeoutMs: number) => {
 };
 
 /**
- * Отправка через штатный путь amo: paste файла в поле ввода → вложение → клик «Отправить».
+ * Запасной путь — штатный путь пользователя: paste файла в поле ввода → вложение → клик
+ * «Отправить».
  *
  * В DataTransfer кладём ТОЛЬКО файл: при наличии text/plain поле вставит текст, а не вложение.
  */
-export const sendFile = async (composer: Composer, file: File) => {
-  if (isEditing(composer))
-    throw new SendError('Сначала завершите редактирование сообщения');
-  if (!isDraftEmpty(composer))
-    throw new SendError(
-      'В поле ввода есть текст или вложения — стикер ушёл бы вместе с ними'
-    );
+const sendViaPaste = async (composer: SendComposer, file: File) => {
+  if (isEditing(composer)) throw new SendError(t('error.send.editing'));
+  if (!isDraftEmpty(composer)) throw new SendError(t('error.send.draftNotEmpty'));
 
   const { editable, sendButton } = composer;
   const dataTransfer = new DataTransfer();
@@ -61,11 +60,49 @@ export const sendFile = async (composer: Composer, file: File) => {
     return !isDraftEmpty(composer);
   }, ATTACH_TIMEOUT_MS);
 
-  if (!isAttached)
-    throw new SendError('amo не принял файл (лимит размера или хранилища?)');
+  if (!isAttached) throw new SendError(t('error.send.notAttached'));
 
   await wait(RENDER_SETTLE_MS);
   sendButton?.click();
+};
+
+/**
+ * Отправляет стикер отдельным сообщением через очередь amo, не трогая поле ввода. Если amo
+ * сообщение не принял — агента нет, внутренности amo сменились, открыт не чат, — стикер
+ * уходит запасным путём, вставкой в поле, с проверками черновика. После приёма в очередь
+ * запасной путь закрыт при любом исходе загрузки: иначе один клик дал бы два стикера.
+ *
+ * @param composer — поле ввода, от которого идёт отправка
+ * @param file — GIF с готовым именем
+ * @param pageClient — клиент агента в мире страницы
+ */
+export const sendFile = async (
+  composer: SendComposer,
+  file: File,
+  pageClient: PageClient
+) => {
+  const result = pageClient.send(composer.editable, file);
+
+  switch (result.status) {
+    case 'accepted': {
+      return;
+    }
+
+    case 'unavailable': {
+      console.info(
+        `[amo-stickers] amo queue unavailable (${result.reason}), pasting instead`
+      );
+      await sendViaPaste(composer, file);
+
+      return;
+    }
+
+    default: {
+      const unknownResult: never = result;
+
+      throw new Error(`Unknown page send result: ${JSON.stringify(unknownResult)}`);
+    }
+  }
 };
 
 /**
@@ -90,7 +127,7 @@ export const toGifFile = (blob: Blob, fileName: string) => {
  */
 export const toCheckedGifFile = async (blob: Blob, fileName: string) => {
   if (!inspectGif(new Uint8Array(await blob.arrayBuffer()))) {
-    throw new SendError('Файл не похож на GIF');
+    throw new SendError(t('error.send.notGif'));
   }
 
   return toGifFile(blob, fileName);

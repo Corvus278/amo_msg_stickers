@@ -1,9 +1,8 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { PlusIcon } from '../../PlusIcon/PlusIcon';
 import { usePickerView } from '../../usePickerView/usePickerView';
-
-const TILE_TITLE = 'Создать стикер';
 
 /**
  * Без наведения плитка не спорит со стикерами: приглушённые пунктирная рамка и «+», без подложки. Подложка
@@ -29,6 +28,7 @@ const TILE_CLASS = [
  */
 export const CreateTile: FC = () => {
   const { openScreen } = usePickerView();
+  const title = t('add.createTile');
 
   const handleTileClick = () => {
     openScreen('add');
@@ -38,8 +38,8 @@ export const CreateTile: FC = () => {
     <button
       type="button"
       className={TILE_CLASS}
-      aria-label={TILE_TITLE}
-      title={TILE_TITLE}
+      aria-label={title}
+      title={title}
       onClick={handleTileClick}
     >
       <PlusIcon />

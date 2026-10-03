@@ -1,8 +1,20 @@
 {
   "manifest_version": 3,
   "name": "amo stickers",
-  "version": "0.11.1",
-  "description": "Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры",
+  "version": "0.17.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1TKaKZ2bdGhm2weVcdYHb9MC/rgTppiAqwmYAA1Fih707+V2zmtlysmOGKJ7Ub7c28HZ9+ilyVWUZiRAJp7pmClTp1TZK5oH3zaPG2kiVFiK4NVX4xsPU0xv5fdzPVFZ1QbiLyofGvyhgsey7IxMJEB2kGN3N0v/Ts9A/bnlCy0qBXpIpIuVr8nvDEneK/HfM5D5tSI85wPKeSf4k2YTf3lH5rNv86PVH5pPG4MrRYHdCOEehxn1hDz8Rd6rROqEAWcvaOfMXMdXsVB0WXCLCPiopbLr4/YZ1NIOhpo+ctrEb32rgaMZkIBUp0k+P7JqZIk9Hh0JEAls5ENpascttQIDAQAB",
+  "description": "__MSG_extDescription__",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "amo stickers",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+  },
+  "default_locale": "ru",
   "permissions": ["storage"],
   "host_permissions": [
     "https://api.giphy.com/*",
@@ -17,6 +29,12 @@
       "matches": ["https://*.amo.tm/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.amo.tm/*"],
+      "js": ["page.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
     }
   ]
 }

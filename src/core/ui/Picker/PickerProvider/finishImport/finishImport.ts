@@ -1,3 +1,6 @@
+import { t } from '../../../../i18n/translate';
+import { packTitle } from '../../packTitle/packTitle';
+
 import type { FinishImportOptions } from './finishImport.types';
 
 /**
@@ -16,5 +19,5 @@ export const finishImport = (options: FinishImportOptions): void => {
 
   if (screen === 'add') scrollToSection(pack.id, 'instant');
 
-  showStatus(`Пак «${pack.title}» добавлен`);
+  showStatus(t('status.packAdded', { title: packTitle(pack) }));
 };

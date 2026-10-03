@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { frameDelayMs, openImageSource } from '../src/core/frameSourceImage';
+import { setLocale } from '../src/core/i18n/translate';
 
 import { fakeCanvasContext } from './helpers/fakeCanvasContext';
 import { FakeImageDecoder, FakeVideoFrame } from './helpers/fakeImageDecoder';
@@ -140,6 +141,21 @@ describe('openImageSource: ImageDecoder', () => {
     );
     expect(FakeVideoFrame.open).toBe(0);
     await expect(source.draw(3, ctx, 256, 128)).rejects.toThrow(RangeError);
+  });
+
+  it.each([
+    ['ru', 'Не удалось прочитать кадры картинки'],
+    ['en', "Couldn't read the image frames"],
+  ] as const)('без дорожки — ошибка на %s, декодер закрыт', async (locale, message) => {
+    setLocale(locale);
+    FakeImageDecoder.init.isTrackMissing = true;
+
+    try {
+      await expect(openImageSource(WEBP, 512)).rejects.toThrow(message);
+      expect(FakeImageDecoder.instances[0]!.isClosed).toBe(true);
+    } finally {
+      setLocale('ru');
+    }
   });
 
   it('dispose закрывает декодер', async () => {

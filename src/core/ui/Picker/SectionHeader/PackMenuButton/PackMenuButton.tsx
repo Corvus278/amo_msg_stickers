@@ -1,8 +1,10 @@
 import type { FunctionComponent as FC, TargetedMouseEvent } from 'preact';
 import { useState } from 'preact/hooks';
 
+import { t } from '../../../../i18n/translate';
 import { Menu } from '../../Menu/Menu';
 import type { MenuOpening } from '../../Menu/Menu.types';
+import { CopyPackLinkItem } from '../CopyPackLinkItem/CopyPackLinkItem';
 import { DeletePackItem } from '../DeletePackItem/DeletePackItem';
 
 import type { PackMenuButtonProps } from './PackMenuButton.types';
@@ -18,8 +20,9 @@ const MORE_CLASS = [
  * закрывает.
  */
 export const PackMenuButton: FC<PackMenuButtonProps> = (props) => {
-  const { title, onDelete } = props;
+  const { title, link, onDelete } = props;
   const [opening, setOpening] = useState<MenuOpening | null>(null);
+  const label = t('pack.menu', { title });
 
   const handleMoreClick = (event: TargetedMouseEvent<HTMLButtonElement>) => {
     const { currentTarget } = event;
@@ -47,7 +50,7 @@ export const PackMenuButton: FC<PackMenuButtonProps> = (props) => {
     <>
       <button
         type="button"
-        aria-label={`Меню пака «${title}»`}
+        aria-label={label}
         aria-haspopup="menu"
         aria-expanded={opening !== null}
         className={MORE_CLASS}
@@ -64,11 +67,13 @@ export const PackMenuButton: FC<PackMenuButtonProps> = (props) => {
 
       {opening && (
         <Menu
-          label={`Меню пака «${title}»`}
+          label={label}
           anchor={opening.anchor}
           source={opening.source}
           onClose={handleMenuClose}
         >
+          {link && <CopyPackLinkItem link={link} />}
+
           <DeletePackItem onConfirm={handleDeleteConfirm} />
         </Menu>
       )}

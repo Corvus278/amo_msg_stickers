@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EVENT_TIMEOUT_MS, fit, waitForEvent } from '../src/core/frameSourceCommon';
+import { setLocale } from '../src/core/i18n/translate';
 
 import { CountingEventTarget } from './helpers/countingEventTarget';
 
@@ -18,6 +19,7 @@ const listenerCount = (target: CountingEventTarget, event: string) => {
 describe('waitForEvent', () => {
   afterEach(() => {
     vi.useRealTimers();
+    setLocale('ru');
   });
 
   it('разрешается по событию и снимает слушатели и таймер', async () => {
@@ -46,11 +48,25 @@ describe('waitForEvent', () => {
     vi.useFakeTimers();
     const target = new CountingEventTarget();
     const waiting = waitForEvent(target, 'seeked');
-    const assertion = expect(waiting).rejects.toThrow('timeout: seeked');
+    const assertion = expect(waiting).rejects.toThrow(
+      'Видео не ответило вовремя (seeked)'
+    );
 
     vi.advanceTimersByTime(EVENT_TIMEOUT_MS);
     await assertion;
     expect(listenerCount(target, 'seeked')).toBe(0);
+  });
+
+  it('в английском интерфейсе отказ по таймауту — на английском', async () => {
+    vi.useFakeTimers();
+    setLocale('en');
+    const waiting = waitForEvent(new CountingEventTarget(), 'seeked');
+    const assertion = expect(waiting).rejects.toThrow(
+      'The video did not respond in time (seeked)'
+    );
+
+    vi.advanceTimersByTime(EVENT_TIMEOUT_MS);
+    await assertion;
   });
 });
 

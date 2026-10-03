@@ -1,3 +1,5 @@
+import { readAmoLocale } from './i18n/locale';
+import { setLocale, t } from './i18n/translate';
 import { createPicker } from './ui/createPicker';
 import { stickerIcon } from './ui/icons';
 import { composerOf, findComposers, injectMessageStyle, isDarkTheme } from './amoDom';
@@ -10,6 +12,7 @@ import type { Host } from './host.types';
 import { createHoverPopup } from './hoverPopup';
 import type { OpenedBy } from './hoverPopup.types';
 import { MAX_REMOTE_GIF_BYTES } from './net';
+import { createPageClient, fileInputOf } from './pageClient';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from './sender';
 import { MAX_GIF_BYTES } from './sidePick';
 
@@ -51,18 +54,20 @@ const setIconOpen = (button: HTMLElement | null, isOpen: boolean) => {
 };
 
 export const start = (host: Host) => {
+  setLocale(readAmoLocale());
   if (window.__amoStickers) return;
   window.__amoStickers = true;
   injectMessageStyle();
 
   let activeButton: HTMLElement | null = null;
+  const pageClient = createPageClient(document, fileInputOf);
 
   const toFile = async (item: SendItem) => {
     switch (item.kind) {
       case 'local': {
         const sticker = await getSticker(item.stickerId);
 
-        if (!sticker) throw new SendError('Стикер удалён');
+        if (!sticker) throw new SendError(t('error.send.stickerDeleted'));
 
         return toGifFile(sticker.blob, sendFileName(item, sticker));
       }
@@ -95,9 +100,9 @@ export const start = (host: Host) => {
   const send = async (item: SendItem) => {
     const composer = activeButton && composerOf(activeButton);
 
-    if (!composer) throw new SendError('Поле ввода не найдено');
+    if (!composer) throw new SendError(t('error.send.noComposer'));
 
-    await sendFile(composer, await toFile(item));
+    await sendFile(composer, await toFile(item), pageClient);
     await pushRecent(item);
   };
 
@@ -174,7 +179,7 @@ export const start = (host: Host) => {
     /**
      * title на inner, а не на wrap: иначе подсказка всплывает над всем попапом.
      */
-    inner.title = 'Стикеры и GIF';
+    inner.title = t('picker.title');
     inner.innerHTML = stickerIcon(ICON_CLASS);
     inner.addEventListener('click', () => {
       hoverPopup.click(wrap);
@@ -210,7 +215,16 @@ export const start = (host: Host) => {
 
   const handleDocumentMouseDown = (event: MouseEvent) => {
     if (!hoverPopup.isOpen || !activeButton) return;
-    if (!event.composedPath().includes(activeButton)) hoverPopup.dismiss();
+
+    const path = event.composedPath();
+
+    /**
+     * Клик по закреплённому предпросмотру: слой лежит вне кнопки, но закрывает только
+     * предпросмотр, попап остаётся.
+     */
+    if (path.includes(activeButton) || path.includes(picker.previewElement)) return;
+
+    hoverPopup.dismiss();
   };
 
   /**

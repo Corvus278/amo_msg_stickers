@@ -1,4 +1,5 @@
 import type { LocalSendItem, Pack, StickerRec } from '../../../../db.types';
+import type { CellNames } from '../../cellName/cellName.types';
 
 /**
  * Стикер в ленте: одна ячейка сетки раздела.
@@ -20,9 +21,9 @@ export type FeedSticker = {
   sticker: StickerRec;
 
   /**
-   * Имя стикера в винительном падеже для кнопок ячейки.
+   * Имена кнопок ячейки на языке интерфейса.
    */
-  name: string;
+  name: CellNames;
 };
 
 /**

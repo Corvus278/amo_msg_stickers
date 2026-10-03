@@ -23,6 +23,11 @@ export type FakeImageDecoderInit = {
    * Ответ `ImageDecoder.isTypeSupported`.
    */
   isSupported: boolean;
+
+  /**
+   * Декодер не выбрал дорожку: `tracks.selectedTrack` — `null`.
+   */
+  isTrackMissing?: boolean;
 };
 
 export type FakeDecodeOptions = {

@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { setLocale } from '../src/core/i18n/translate';
 import { finishImport } from '../src/core/ui/Picker/PickerProvider/finishImport/finishImport';
 import type { SectionMotion } from '../src/core/ui/Picker/usePickerView/usePickerView.types';
 
@@ -21,6 +22,10 @@ const callbacks = () => {
 
   return { calls, scrollToSection, showStatus };
 };
+
+afterEach(() => {
+  setLocale('ru');
+});
 
 describe('finishImport', () => {
   it('экран «Добавить» открыт — мгновенный переход к паку, затем статус', () => {
@@ -47,5 +52,15 @@ describe('finishImport', () => {
 
     expect(scrollToSection).not.toHaveBeenCalled();
     expect(showStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('на английском — английский статус, название пака без перевода', () => {
+    setLocale('en');
+
+    const { showStatus, scrollToSection } = callbacks();
+
+    finishImport({ screen: null, pack: PACK, scrollToSection, showStatus });
+
+    expect(showStatus).toHaveBeenCalledWith('Pack “Коты” added');
   });
 });

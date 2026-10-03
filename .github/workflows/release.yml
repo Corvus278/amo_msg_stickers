@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     branches: [master]
+  # Запасной путь, если push мержа не создал прогона: GitHub изредка теряет событие,
+  # а перезапустить прогон, которого нет, нельзя.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,6 +17,9 @@ permissions:
 
 jobs:
   ci:
+    # У workflow_dispatch нет фильтра веток: ручной запуск с другой ветки выпустил бы
+    # релиз из неё. Пропуск ci пропускает и release.
+    if: ${{ github.ref == 'refs/heads/master' }}
     uses: ./.github/workflows/ci.yml
 
   release:
@@ -21,6 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Публикация в стор идёт за релизом этого коммита: созданным сейчас или прошлой
+    # попыткой того же прогона, упавшей после создания тега, — иначе перезапуск такой
+    # попытки потерял бы версию для стора. Тег на другом коммите — версия выпущена
+    # прошлым прогоном и в стор отправлялась тогда же.
+    outputs:
+      released: ${{ steps.tag.outputs.exists == 'false' || steps.tag.outputs.sha == github.sha }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
 
@@ -32,7 +45,9 @@ jobs:
         env:
           TAG: v${{ steps.version.outputs.version }}
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null; then
+          sha=$(git ls-remote --tags origin "refs/tags/${TAG}" | cut -f1)
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+          if [ -n "${sha}" ]; then
             echo "::warning::Версия ${TAG} уже выпущена — релиз не создаётся"
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -50,14 +65,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: v${{ steps.version.outputs.version }}
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
           gh release create "${TAG}" \
             --target "${GITHUB_SHA}" \
             --title "${TAG}" \
             --generate-notes \
             --latest=false \
-            "release/amo-stickers-${VERSION}.zip" \
+            release/amo-stickers.zip \
             release/amo-stickers.user.js
 
       # «Latest» (на него ведёт README) — всегда наибольшая версия, а не последний
@@ -71,3 +85,15 @@ jobs:
           latest=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1000 \
             --json tagName --jq '.[].tagName' | sort -V | tail -n 1)
           gh release edit "${latest}" --latest
+
+  # Отдельный job после релиза: его сбой виден красным в прогоне, а релиз на GitHub к
+  # этому моменту уже выпущен. Упавший job перезапускается кнопкой «Re-run failed
+  # jobs» — версию, которая в сторе уже на проверке или опубликована, скрипт второй
+  # раз не загружает. Тот же workflow запускается и вручную.
+  chrome-web-store:
+    needs: release
+    if: ${{ needs.release.outputs.released == 'true' }}
+    uses: ./.github/workflows/chrome-web-store.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit

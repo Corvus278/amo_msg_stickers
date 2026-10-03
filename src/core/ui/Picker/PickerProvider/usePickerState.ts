@@ -4,6 +4,7 @@ import { listPacks } from '../../../db';
 import type { Pack, SendItem } from '../../../db.types';
 import { DEFAULT_SETTINGS } from '../../../host';
 import type { Settings } from '../../../host.types';
+import { t } from '../../../i18n/translate';
 import { useObjectUrls } from '../useObjectUrls/useObjectUrls';
 import { usePickerViewState } from '../usePickerView/usePickerViewState';
 
@@ -52,14 +53,14 @@ export const usePickerState = (options: PickerStateOptions): PickerStateValue =>
 
   const send = useCallback(
     async (item: SendItem) => {
-      showStatus('Отправляю…');
+      showStatus(t('status.sending'));
 
       try {
         await onSend(item);
         clearStatus();
         onClose();
       } catch (error) {
-        showError(errorMessage(error) || 'Ошибка отправки');
+        showError(errorMessage(error) || t('status.sendFailed'));
       }
     },
     [onSend, onClose, showStatus, showError, clearStatus]

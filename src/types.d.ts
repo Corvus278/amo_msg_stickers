@@ -103,6 +103,22 @@ declare module '*?raw' {
 }
 
 /**
+ * `import.meta.glob` vite — список файлов по шаблону, который vitest разворачивает при сборке
+ * теста в объект «путь → загрузчик». Нужен тестам, сверяющим наборы файлов: типов Node и
+ * `vite/client` в проекте нет, описан только используемый срез. Слияние с глобальным
+ * `ImportMeta` возможно только через `interface`.
+ */
+interface ImportMeta {
+  /**
+   * Шаблон — только литерал: vitest разбирает вызов статически.
+   *
+   * @param patterns — шаблоны путей относительно файла; `!` в начале исключает совпадения
+   * @returns загрузчики модулей по путям найденных файлов
+   */
+  glob: (patterns: string | readonly string[]) => Record<string, () => Promise<unknown>>;
+}
+
+/**
  * Код Worker-а кодирования GIF (`src/core/gifWorkerEntry.ts`) одним IIFE-бандлом:
  * модуль собирает плагин в `build.mjs`, ядро запускает Worker из blob URL с этим
  * кодом. Vitest плагина не знает — модуль, который его импортирует, юнит-тесты не
@@ -110,6 +126,14 @@ declare module '*?raw' {
  */
 declare module 'gif-worker:code' {
   export const GIF_WORKER_CODE: string;
+}
+
+/**
+ * Код агента в мире страницы (`src/page/index.ts`) строкой — из esbuild-плагина
+ * `page-agent` в `build.mjs`: userscript вставляет его элементом `<script>`.
+ */
+declare module 'page-agent:code' {
+  export const PAGE_AGENT_CODE: string;
 }
 
 /**
@@ -122,4 +146,10 @@ interface Window {
    * а стартовать нужно один раз.
    */
   __amoStickers?: boolean;
+
+  /**
+   * Флаг запуска агента в мире страницы (`src/page/agent.ts`): расширение и userscript
+   * могут подключить его оба, а слушать команды должен один.
+   */
+  __amoStickersPage?: boolean;
 }

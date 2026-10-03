@@ -1,6 +1,8 @@
 import { fetchChecked, readResponseLimited } from '../core/net';
 
-import type { FetchRequest, FetchResponse } from './messages.types';
+import { actionIconPaths, isIconThemeMessage } from './actionIcon';
+import { toFailureResponse } from './fetchResponse';
+import type { FetchRequest, FetchResponse, IconThemeMessage } from './messages.types';
 
 /**
  * Сеть идёт через service worker: у него host_permissions и нет CORS-ограничений страницы.
@@ -57,7 +59,7 @@ const handleFetch = async (request: FetchRequest): Promise<FetchResponse> => {
   try {
     return await readBody(await fetchChecked(request.url), request);
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    return toFailureResponse(error);
   }
 };
 
@@ -81,11 +83,31 @@ const respond = async (
 };
 
 /**
+ * Тема браузера известна только странице (`prefers-color-scheme`): у service worker нет
+ * `matchMedia`. Иконка ставится на все вкладки сразу — тема у браузера одна.
+ */
+const setActionIcon = async (isDark: boolean) => {
+  try {
+    await chrome.action.setIcon({ path: actionIconPaths(isDark) });
+  } catch (error) {
+    console.warn('[amo-stickers] action icon update failed', error);
+  }
+};
+
+/**
  * Слушатель синхронный: `true` держит канал открытым до асинхронного `sendResponse`.
  */
-chrome.runtime.onMessage.addListener((msg: FetchRequest, sender, sendResponse) => {
-  if (msg?.type !== 'amo-stickers:fetch' || !isOwnContentScript(sender)) return false;
-  void respond(msg, sendResponse);
+chrome.runtime.onMessage.addListener(
+  (msg: FetchRequest | IconThemeMessage, sender, sendResponse) => {
+    if (isIconThemeMessage(msg) && isOwnContentScript(sender)) {
+      void setActionIcon(msg.isDark);
 
-  return true;
-});
+      return false;
+    }
+
+    if (msg?.type !== 'amo-stickers:fetch' || !isOwnContentScript(sender)) return false;
+    void respond(msg, sendResponse);
+
+    return true;
+  }
+);

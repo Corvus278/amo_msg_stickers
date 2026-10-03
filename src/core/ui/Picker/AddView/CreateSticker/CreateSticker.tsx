@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../../i18n/translate';
 import { Button } from '../../Button/Button';
 import { TextInput } from '../../TextInput/TextInput';
 import { useStickerDraft } from '../../useStickerDraft/useStickerDraft';
@@ -30,14 +31,14 @@ export const CreateSticker: FC = () => {
 
   return (
     <>
-      <h3 className="mt-1.5 text-xsm font-bold">Свой стикер</h3>
+      <h3 className="mt-1.5 text-xsm font-bold">{t('add.custom.title')}</h3>
 
       <DropZone fileName={fileName} onPick={handleZonePick} />
 
       <TextInput
         type="text"
         value={caption}
-        placeholder="Подпись (необязательно)"
+        placeholder={t('add.custom.caption')}
         onInput={handleCaptionInput}
       />
 
@@ -45,7 +46,7 @@ export const CreateSticker: FC = () => {
 
       <div className="flex items-center gap-1.5">
         <Button variant="primary" isDisabled={!isSavable} onClick={handleSaveClick}>
-          Сохранить в «Мои стикеры»
+          {t('add.custom.save')}
         </Button>
       </div>
     </>

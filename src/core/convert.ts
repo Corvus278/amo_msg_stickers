@@ -1,3 +1,4 @@
+import { t } from './i18n/translate';
 import {
   type CanvasBox,
   type Decorate,
@@ -188,7 +189,7 @@ export const toStickerGif = async (
   const source = await openFrameSource(blob, kind, max);
 
   try {
-    if (!source.plan.length) throw new Error('Не удалось извлечь кадры');
+    if (!source.plan.length) throw new Error(t('error.convert.noFrames'));
 
     const { bytes, width, height } = await encodeLadder({
       frameCount: source.plan.length,

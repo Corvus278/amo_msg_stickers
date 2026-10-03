@@ -1,5 +1,6 @@
 import type { FunctionComponent as FC } from 'preact';
 
+import { t } from '../../../i18n/translate';
 import type { View } from '../usePickerView/usePickerView.types';
 import { ViewBody } from '../ViewBody/ViewBody';
 import { ViewHeader } from '../ViewHeader/ViewHeader';
@@ -17,7 +18,7 @@ export const AddView: FC = () => {
   return (
     <>
       <ViewHeader>
-        <ViewTitle title="Добавить стикеры" />
+        <ViewTitle title={t('add.title')} />
       </ViewHeader>
 
       <ViewBody view={ADD_VIEW}>

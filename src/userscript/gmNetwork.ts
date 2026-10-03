@@ -1,9 +1,11 @@
 import type { HostNetwork } from '../core/host.types';
+import type { MessageKey } from '../core/i18n/i18n.types';
+import { t } from '../core/i18n/translate';
 import {
   assertAllowedUrl,
   httpError,
   isAllowedUrl,
-  NOT_ALLOWED,
+  notAllowedError,
   tooBigError,
 } from '../core/net';
 
@@ -36,15 +38,15 @@ const NO_LIMIT = Number.POSITIVE_INFINITY;
  * Тексты без адреса запроса: в пути запросов к Telegram лежит токен бота, а текст ошибки
  * показывается в попапе и пишется в консоль.
  */
-const NETWORK_ERROR = 'Сетевая ошибка';
-const TIMEOUT_ERROR = 'Сервер не ответил вовремя';
-const ABORT_ERROR = 'Запрос прерван';
+const NETWORK_ERROR = 'error.net.network' satisfies MessageKey;
+const TIMEOUT_ERROR = 'error.net.timeout' satisfies MessageKey;
+const ABORT_ERROR = 'error.net.aborted' satisfies MessageKey;
 
 /**
  * Менеджер отдал тело `arraybuffer`-запроса не байтами: пустой Blob ушёл бы дальше как
  * стикер, поэтому это ошибка.
  */
-export const BODY_NOT_BYTES = 'Ответ пришёл не байтами';
+const BODY_NOT_BYTES = 'error.net.bodyNotBytes' satisfies MessageKey;
 
 /**
  * Значение заголовка из строки `responseHeaders`. Имя сравнивается без учёта регистра:
@@ -175,7 +177,7 @@ const send = (
         headersStatus = response.status;
 
         if (!isAllowedFinalUrl(response)) {
-          stop(new Error(NOT_ALLOWED));
+          stop(notAllowedError());
         } else if (
           Number(headerValue(response.responseHeaders, 'content-length')) > maxBytes
         ) {
@@ -189,7 +191,7 @@ const send = (
         const { status, response: body } = response;
 
         if (!isAllowedFinalUrl(response)) {
-          stop(new Error(NOT_ALLOWED));
+          stop(notAllowedError());
         } else if (!isOkStatus(status)) {
           fail(httpError(status, bodyText(response)));
         } else if (isArrayBuffer(body) && body.byteLength > maxBytes) {
@@ -200,13 +202,13 @@ const send = (
         }
       },
       onerror: () => {
-        fail(new Error(NETWORK_ERROR));
+        fail(new Error(t(NETWORK_ERROR)));
       },
       ontimeout: () => {
-        fail(new Error(TIMEOUT_ERROR));
+        fail(new Error(t(TIMEOUT_ERROR)));
       },
       onabort: () => {
-        fail(new Error(ABORT_ERROR));
+        fail(new Error(t(ABORT_ERROR)));
       },
     });
 
@@ -238,7 +240,7 @@ export const gmNetwork = (request: GmXmlhttpRequest): HostNetwork => {
       const response = await send(request, url, 'arraybuffer', maxBytes);
       const { response: body, responseHeaders } = response;
 
-      if (!isArrayBuffer(body)) throw new Error(BODY_NOT_BYTES);
+      if (!isArrayBuffer(body)) throw new Error(t(BODY_NOT_BYTES));
 
       return new Blob([body], { type: headerValue(responseHeaders, 'content-type') });
     },

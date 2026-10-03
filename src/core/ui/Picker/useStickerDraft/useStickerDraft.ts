@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 
 import { captionDecorator, detectKind, toStickerGif } from '../../../convert';
 import { CUSTOM_PACK_ID, putSticker, uid } from '../../../db';
+import { t } from '../../../i18n/translate';
 import { errorMessage } from '../PickerProvider/errorMessage';
 import { usePicker } from '../PickerProvider/usePicker';
 import { usePickerView } from '../usePickerView/usePickerView';
@@ -64,7 +65,7 @@ export const useStickerDraft = (): StickerDraftState => {
 
     const convert = async () => {
       setIsConverting(true);
-      showStatus('Конвертирую…');
+      showStatus(t('status.converting'));
 
       try {
         const gif = await toStickerGif(source, detectKind(source, source.name), {
@@ -75,11 +76,17 @@ export const useStickerDraft = (): StickerDraftState => {
         const { blob, width, height } = gif;
 
         setDraft({ gif, caption: captionText, url: URL.createObjectURL(blob) });
-        showStatus(`${width}×${height}, ${Math.round(blob.size / BYTES_IN_KB)} КБ`);
+        showStatus(
+          t('status.stickerSize', {
+            width,
+            height,
+            size: Math.round(blob.size / BYTES_IN_KB),
+          })
+        );
       } catch (error) {
         if (isStale) return;
         setDraft(null);
-        showError(`Не получилось: ${errorMessage(error)}`);
+        showError(t('status.convertFailed', { message: errorMessage(error) }));
       } finally {
         if (!isStale) setIsConverting(false);
       }

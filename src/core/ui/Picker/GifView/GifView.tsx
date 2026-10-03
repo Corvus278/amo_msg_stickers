@@ -2,8 +2,11 @@ import type { FunctionComponent as FC } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 
 import type { RemoteGif } from '../../../db.types';
+import { getLocale, t } from '../../../i18n/translate';
 import type { GifFeed } from '../../../sources/gifs.types';
+import { USER_DOCS_PAGE, userDocsUrl } from '../../../userDocs';
 import { EmptyState } from '../EmptyState/EmptyState';
+import { ExternalLink } from '../ExternalLink/ExternalLink';
 import { MasonryGrid } from '../MasonryGrid/MasonryGrid';
 import { usePicker } from '../PickerProvider/usePicker';
 import { TextInput } from '../TextInput/TextInput';
@@ -104,7 +107,7 @@ export const GifView: FC<GifViewProps> = (props) => {
           onRecentClear={handleRecentClear}
         >
           <EmptyState>
-            Для поиска GIF нужен API-ключ GIPHY или KLIPY
+            {t('gifs.noKeys')}
             <br />
             <button
               ref={settingsRef}
@@ -112,8 +115,14 @@ export const GifView: FC<GifViewProps> = (props) => {
               className={SETTINGS_LINK_CLASS}
               onClick={handleSettingsClick}
             >
-              Открыть настройки
+              {t('gifs.openSettings')}
             </button>
+
+            <br />
+
+            <ExternalLink href={userDocsUrl(USER_DOCS_PAGE.gifKeys, getLocale())}>
+              {t('gifs.docs')}
+            </ExternalLink>
           </EmptyState>
         </MasonryGrid>
       </>
@@ -126,7 +135,7 @@ export const GifView: FC<GifViewProps> = (props) => {
         <TextInput
           type="search"
           value={query}
-          placeholder="Поиск GIF"
+          placeholder={t('gifs.search')}
           inputRef={searchRef}
           onInput={handleSearchInput}
         />
@@ -141,7 +150,7 @@ export const GifView: FC<GifViewProps> = (props) => {
         onRecentRemove={handleRecentRemove}
         onRecentClear={handleRecentClear}
       >
-        {isNothingFound && <EmptyState>Ничего не нашлось</EmptyState>}
+        {isNothingFound && <EmptyState>{t('gifs.nothingFound')}</EmptyState>}
 
         <div className="px-0.5 pt-1 text-right text-xxs text-cadetGray-30 dark:text-gray-70">
           {FEED_ATTRIBUTION[feed]}

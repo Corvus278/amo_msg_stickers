@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { RecentRec, RemoteGif } from '../src/core/db.types';
+import { setLocale } from '../src/core/i18n/translate';
 import {
   gifSections,
   recentGifs,
@@ -25,6 +26,10 @@ const gif = (id: string): RemoteGif => {
 
 const RECENT: [RemoteGif, RemoteGif] = [gif('r1'), gif('r2')];
 const TRENDS = [gif('t1'), gif('t2'), gif('t3')];
+
+afterEach(() => {
+  setLocale('ru');
+});
 
 describe('gifSections', () => {
   it('при пустом запросе ставит недавние с заголовком над трендами', () => {
@@ -110,6 +115,23 @@ describe('gifSections', () => {
 
     expect(sections).toEqual([
       { id: 'feed', title: '', items: TRENDS, skeletons: 1, isRecent: false },
+    ]);
+  });
+
+  it('в английском интерфейсе заголовки недавних и трендов английские', () => {
+    setLocale('en');
+
+    const sections = gifSections({
+      recent: RECENT,
+      gifs: TRENDS,
+      term: '',
+      hasFeed: true,
+      loading: null,
+    });
+
+    expect(sections).toEqual([
+      { id: 'recent', title: 'Recent', items: RECENT, skeletons: 0, isRecent: true },
+      { id: 'feed', title: 'Trending', items: TRENDS, skeletons: 0, isRecent: false },
     ]);
   });
 

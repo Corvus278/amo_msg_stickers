@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { SendError, toCheckedGifFile, toGifFile } from '../src/core/sender';
+import type { SendComposer } from '../src/core/amoDom.types';
+import { setLocale } from '../src/core/i18n/translate';
+import type { PageClient, PageSendResult } from '../src/core/pageClient.types';
+import { SendError, sendFile, toCheckedGifFile, toGifFile } from '../src/core/sender';
 
 import { makeGif } from './helpers/makeGif';
 
@@ -42,4 +45,117 @@ describe('toCheckedGifFile', () => {
     await expect(result).rejects.toBeInstanceOf(SendError);
     await expect(result).rejects.toThrow('Файл не похож на GIF');
   });
+
+  it('в английском интерфейсе отклоняет с английским текстом', async () => {
+    setLocale('en');
+
+    await expect(
+      toCheckedGifFile(new Blob(['<html>404</html>']), GIF_NAME)
+    ).rejects.toThrow('The file does not look like a GIF');
+  });
+});
+
+/**
+ * Поле ввода amo без DOM: «Отправить» видна, когда в поле есть текст или вложение, а
+ * paste файла делает её видимой — как amo, принявший вложение.
+ *
+ * @param hasDraft — в поле уже есть текст
+ * @returns композер и шпионы вставки и клика
+ */
+const fakeComposer = (hasDraft: boolean) => {
+  let isSendShown = hasDraft;
+  const shownClass = {
+    contains: () => {
+      return isSendShown;
+    },
+  };
+  const paste = vi.fn(() => {
+    isSendShown = true;
+
+    return true;
+  });
+  const click = vi.fn();
+  const composer: SendComposer = {
+    editable: {
+      focus: vi.fn(),
+      dispatchEvent: paste,
+      setAttribute: vi.fn(),
+      removeAttribute: vi.fn(),
+    },
+    sendButton: { classList: shownClass, click },
+    cancelEditButton: null,
+  };
+
+  return { click, composer, paste };
+};
+
+const clientAnswering = (result: PageSendResult): PageClient => {
+  return {
+    send: vi.fn(() => {
+      return result;
+    }),
+  };
+};
+
+describe('sendFile', () => {
+  const file = new File([makeGif(8, 8)], GIF_NAME, { type: 'image/gif' });
+
+  it('amo принял в очередь — поле не трогается, «Отправить» не нажимается', async () => {
+    const { click, composer, paste } = fakeComposer(true);
+    const client = clientAnswering({ status: 'accepted' });
+
+    await sendFile(composer, file, client);
+
+    expect(client.send).toHaveBeenCalledWith(composer.editable, file);
+    expect(paste).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+  });
+
+  it('очередь недоступна, поле пустое — вставка и «Отправить»', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {
+      return undefined;
+    });
+    vi.stubGlobal(
+      'DataTransfer',
+      class {
+        readonly items = { add: vi.fn() };
+      }
+    );
+    vi.stubGlobal('ClipboardEvent', class extends Event {});
+
+    const { click, composer, paste } = fakeComposer(false);
+
+    await sendFile(
+      composer,
+      file,
+      clientAnswering({ status: 'unavailable', reason: 'no-agent' })
+    );
+
+    expect(paste).toHaveBeenCalledTimes(1);
+    expect(click).toHaveBeenCalledTimes(1);
+  });
+
+  it('очередь недоступна, в поле текст — SendError без вставки', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {
+      return undefined;
+    });
+
+    const { click, composer, paste } = fakeComposer(true);
+
+    await expect(
+      sendFile(
+        composer,
+        file,
+        clientAnswering({ status: 'unavailable', reason: 'no-client' })
+      )
+    ).rejects.toBeInstanceOf(SendError);
+    expect(paste).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+  });
+});
+
+afterEach(() => {
+  setLocale('ru');
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });

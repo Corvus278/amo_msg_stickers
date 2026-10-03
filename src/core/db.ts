@@ -1,3 +1,4 @@
+import { t } from './i18n/translate';
 import type {
   Pack,
   RecentKind,
@@ -108,7 +109,10 @@ export const ensureCustomPack = async (): Promise<Pack> => {
   if (existing) return existing;
   const pack: Pack = {
     id: CUSTOM_PACK_ID,
-    title: 'Мои стикеры',
+    /**
+     * Название на языке создания; в интерфейсе свой пак называется по id, на текущем языке (`packTitle`).
+     */
+    title: t('pack.custom'),
     source: 'custom',
     /**
      * 0 — вкладка своих стикеров всегда первая среди наборов.

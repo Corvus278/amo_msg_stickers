@@ -6,6 +6,9 @@ dev/amo.css
 
 .eslintcache
 
+# Кэш и сборка VitePress
+docs/.vitepress/cache
+
 # Локальное, в репозиторий не попадает: заметки и заготовки под конкретное окружение
 local/
 *.local.*

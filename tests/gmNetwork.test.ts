@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { BYTES_IN_MB, httpError, NOT_ALLOWED, tooBigError } from '../src/core/net';
-import { BODY_NOT_BYTES, gmNetwork } from '../src/userscript/gmNetwork';
+import { setLocale } from '../src/core/i18n/translate';
+import { BYTES_IN_MB, httpError, notAllowedError, tooBigError } from '../src/core/net';
+import { gmNetwork } from '../src/userscript/gmNetwork';
 
 import { gmResponse, mockGmRequest } from './helpers/mockGmRequest';
 
@@ -14,8 +15,13 @@ const FILE_URL = `https://api.telegram.org/file/bot123:${SECRET}/stickers/a.webm
 const EVIL_URL = 'https://evil.example/x.gif';
 const LIMIT = BYTES_IN_MB;
 const TOO_BIG = tooBigError(LIMIT).message;
+const NOT_ALLOWED = notAllowedError().message;
 const HEADERS_RECEIVED = 2;
 const LONG_BODY = 'x'.repeat(300);
+
+afterEach(() => {
+  setLocale('ru');
+});
 
 const bytes = (length: number) => {
   return new Uint8Array(length).fill(7).buffer;
@@ -253,15 +259,22 @@ describe('gmNetwork: успешные ответы', () => {
     expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual([1, 2, 3]);
   });
 
-  it('тело Blob не байтами — ошибка, а не пустой Blob', async () => {
-    const { request } = mockGmRequest(({ onload }) => {
-      onload(gmResponse({ response: 'GIF89a' }));
-    });
+  it.each([
+    ['ru', 'Ответ пришёл не байтами'],
+    ['en', 'The response body is not bytes'],
+  ] as const)(
+    'тело Blob не байтами — ошибка, а не пустой Blob (%s)',
+    async (locale, message) => {
+      setLocale(locale);
+      const { request } = mockGmRequest(({ onload }) => {
+        onload(gmResponse({ response: 'GIF89a' }));
+      });
 
-    await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
-      BODY_NOT_BYTES
-    );
-  });
+      await expect(gmNetwork(request).fetchBlob(FILE_URL, LIMIT)).rejects.toThrow(
+        message
+      );
+    }
+  );
 
   it('запрос уходит без cookie, в нужном формате тела и по адресу запроса', async () => {
     const { request } = mockGmRequest(({ onload }) => {
@@ -288,21 +301,28 @@ describe('gmNetwork: успешные ответы', () => {
 
 describe('gmNetwork: сбои сети', () => {
   it.each([
-    ['onerror', 'Сетевая ошибка'],
-    ['ontimeout', 'Сервер не ответил вовремя'],
-    ['onabort', 'Запрос прерван'],
-  ] as const)('%s — ошибка без адреса и токена', async (callback, message) => {
-    const { request } = mockGmRequest((details) => {
-      details[callback](gmResponse({ status: 0, finalUrl: TG_URL }));
-    });
-    const error = await gmNetwork(request)
-      .fetchJson(TG_URL)
-      .catch((error_: unknown) => {
-        return error_;
+    ['onerror', 'ru', 'Сетевая ошибка'],
+    ['ontimeout', 'ru', 'Сервер не ответил вовремя'],
+    ['onabort', 'ru', 'Запрос прерван'],
+    ['onerror', 'en', 'Network error'],
+    ['ontimeout', 'en', 'The server did not respond in time'],
+    ['onabort', 'en', 'Request aborted'],
+  ] as const)(
+    '%s на %s — ошибка без адреса и токена',
+    async (callback, locale, message) => {
+      setLocale(locale);
+      const { request } = mockGmRequest((details) => {
+        details[callback](gmResponse({ status: 0, finalUrl: TG_URL }));
       });
+      const error = await gmNetwork(request)
+        .fetchJson(TG_URL)
+        .catch((error_: unknown) => {
+          return error_;
+        });
 
-    expect(error).toHaveProperty('message', message);
-    expect(String(error)).not.toContain(SECRET);
-    expect(String(error)).not.toContain('api.telegram.org');
-  });
+      expect(error).toHaveProperty('message', message);
+      expect(String(error)).not.toContain(SECRET);
+      expect(String(error)).not.toContain('api.telegram.org');
+    }
+  );
 });
