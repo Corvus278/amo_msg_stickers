@@ -21,6 +21,9 @@ jobs:
     # релиз из неё. Пропуск ci пропускает и release.
     if: ${{ github.ref == 'refs/heads/master' }}
     uses: ./.github/workflows/ci.yml
+    # Вызванный workflow секретов не видит: без них релиз собрался бы без встроенного
+    # токена Telegram-бота.
+    secrets: inherit
 
   release:
     needs: ci
