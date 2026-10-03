@@ -29,7 +29,7 @@ TypeScript (strict) + esbuild. UI пикера — Preact (JSX с `jsxImportSour
 ```bash
 pnpm i
 pnpm build             # dist/extension/* и dist/amo-stickers.user.js
-pnpm watch             # пересборка при изменениях, с inline-sourcemap и адресами localhost:3000
+pnpm watch             # пересборка при изменениях, с inline-sourcemap и адресами localhost:3000 и :3001
 pnpm typecheck         # только проверка типов (TS 7): корень и конфиг доки (docs/tsconfig.json)
 pnpm lint              # eslint + typecheck + prettier --check параллельно
 pnpm lint:fix          # eslint --fix
@@ -55,8 +55,8 @@ pnpm docs:dev          # сайт доки локально; docs:build — сб
 напрямую) — прямой `fetch` со страницы под её CORS и `localStorage`. Заголовок userscript просит гранты этих `GM_*`,
 `@connect` к хостам сетевой политики и изолированный мир (`@sandbox DOM`, `@inject-into content`).
 
-Боевая сборка запускается только на `https://*.amo.tm/*`; `http://localhost:3000/*` и `http://127.0.0.1:3000/*`
-`build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`. Заголовок боевой сборки несёт
+Боевая сборка запускается только на `https://*.amo.tm/*`; `http://localhost` и `http://127.0.0.1` на портах 3000 и
+3001 `build.mjs` добавляет в manifest и в заголовок userscript лишь в `pnpm watch`. Заголовок боевой сборки несёт
 `@updateURL` и `@downloadURL` на userscript последнего релиза (`releases/latest/download/amo-stickers.user.js`) —
 менеджер обновляет скрипт сам; в `pnpm watch` их нет, иначе менеджер заменил бы dev-сборку версией из релиза.
 

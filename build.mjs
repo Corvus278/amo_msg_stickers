@@ -12,7 +12,11 @@ const isWatch = process.argv.includes('--watch');
  * Адреса локального amo добавляются только в dev-сборку (`pnpm watch`): боевая работает
  * лишь на *.amo.tm.
  */
-const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
+const DEV_MATCHES = ['localhost', '127.0.0.1'].flatMap((host) => {
+  return ['3000', '3001'].map((port) => {
+    return `http://${host}:${port}/*`;
+  });
+});
 const devMatches = isWatch ? DEV_MATCHES : [];
 
 /**
