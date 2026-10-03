@@ -15,6 +15,13 @@ const MARKER = 'amostk';
 const KIND_KEY = 'k';
 
 /**
+ * Подстроки имени для селекторов стиля ленты (`amoDom*.ts`): маркер с точкой — своё сообщение, сегмент вида в
+ * точках — стикер. Собраны из тех же констант, что и само имя, поэтому смена маркера не разведёт имя и стиль.
+ */
+export const MARKER_NAME_PART = `${MARKER}.`;
+export const STICKER_NAME_PART = `.${KIND_KEY}-${'sticker' satisfies StickerFileKind}.`;
+
+/**
  * Других форматов сейчас нет: всё, что отправляется, приведено к GIF.
  */
 const EXTENSION = 'gif';

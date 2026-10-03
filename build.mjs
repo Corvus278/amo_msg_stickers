@@ -12,7 +12,11 @@ const isWatch = process.argv.includes('--watch');
  * Адреса локального amo добавляются только в dev-сборку (`pnpm watch`): боевая работает
  * лишь на *.amo.tm.
  */
-const DEV_MATCHES = ['http://localhost:3000/*', 'http://127.0.0.1:3000/*'];
+const DEV_MATCHES = ['localhost', '127.0.0.1'].flatMap((host) => {
+  return ['3000', '3001'].map((port) => {
+    return `http://${host}:${port}/*`;
+  });
+});
 const devMatches = isWatch ? DEV_MATCHES : [];
 
 /**
@@ -48,7 +52,7 @@ const USERSCRIPT_BANNER = [
    */
   '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
   '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
-  '// @version      0.17.0',
+  '// @version      0.17.1',
   `// @icon         ${USERSCRIPT_ICON}`,
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
