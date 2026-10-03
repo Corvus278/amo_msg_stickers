@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { SendComposer } from '../src/core/amoDom.types';
+import type { ComposeMarkup, SendComposer } from '../src/core/amoDom.types';
+import { legacyMarkup } from '../src/core/amoDomLegacy';
+import { stableMarkup } from '../src/core/amoDomStable';
 import { setLocale } from '../src/core/i18n/translate';
 import type { PageClient, PageSendResult } from '../src/core/pageClient.types';
 import { SendError, sendFile, toCheckedGifFile, toGifFile } from '../src/core/sender';
@@ -56,19 +58,23 @@ describe('toCheckedGifFile', () => {
 });
 
 /**
+ * Признак видимости кнопки, который читает разметка: прежняя — класс `opacity-100`, стабильная —
+ * атрибут `data-visible`.
+ */
+type ShownSignal = 'class' | 'attribute';
+
+/**
  * Поле ввода amo без DOM: «Отправить» видна, когда в поле есть текст или вложение, а
- * paste файла делает её видимой — как amo, принявший вложение.
+ * paste файла делает её видимой — как amo, принявший вложение. Видимость кнопка отдаёт только
+ * признаком своей разметки: разметка, читающая чужой признак, считала бы кнопку скрытой.
  *
  * @param hasDraft — в поле уже есть текст
+ * @param markup — разметка, в которой поле найдено
+ * @param signal — признак видимости этой разметки
  * @returns композер и шпионы вставки и клика
  */
-const fakeComposer = (hasDraft: boolean) => {
+const fakeComposer = (hasDraft: boolean, markup: ComposeMarkup, signal: ShownSignal) => {
   let isSendShown = hasDraft;
-  const shownClass = {
-    contains: () => {
-      return isSendShown;
-    },
-  };
   const paste = vi.fn(() => {
     isSendShown = true;
 
@@ -82,8 +88,19 @@ const fakeComposer = (hasDraft: boolean) => {
       setAttribute: vi.fn(),
       removeAttribute: vi.fn(),
     },
-    sendButton: { classList: shownClass, click },
+    sendButton: {
+      classList: {
+        contains: (className) => {
+          return signal === 'class' && className === 'opacity-100' && isSendShown;
+        },
+      },
+      hasAttribute: (name) => {
+        return signal === 'attribute' && name === 'data-visible' && isSendShown;
+      },
+      click,
+    },
     cancelEditButton: null,
+    markup,
   };
 
   return { click, composer, paste };
@@ -97,11 +114,14 @@ const clientAnswering = (result: PageSendResult): PageClient => {
   };
 };
 
-describe('sendFile', () => {
+describe.each<[string, ComposeMarkup, ShownSignal]>([
+  ['прежняя разметка', legacyMarkup, 'class'],
+  ['стабильная разметка', stableMarkup, 'attribute'],
+])('sendFile, %s', (_name, markup, signal) => {
   const file = new File([makeGif(8, 8)], GIF_NAME, { type: 'image/gif' });
 
   it('amo принял в очередь — поле не трогается, «Отправить» не нажимается', async () => {
-    const { click, composer, paste } = fakeComposer(true);
+    const { click, composer, paste } = fakeComposer(true, markup, signal);
     const client = clientAnswering({ status: 'accepted' });
 
     await sendFile(composer, file, client);
@@ -123,7 +143,7 @@ describe('sendFile', () => {
     );
     vi.stubGlobal('ClipboardEvent', class extends Event {});
 
-    const { click, composer, paste } = fakeComposer(false);
+    const { click, composer, paste } = fakeComposer(false, markup, signal);
 
     await sendFile(
       composer,
@@ -140,7 +160,7 @@ describe('sendFile', () => {
       return undefined;
     });
 
-    const { click, composer, paste } = fakeComposer(true);
+    const { click, composer, paste } = fakeComposer(true, markup, signal);
 
     await expect(
       sendFile(

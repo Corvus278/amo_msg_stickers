@@ -122,6 +122,32 @@
       .reply-bar-x[hidden] {
         display: none;
       }
+      /* Заглушка картинки, пока файл «скачивается»: заливка со спиннером и сплошной блок подложки,
+       как у amo (design.md change loading-sticker-no-bubble, «Context»). */
+      .placeholder-x {
+        background: #d9dce1;
+      }
+      .dark .placeholder-x {
+        background: #3a3a3d;
+      }
+      .loader-x {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #7a828e;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: loader-x 0.8s linear infinite;
+      }
+      @keyframes loader-x {
+        to {
+          transform: rotate(1turn);
+        }
+      }
+      .backdrop-fill-x {
+        width: 100%;
+        height: 100%;
+        background: #000;
+      }
       .quote-x img {
         width: 46px;
         height: 46px;
@@ -271,6 +297,13 @@
             <option value="en">en</option>
           </select>
         </label>
+        <label class="toggle">
+          Разметка amo
+          <select id="markup">
+            <option value="legacy">прежняя</option>
+            <option value="stable">стабильная</option>
+          </select>
+        </label>
       </div>
       <div class="group">
         <span class="group-title">Режим</span>
@@ -279,6 +312,9 @@
         >
         <label class="toggle"
           ><input type="checkbox" id="slow" /> медленная загрузка</label
+        >
+        <label class="toggle"
+          ><input type="checkbox" id="slow-image" /> долгая загрузка картинки</label
         >
       </div>
       <div class="group">
@@ -373,6 +409,30 @@
       </div>
     </div>
     <script>
+      // --- разметка amo: стабильная — те же классы и структура плюс атрибуты amo web perf-master
+      // (спека dom-markers); выбор — с перезагрузкой, как язык ---
+      const MARKUP_KEY = 'harness:markup';
+      const isStableMarkup = localStorage.getItem(MARKUP_KEY) === 'stable';
+      const markupSelect = document.getElementById('markup');
+      markupSelect.value = isStableMarkup ? 'stable' : 'legacy';
+      markupSelect.onchange = () => {
+        localStorage.setItem(MARKUP_KEY, markupSelect.value);
+        location.reload();
+      };
+
+      /**
+       * Атрибуты стабильной разметки; в прежней — ничего. Булевы React пишет строкой "true",
+       * ложные не пишет вовсе.
+       */
+      const mark = (node, attrs) => {
+        if (!isStableMarkup) return node;
+        for (const [name, value] of Object.entries(attrs)) {
+          if (value === false || value === null || value === undefined) continue;
+          node.setAttribute(name, value === true ? 'true' : String(value));
+        }
+        return node;
+      };
+
       // --- мок amo: вставка файла + кнопка «Отправить» ---
       const editable = document.querySelector('[contenteditable]');
       const sendBtn = document.querySelector('[aria-label="Send message"]');
@@ -380,12 +440,24 @@
       const chat = document.getElementById('chat');
       let files = [];
 
+      const composeRow = editable.closest('.flex.size-full');
+      mark(sendBtn.parentElement, { 'data-compose': true });
+      mark(document.querySelector('[aria-label="cancel edit"]'), {
+        'data-compose-cancel-edit': true,
+      });
+      mark(composeRow.parentElement, { 'data-compose-field': true });
+      mark(composeRow, { 'data-compose-row': true });
+      mark(editable, { 'data-compose-input': true });
+      mark(composeRow.querySelector(':scope > .z-100'), { 'data-compose-emoji': true });
+      mark(sendBtn, { 'data-compose-send': true });
+
       function syncSend() {
         const visible = files.length > 0 || editable.textContent.trim().length > 0;
         ['size-8.5', 'opacity-100', 'ml-1.5', 'pl-2.5', 'pt-2', 'pb-0'].forEach((c) =>
           sendBtn.classList.toggle(c, visible)
         );
         sendBtn.querySelector('svg').classList.toggle('size-4.5', visible);
+        if (isStableMarkup) sendBtn.toggleAttribute('data-visible', visible);
       }
 
       /**
@@ -442,7 +514,9 @@
         svg.setAttribute('height', '10');
         svg.setAttribute('viewBox', '0 0 8 10');
         svg.innerHTML = '<path d="M8 0v10H0C4 9 8 6 8 0Z" />';
-        return el('div', '-mx-1 w-2 h-2.5 overflow-hidden shrink-0', svg);
+        return mark(el('div', '-mx-1 w-2 h-2.5 overflow-hidden shrink-0', svg), {
+          'data-feed-bubble-tail': true,
+        });
       };
 
       /**
@@ -465,6 +539,12 @@
         );
         const id = `harness-${++messageSeq}`;
         root.id = `message+${id}`;
+        mark(root, {
+          'data-feed-message': true,
+          'data-outgoing': !isIncoming,
+          'data-with-reply': isReply,
+          'data-with-author': hasAuthor,
+        });
         harnessMessages[id] = {
           id,
           conversationId: HARNESS_CHAT_ID,
@@ -473,23 +553,39 @@
           ...meta,
         };
         lastMessageId = id;
-        const bubble = el(
-          'div',
-          `message-x rounded-lgx p-2 shadow-md${hasAuthor ? ' has-title' : ''}`
+        const bubble = mark(
+          el(
+            'div',
+            `message-x rounded-lgx p-2 shadow-md${hasAuthor ? ' has-title' : ''}`
+          ),
+          { 'data-feed-bubble': isIncoming ? 'default' : 'outgoing' }
         );
         if (hasAuthor)
           bubble.append(
-            el(
-              'div',
-              '',
-              el('button', 'text-sm font-semibold', el('div', 'truncate', 'Собеседник'))
+            mark(
+              el(
+                'div',
+                '',
+                el('button', 'text-sm font-semibold', el('div', 'truncate', 'Собеседник'))
+              ),
+              { 'data-feed-author': true }
             )
           );
-        if (quote) bubble.append(quote);
-        bubble.append(el('div', 'relative whitespace-pre-wrap', ...content));
-        const row = el('div', 'inner-x', el('div', 'checkbox-x'));
+        if (quote) bubble.append(mark(quote, { 'data-feed-reply-quote': true }));
+        bubble.append(
+          mark(el('div', 'relative whitespace-pre-wrap', ...content), {
+            'data-feed-content': true,
+          })
+        );
+        const row = mark(el('div', 'inner-x', el('div', 'checkbox-x')), {
+          'data-feed-row': true,
+        });
         if (hasAuthor && isIncoming)
-          row.append(el('div', 'flex w-11.5 shrink-0 self-end', el('div', 'avatar-x')));
+          row.append(
+            mark(el('div', 'flex w-11.5 shrink-0 self-end', el('div', 'avatar-x')), {
+              'data-feed-avatar': true,
+            })
+          );
         row.append(tail(), bubble);
         root.append(row);
         chat.append(root);
@@ -505,8 +601,18 @@
       };
 
       /**
+       * Скачивание файла картинки: из кэша amo — 0,1–0,2 с, «долгая загрузка картинки» — как
+       * первое открытие чата на медленной сети.
+       */
+      const IMAGE_LOAD_MS = 150;
+      const SLOW_IMAGE_LOAD_MS = 2000;
+
+      /**
        * Место под картинку — как в amo: источник вписан в 420×420 без увеличения, размер —
-       * inline-стилем `div` над картинкой и атрибутами `width` / `height` у `img`.
+       * inline-стилем контейнера над картинкой и атрибутами `width` / `height` у `img`. Пока
+       * файл «скачивается», в контейнере — заливка со спиннером, а подложка — сплошной блок;
+       * потом заливка сменяется `img`, блок — `canvas`. Стабильная разметка несёт имя файла и
+       * размер контейнера на нём самом и в заглушке.
        */
       const sendMedia = async (file, name = file.name, quote = null) => {
         const source = await loadImage(file);
@@ -517,31 +623,70 @@
         );
         const width = Math.round(source.naturalWidth * scale);
         const height = Math.round(source.naturalHeight * scale);
-        const img = el('img', 'photo_media_image-x size-full');
-        Object.assign(img, { src: source.src, alt: name, width, height });
-        const place = el('div', '', img);
+        const placeholder = mark(
+          el(
+            'div',
+            'absolute z-30 flex size-full items-center justify-center placeholder-x',
+            el('div', 'loader-x')
+          ),
+          { 'data-photo-placeholder': true }
+        );
+        const place = mark(
+          el('div', 'relative z-0 flex size-full overflow-hidden', placeholder),
+          {
+            'data-photo-frame': true,
+            'data-file-name': name,
+          }
+        );
         place.style.width = `${width}px`;
         place.style.height = `${height}px`;
-        const canvas = el('canvas', 'blur-x');
-        Object.assign(canvas, { width: 32, height: 32 });
-        canvas.getContext('2d').drawImage(source, 0, 0, 32, 32);
+        if (isStableMarkup) {
+          place.style.setProperty('--media-w', String(width));
+          place.style.setProperty('--media-h', String(height));
+        }
+        const backdrop = mark(
+          el('div', 'absolute -inset-1 -z-20', el('div', 'backdrop-fill-x')),
+          { 'data-photo-backdrop': true }
+        );
         const time = new Date().toTimeString().slice(0, 5);
         message(
           [
-            el(
-              'div',
-              'media_wrapper-x media_wrapper_photo-x -m-1',
+            mark(
               el(
-                'button',
-                'photo_media_container-x message_photo_media-x relative',
-                place,
-                el('div', 'absolute -inset-1 -z-20', canvas)
+                'div',
+                'media_wrapper-x media_wrapper_photo-x -m-1',
+                mark(
+                  el(
+                    'button',
+                    'photo_media_container-x message_photo_media-x relative',
+                    place,
+                    backdrop
+                  ),
+                  { 'data-feed-photo': true }
+                ),
+                el('span', 'absolute right-1 bottom-1 h-4.5 time-x', `${time} ✓`)
               ),
-              el('span', 'absolute right-1 bottom-1 h-4.5 time-x', `${time} ✓`)
+              { 'data-feed-media': 'photo' }
             ),
           ],
           { isReply: Boolean(quote), quote, meta: { file, name } }
         );
+
+        await new Promise((r) =>
+          setTimeout(
+            r,
+            document.getElementById('slow-image').checked
+              ? SLOW_IMAGE_LOAD_MS
+              : IMAGE_LOAD_MS
+          )
+        );
+        const img = el('img', 'photo_media_image-x size-full');
+        Object.assign(img, { src: source.src, alt: name, width, height });
+        placeholder.replaceWith(img);
+        const canvas = el('canvas', 'blur-x');
+        Object.assign(canvas, { width: 32, height: 32 });
+        canvas.getContext('2d').drawImage(source, 0, 0, 32, 32);
+        backdrop.replaceChildren(canvas);
       };
 
       const sendText = (text, quote = null) => {
