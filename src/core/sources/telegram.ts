@@ -82,6 +82,22 @@ const isBuiltinUnavailable = (error: unknown) => {
   );
 };
 
+/**
+ * Запрос к Bot API или его файлам: на встроенном токене отказ бота становится подсказкой про
+ * свой токен.
+ *
+ * @param request — запрос
+ * @param isBuiltin — запрос идёт со встроенным токеном
+ * @returns результат запроса
+ */
+const guardBuiltin = async <T>(request: Promise<T>, isBuiltin: boolean): Promise<T> => {
+  try {
+    return await request;
+  } catch (error) {
+    throw isBuiltin ? toBuiltinError(error) : error;
+  }
+};
+
 const SET_LINK_RE = /(?:t\.me|telegram\.me)\/(?:addstickers|addemoji)\/([A-Za-z0-9_]+)/;
 
 export const parseSetName = (input: string): string | null => {
@@ -177,22 +193,7 @@ export const importTelegramSet = async (
   if (!token) throw new Error(t('error.telegram.noToken'));
   const isBuiltin = !ownToken;
 
-  /**
-   * Запрос к Bot API или его файлам: на встроенном токене отказ бота становится
-   * подсказкой про свой токен.
-   *
-   * @param request — запрос
-   * @returns результат запроса
-   */
-  const guarded = async <T>(request: Promise<T>): Promise<T> => {
-    try {
-      return await request;
-    } catch (error) {
-      throw isBuiltin ? toBuiltinError(error) : error;
-    }
-  };
-
-  const set = await guarded(call(host, token, 'getStickerSet', { name }));
+  const set = await guardBuiltin(call(host, token, 'getStickerSet', { name }), isBuiltin);
 
   if (!isTgStickerSet(set)) throw badResponse();
   const { name: setName, title, stickers } = set;
@@ -231,12 +232,16 @@ export const importTelegramSet = async (
     try {
       if (!isTgSticker(sticker)) throw badResponse();
       const { file_id: fileId, file_unique_id: fileUniqueId, emoji } = sticker;
-      const file = await guarded(call(host, token, 'getFile', { file_id: fileId }));
+      const file = await guardBuiltin(
+        call(host, token, 'getFile', { file_id: fileId }),
+        isBuiltin
+      );
 
       if (!isTgFile(file)) throw new Error(t('error.telegram.badFilePath'));
       const { file_path: filePath } = file;
-      const raw = await guarded(
-        host.fetchBlob(`${TG_API}/file/bot${token}/${filePath}`, MAX_STICKER_FILE_BYTES)
+      const raw = await guardBuiltin(
+        host.fetchBlob(`${TG_API}/file/bot${token}/${filePath}`, MAX_STICKER_FILE_BYTES),
+        isBuiltin
       );
       const kind = toSourceKind(sticker);
       const gif = await toStickerGif(withMimeType(raw, kind), kind);
