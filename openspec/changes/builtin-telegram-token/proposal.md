@@ -45,7 +45,7 @@
 - Ядро: модуль встроенного токена в `src/core/`, `src/core/sources/telegram.ts` (выбор токена, отказ встроенного бота),
   `src/core/net.ts` (статус из ошибки `httpError`), `SettingsView` (подсказка), словари `messages.ru.ts` /
   `messages.en.ts`.
-- CI: `.github/workflows/ci.yml` (секрет в job `build`), `.github/workflows/release.yml` (`secrets: inherit` у вызова
+- CI: `.github/workflows/ci.yml` (секрет в job `build`), `.github/workflows/release.yml` (явная передача секрета у вызова
   проверок). Нужен секрет репозитория `TELEGRAM_BOT_TOKEN` — его заводит владелец репозитория.
 - Дока: `docs/content/setup/telegram.md`, `privacy.md`, `index.md`, `faq.md` и их пары в `docs/content/en/`.
 - `CLAUDE.md`: сборка, CI и внешние данные. Версия — `package.json`, `manifest.json`, `@version` в `build.mjs`.
