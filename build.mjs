@@ -48,7 +48,7 @@ const USERSCRIPT_BANNER = [
    */
   '// @description  Стикеры и GIF в amo: GIPHY/KLIPY, импорт паков из Telegram, свои стикеры',
   '// @description:en Stickers and GIFs in amo: GIPHY/KLIPY, Telegram pack import, custom stickers',
-  '// @version      0.16.0',
+  '// @version      0.17.0',
   `// @icon         ${USERSCRIPT_ICON}`,
   ...['https://*.amo.tm/*', ...devMatches].map((match) => {
     return `// @match        ${match}`;
@@ -88,8 +88,8 @@ const TAILWIND_CONFIG = 'tailwind.config.ts';
 
 /**
  * Компоненты, по классам которых Tailwind собирает CSS пикера. Вместе с
- * `tailwind.config.ts` они идут в `watchFiles`: конфиг в бандл не входит, и без
- * явной подписки новый токен не пересобрал бы CSS в `watch`.
+ * `tailwind.config.ts` они идут в `watchFiles`: CSS собирает плагин, а не граф модулей
+ * бандла, и без явной подписки новый токен не пересобрал бы CSS в `watch`.
  */
 const TAILWIND_WATCH_GLOB = 'src/core/ui/**/*.tsx';
 

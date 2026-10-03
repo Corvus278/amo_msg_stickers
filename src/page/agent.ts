@@ -8,13 +8,25 @@ import {
 } from '../shared/pageBridge';
 import type { PageRejectReason, PageResponse } from '../shared/pageBridge.types';
 
-import type { AgentDocument, AgentNode } from './agent.types';
+import type {
+  AgentDocument,
+  AgentMemory,
+  AgentNode,
+  PreparedMessage,
+} from './agent.types';
+import type { AmoClient } from './amo.types';
 import { buildMessage } from './buildMessage';
-import type { BuildMessageResult } from './buildMessage.types';
 import { fieldOf } from './field';
 import { findClient } from './findClient';
+import { attachReply, replyKey } from './refersTo';
+import type { AmoReplyRef } from './refersTo.types';
 
 const SEND_REQUEST_TYPE = 'sendNewMessages';
+
+/**
+ * Запрос, которым кнопка «×» над полем ввода снимает ответ.
+ */
+const CLEAR_REPLY_REQUEST_TYPE = 'updateConversationDraughtRefersToId';
 
 /**
  * Узел ищется по имени атрибута, а значение сравнивается строкой: `id` команды приходит от
@@ -40,20 +52,90 @@ const fileOf = (input: AgentNode | null) => {
 };
 
 /**
- * Исход загрузки amo показывает сам — неотправленным сообщением с повтором; агенту остаётся
- * оставить след в консоли для разработчика.
+ * Исход запроса amo показывает сам — неотправленным сообщением с повтором или оставшейся
+ * плашкой ответа; агенту остаётся оставить след в консоли для разработчика.
  *
- * @param sending — промис `sendRequest`
+ * @param pending — промис `sendRequest`
+ * @param what — что делал запрос, для консоли
  */
-const logOutcome = async (sending: Promise<unknown>) => {
+const logOutcome = async (pending: Promise<unknown>, what: string) => {
   try {
-    const result = await sending;
+    const result = await pending;
 
     if (result instanceof Error) {
-      console.warn('[amo-stickers] amo rejected sticker send:', result.message);
+      console.warn(`[amo-stickers] amo rejected ${what}:`, result.message);
     }
   } catch (error) {
-    console.warn('[amo-stickers] sticker send failed:', error);
+    console.warn(`[amo-stickers] ${what} failed:`, error);
+  }
+};
+
+/**
+ * Дольше этого снимаемый ответ не помнится, даже если запрос снятия так и не завершился: иначе
+ * зависший запрос оставил бы ответ снимаемым до перезагрузки, и каждый следующий стикер на ту
+ * же плашку уходил бы без цитаты. В живом amo снятие завершается за доли секунды, первое за
+ * сессию — около секунды.
+ */
+const CLEARING_REPLY_MAX_MS = 10_000;
+
+/**
+ * Снимаемым ответ остаётся до конца запроса снятия при любом его исходе, но не дольше
+ * `CLEARING_REPLY_MAX_MS`. Запрос, завершившийся после этого срока, ключ уже не трогает: за это
+ * время тот же ответ мог стать снимаемым снова — следующим стикером.
+ *
+ * @param request — промис запроса снятия
+ * @param key — ключ снимаемого ответа
+ * @param clearingReplies — ключи ответов, снятие которых ещё идёт
+ */
+const forgetWhenSettled = async (
+  request: Promise<unknown>,
+  key: string,
+  clearingReplies: Set<string>
+) => {
+  let isExpired = false;
+
+  const timer = setTimeout(() => {
+    isExpired = true;
+    clearingReplies.delete(key);
+  }, CLEARING_REPLY_MAX_MS);
+
+  await logOutcome(request, 'reply clear');
+
+  if (isExpired) return;
+
+  clearTimeout(timer);
+  clearingReplies.delete(key);
+};
+
+/**
+ * Снятие ответа — после постановки стикера в очередь: стикер уже ушёл, и никакой исход
+ * снятия не должен вести ко второй отправке. Ответ помнится снимаемым, пока запрос не
+ * завершился: к его концу store уже без ответа, а если снятие не удалось, плашка осталась, и
+ * следующий стикер, как картинка из поля, уйдёт ответом.
+ *
+ * @param client — `{ reduxStore, sendRequest }` amo
+ * @param reply — снимаемый ответ
+ * @param clearingReplies — ключи ответов, снятие которых ещё идёт
+ */
+const clearReply = (
+  client: AmoClient,
+  reply: AmoReplyRef,
+  clearingReplies: Set<string>
+) => {
+  const key = replyKey(reply);
+
+  clearingReplies.add(key);
+
+  try {
+    const request = client.sendRequest({
+      type: CLEAR_REPLY_REQUEST_TYPE,
+      payload: { conversationId: reply.conversationId, refersToId: null },
+    });
+
+    void forgetWhenSettled(request, key, clearingReplies);
+  } catch (error) {
+    console.warn('[amo-stickers] reply clear threw:', error);
+    clearingReplies.delete(key);
   }
 };
 
@@ -64,8 +146,9 @@ const logOutcome = async (sending: Promise<unknown>) => {
  *
  * @param doc — документ страницы
  * @param event — команда ядра
+ * @param memory — память агента между командами
  */
-const handleRequest = (doc: AgentDocument, event: Event) => {
+const handleRequest = (doc: AgentDocument, event: Event, memory: AgentMemory) => {
   const request = parsePageRequest(event);
 
   if (!request) return;
@@ -96,24 +179,32 @@ const handleRequest = (doc: AgentDocument, event: Event) => {
    * `getState` и чтение состояния — чужой код: исключение в них — отказ с причиной, а не
    * молчание, которое ядро приняло бы за отсутствие агента.
    */
-  let built: BuildMessageResult;
+  let prepared: PreparedMessage;
 
   try {
-    built = buildMessage(client.reduxStore.getState(), file, Date.now(), Math.random);
+    const state = client.reduxStore.getState();
+    const built = buildMessage(state, file, Date.now(), Math.random);
+
+    prepared =
+      'reason' in built
+        ? built
+        : attachReply(state, built.message, memory.clearingReplies);
   } catch (error) {
     console.warn('[amo-stickers] amo state unreadable:', error);
 
     return reject('build-threw');
   }
 
-  if ('reason' in built) return reject(built.reason);
+  if ('reason' in prepared) return reject(prepared.reason);
+
+  const { message, replyToClear } = prepared;
 
   let sending: Promise<unknown>;
 
   try {
     sending = client.sendRequest({
       type: SEND_REQUEST_TYPE,
-      payload: { messages: [built.message] },
+      payload: { messages: [message] },
     });
   } catch (error) {
     console.warn('[amo-stickers] sendRequest threw:', error);
@@ -121,8 +212,11 @@ const handleRequest = (doc: AgentDocument, event: Event) => {
     return reject('send-threw');
   }
 
+  void logOutcome(sending, 'sticker send');
+
+  if (replyToClear) clearReply(client, replyToClear, memory.clearingReplies);
+
   respond({ id, status: 'accepted' });
-  void logOutcome(sending);
 };
 
 /**
@@ -139,8 +233,10 @@ export const startAgent = (
 ) => {
   if (host.__amoStickersPage) return;
 
+  const memory: AgentMemory = { clearingReplies: new Set() };
+
   host.__amoStickersPage = true;
   doc.addEventListener(PAGE_REQUEST_EVENT, (event) => {
-    handleRequest(doc, event);
+    handleRequest(doc, event, memory);
   });
 };

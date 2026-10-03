@@ -1,3 +1,6 @@
+import type { BuildMessageFailure } from './buildMessage.types';
+import type { AttachedReply } from './refersTo.types';
+
 /**
  * Узел DOM, как его читает агент: атрибут пометки и, у `<input>`, файлы.
  */
@@ -27,3 +30,20 @@ export type AgentDocument = {
    */
   querySelectorAll: (selector: string) => Iterable<AgentNode>;
 };
+
+/**
+ * Что агент помнит между командами.
+ */
+export type AgentMemory = {
+  /**
+   * Ключи (`replyKey`) ответов, снятие которых агент запросил и ещё не дождался: стикер в это
+   * окно уходит без цитаты, а не второй цитатой того же сообщения.
+   */
+  clearingReplies: Set<string>;
+};
+
+/**
+ * Итог подготовки команды: сообщение с ответом из черновика или причина, по которой его не
+ * собрать.
+ */
+export type PreparedMessage = AttachedReply | BuildMessageFailure;
