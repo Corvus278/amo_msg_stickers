@@ -99,9 +99,7 @@ You can copy the token again at any time: open @BotFather, choose the bot in�
 3. Paste the token into the “Your Telegram bot token (optional)” field and click “Save”. “Saved” will appear at the
    bottom of the panel.
 
-<!-- скрин: img/setup/settings-token.png — переснять: поле «Свой токен Telegram-бота (необязательно)» и его подсказка -->
-
-![amo stickers “Settings” screen: the KLIPY and GIPHY key fields and the Telegram bot token field](../../img/setup/settings-token.png)
+<!-- скрин: img/setup/settings-token.png — поле «Свой токен Telegram-бота (необязательно)» и его подсказка -->
 
 Import the pack again following the [“Import the pack”](#import) step: with your own token it goes through your bot
 rather than the built-in one.
