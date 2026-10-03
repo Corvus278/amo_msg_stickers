@@ -414,6 +414,34 @@ describe('importTelegramSet: свой и встроенный токен', () =>
     expect(deletePack).not.toHaveBeenCalled();
   });
 
+  it('отказ встроенного после другой ошибки стикера — в статусе недоступность бота', async () => {
+    builtin.token = BUILTIN;
+    const set = botApi({
+      name: 'Pack',
+      title: 'Пак',
+      stickers: [sticker('a'), sticker('b')],
+    });
+    let getFileCalls = 0;
+    const host = fakeHost({
+      onJson: (url) => {
+        if (url.includes('/getFile')) {
+          getFileCalls++;
+
+          if (getFileCalls > 1) throw httpError(429, 'Too Many Requests');
+        }
+
+        return set(url);
+      },
+    });
+
+    vi.mocked(host.fetchBlob).mockRejectedValue(tooBigError(5 * 1024 * 1024));
+
+    await expect(importTelegramSet(host, '', 'Pack', vi.fn())).rejects.toThrow(
+      BUILTIN_UNAVAILABLE
+    );
+    expect(deletePack).toHaveBeenCalledWith('tg:Pack');
+  });
+
   it('401 на скачивании файла встроенного — ошибка недоступности', async () => {
     builtin.token = BUILTIN;
     const host = fakeHost({ onJson: botApi(PACK) });

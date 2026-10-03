@@ -177,7 +177,8 @@ const withMimeType = (raw: Blob, kind: SourceKind): Blob => {
  * @param ownToken — свой токен из настроек; пустой — импорт встроенным токеном сборки
  * @param input — ссылка на пак или имя набора
  * @param onProgress — прогресс по стикерам
- * @returns пак, в который импортирован хотя бы один стикер
+ * @returns пак, в который импортирован хотя бы один стикер; отказ встроенного бота посреди пака —
+ *   исключение, а уже импортированные стикеры остаются в библиотеке
  */
 export const importTelegramSet = async (
   host: Host,
@@ -282,7 +283,7 @@ export const importTelegramSet = async (
    */
   if (!pack.coverId) {
     await (previous ? putPack(previous) : deletePack(pack.id));
-    throw firstError || new Error(t('error.telegram.noStickers'));
+    throw refusal || firstError || new Error(t('error.telegram.noStickers'));
   }
 
   if (refusal) throw refusal;
