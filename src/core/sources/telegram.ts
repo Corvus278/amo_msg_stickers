@@ -4,7 +4,7 @@ import type { SourceKind } from '../convert.types';
 import { deletePack, getPack, putPack, putSticker } from '../db';
 import type { Pack } from '../db.types';
 import type { Host } from '../host.types';
-import { t } from '../i18n/translate';
+import { LocalizedError, t } from '../i18n/translate';
 import { BYTES_IN_MB, httpStatus } from '../net';
 
 import {
@@ -66,7 +66,20 @@ const toBuiltinError = (error: unknown): unknown => {
 
   if (status === null || !BOT_REFUSAL_STATUSES.includes(status)) return error;
 
-  return new Error(t('error.telegram.builtinUnavailable'));
+  return new LocalizedError('error.telegram.builtinUnavailable');
+};
+
+/**
+ * Отказ встроенного бота касается всего пака, а не одного стикера: следующие запросы уйдут с
+ * тем же отозванным токеном или в тот же лимит общего бота.
+ *
+ * @param error — ошибка импорта стикера
+ * @returns `true` — встроенный бот недоступен
+ */
+const isBuiltinUnavailable = (error: unknown) => {
+  return (
+    error instanceof LocalizedError && error.key === 'error.telegram.builtinUnavailable'
+  );
 };
 
 const SET_LINK_RE = /(?:t\.me|telegram\.me)\/(?:addstickers|addemoji)\/([A-Za-z0-9_]+)/;
@@ -208,6 +221,12 @@ export const importTelegramSet = async (
    */
   let firstError: unknown;
 
+  /**
+   * Отказ встроенного бота посреди пака: оставшиеся стикеры не запрашиваются, а уже импортированные
+   * остаются — пользователь видит, что делать, и повторный импорт со своим токеном допишет пак.
+   */
+  let refusal: unknown;
+
   for (const [index, sticker] of stickers.entries()) {
     try {
       if (!isTgSticker(sticker)) throw badResponse();
@@ -240,6 +259,11 @@ export const importTelegramSet = async (
     } catch (e) {
       console.warn('[amo-stickers] sticker import failed', index, e);
       firstError ||= e;
+
+      if (isBuiltinUnavailable(e)) {
+        refusal = e;
+        break;
+      }
     }
 
     done++;
@@ -255,6 +279,8 @@ export const importTelegramSet = async (
     await (previous ? putPack(previous) : deletePack(pack.id));
     throw firstError || new Error(t('error.telegram.noStickers'));
   }
+
+  if (refusal) throw refusal;
 
   return pack;
 };
