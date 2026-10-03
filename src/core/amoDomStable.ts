@@ -108,8 +108,8 @@ export const stableMarkup: AmoMarkup = {
     stickerSizing: {
       by: 'frame',
       frame: STICKER_FRAME_PATH,
-      placeholder: `${STICKER_FRAME_PATH} > [data-photo-placeholder]`,
     },
+    stickerSpinnerLayer: `${STICKER_FRAME_PATH} > [data-photo-placeholder]`,
     quote: QUOTE,
     stickerQuote: `${QUOTE}:has(+ ${STICKER_CONTENT})`,
     gifQuote: `${QUOTE}:not(:has(+ ${STICKER_CONTENT}))`,

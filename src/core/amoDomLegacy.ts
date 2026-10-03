@@ -146,6 +146,13 @@ export const legacyMarkup: AmoMarkup = {
       frame: `${STICKER_SELECTOR} > div:has(> img)`,
       image: `${STICKER_SELECTOR} > div > ${STICKER_IMG_SELECTOR}`,
     },
+
+    /**
+     * Слой отправки — заливка со спиннером рядом с `img`, пока файл уходит на сервер. В субъекте —
+     * класс заливки, а не голый `div`, по той же причине, что `-mt-2` у плашки. До загрузки
+     * картинки `img` нет, и стикер не узнать: заглушка скачивания остаётся как у amo.
+     */
+    stickerSpinnerLayer: `${STICKER_SELECTOR} > div > div.bg-gray-260`,
     quote: QUOTE_SELECTOR,
 
     /**

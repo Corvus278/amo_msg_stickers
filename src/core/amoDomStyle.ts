@@ -188,8 +188,7 @@ const fittedSide = (side: '--media-w' | '--media-h') => {
  *
  * Размер по картинке: контейнер в `auto`, картинка вписывается в лимит сама — до загрузки
  * размер не известен. Размер по контейнеру: место встаёт в итоговый размер ещё в заглушке, а
- * картинка заполняет его, как у amo, поэтому её появление ничего не сдвигает; заливка заглушки
- * снимается, спиннер остаётся.
+ * картинка заполняет его, как у amo, поэтому её появление ничего не сдвигает.
  *
  * @param sizing — чем задан размер места под стикер в разметке
  * @returns CSS размера стикера
@@ -213,9 +212,6 @@ ${sizing.image} {
       return `${sizing.frame} {
   width: ${fittedSide('--media-w')} !important;
   height: ${fittedSide('--media-h')} !important;
-}
-${sizing.placeholder} {
-  background: none;
 }`;
     }
 
@@ -237,6 +233,10 @@ ${sizing.placeholder} {
  * картинок: при `object-cover` и неполном сбросе размеров стикер обрезался бы. Оверлей времени и
  * статуса не трогается.
  *
+ * Слой со спиннером поверх стикера — без заливки: стикер прозрачный, и сплошной серый слой amo,
+ * пока файл скачивается или отправляется, выглядел бы серым блоком вместо стикера. Спиннер
+ * остаётся.
+ *
  * @param selectors — цели стиля одной разметки amo
  * @returns CSS своих сообщений в этой разметке
  */
@@ -249,6 +249,7 @@ export const messageCss = (selectors: MessageSelectors) => {
     image,
     stickerButton,
     stickerSizing,
+    stickerSpinnerLayer,
     quote,
     replyRow,
     replyControls,
@@ -275,6 +276,9 @@ ${stickerButton} {
   width: auto;
 }
 ${stickerSizingCss(stickerSizing)}
+${stickerSpinnerLayer} {
+  background: none;
+}
 ${quote} {
   position: absolute;
   top: ${MEDIA_INSET_PX}px;
