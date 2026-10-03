@@ -221,9 +221,7 @@ describe('startAgent', () => {
   });
 
   it('rejected send-threw, если sendRequest бросил синхронно', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {
-      return undefined;
-    });
+    vi.spyOn(console, 'warn').mockImplementation(noop);
 
     const { responses, send } = setup({
       client: {
@@ -242,9 +240,7 @@ describe('startAgent', () => {
   });
 
   it('rejected build-threw, если состояние amo не читается, — без sendRequest', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {
-      return undefined;
-    });
+    vi.spyOn(console, 'warn').mockImplementation(noop);
 
     const sendRequest = vi.fn();
     const { responses, send } = setup({
@@ -298,9 +294,7 @@ describe('startAgent', () => {
   });
 
   it('пишет в консоль, если amo вернул ошибку отправки', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {
-      return undefined;
-    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(noop);
     const { send, sendRequest } = setup();
 
     sendRequest.mockResolvedValueOnce(new Error('aborted on signOut'));
@@ -367,10 +361,10 @@ describe('startAgent: ответ на сообщение', () => {
 
     const { responses, send, sendRequest, setState } = setup();
 
-    sendRequest.mockImplementation(async (request) => {
+    sendRequest.mockImplementation((request) => {
       if (request.type === CLEAR_REQUEST.type) throw new Error('не дошло');
 
-      return undefined;
+      return Promise.resolve(undefined);
     });
     setState(replyState());
     send();
@@ -515,8 +509,8 @@ describe('startAgent: ответ на сообщение', () => {
 
     const { send, sendRequest, setState } = setup();
 
-    sendRequest.mockImplementation(async (request) => {
-      return request.type === CLEAR_REQUEST.type ? clear() : undefined;
+    sendRequest.mockImplementation((request) => {
+      return request.type === CLEAR_REQUEST.type ? clear() : Promise.resolve(undefined);
     });
     setState(replyState());
     send('cmd-1');

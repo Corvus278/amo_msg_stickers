@@ -3,7 +3,7 @@ import { isObject } from '../shared/guards';
 import type { AmoStickerMessage } from './buildMessage.types';
 import { fieldOf } from './field';
 import type { AmoQuotedMessage, AmoReplyRef, AttachedReply } from './refersTo.types';
-import { isQuotedMessage } from './refersTo.types';
+import { isFilledString, isQuotedMessage } from './refersTo.types';
 
 /**
  * Ответ стикером повторяет то, что страница amo кладёт в очередь при ответе картинкой из
@@ -24,7 +24,7 @@ export const draughtReplyIdOf = (state: unknown, conversationId: string) => {
   const draught = fieldOf(fieldOf(state, 'conversationDraughts'), conversationId);
   const refersTo = fieldOf(draught, 'refersTo');
 
-  return typeof refersTo === 'string' && refersTo ? refersTo : null;
+  return isFilledString(refersTo) ? refersTo : null;
 };
 
 /**

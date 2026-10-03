@@ -60,7 +60,7 @@ export type AttachedReply = {
   replyToClear: AmoReplyRef | null;
 };
 
-const isFilledString = (value: unknown): value is string => {
+export const isFilledString = (value: unknown): value is string => {
   return typeof value === 'string' && value.length > 0;
 };
 

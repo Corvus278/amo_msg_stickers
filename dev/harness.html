@@ -605,7 +605,7 @@
          * загруженных — без цитаты.
          */
         const replied = replyTo && loadedMessages()[replyTo];
-        const quote = replied ? quoteOf(replied) : null;
+        const makeQuote = () => (replied ? quoteOf(replied) : null);
         setReply(null);
         console.log('[harness] sent', sent.length, 'files');
         files = [];
@@ -613,10 +613,10 @@
         editable.textContent = '';
         syncSend();
         for (const f of sent) {
-          await sendMedia(f, f.name, quote);
+          await sendMedia(f, f.name, makeQuote());
           lastFile = { file: f, name: f.name };
         }
-        if (text) sendText(text, quote);
+        if (text) sendText(text, makeQuote());
       });
 
       /**
